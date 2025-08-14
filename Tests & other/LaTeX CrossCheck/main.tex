@@ -1,0 +1,289 @@
+\documentclass[a4paper,10pt]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{physics}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage[rightcaption]{sidecap}
+\graphicspath{ {images/} }
+\usepackage{appendix}
+\usepackage{blindtext}
+\usepackage{multicol}
+\usepackage{multirow}
+\usepackage{enumerate}
+\usepackage{mathtools}
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+
+\usepackage{vmargin}
+\usepackage{amsmath, amsthm, amssymb}
+\usepackage{titlesec}
+\usepackage{setspace}
+
+\usepackage{tensor}
+\usepackage[version=3]{mhchem}
+\usepackage{simpler-wick}
+
+\usepackage[shortlabels]{enumitem}
+\usepackage[hidelinks]{hyperref}
+%\usepackage[compat=1.1.0]{tikz-feynman}
+\usepackage{pdflscape}
+\usepackage{afterpage}
+\usepackage{capt-of}% or use the larger `caption` package
+\usepackage{changepage}
+
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{adjustbox}
+\usepackage{xcolor}
+
+\usepackage{csquotes}
+\usepackage[backend=bibtex]{biblatex}
+\addbibresource{ref.bib}
+
+\usepackage{dsfont}
+
+\title{\textbf{Table CrossCheck}\\
+Next to Leading Order \texorpdfstring{$(g-2)_\mu$}{Lg} using lattice data}
+\author{Beltran Martínez, Arnau}
+\date{\today} 
+
+\begin{document}
+
+\maketitle
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|c|c|c|c|c|}
+    \hline
+    ens & Set 1 ll & Set 1 lc & Set 2 ll & Set 2 lc \\
+    \hline
+    \hline
+    
+    H101 & \begin{tabular}{@{}c@{}} 172.1 +/- 0.39 \\ 172.73 +/- 0.42 \\ 1.09 \end{tabular} & \begin{tabular}{@{}c@{}} 173.35 +/- 0.39 \\ 173.97 +/- 0.4 \\ 1.11 \end{tabular} & \begin{tabular}{@{}c@{}} 150.16 +/- 0.39 \\ 150.45 +/- 0.45 \\ 0.49 \end{tabular} & \begin{tabular}{@{}c@{}} 155.36 +/- 0.39 \\ 155.82 +/- 0.41 \\ 0.81 \end{tabular} \\
+     \hline 
+    B450 & \begin{tabular}{@{}c@{}} 168.12 +/- 0.38 \\ 168.25 +/- 0.64 \\ 0.18 \end{tabular} & \begin{tabular}{@{}c@{}} 168.82 +/- 0.38 \\ 168.98 +/- 0.63 \\ 0.22 \end{tabular} & \begin{tabular}{@{}c@{}} 152.53 +/- 0.38 \\ 152.64 +/- 0.64 \\ 0.15 \end{tabular} & \begin{tabular}{@{}c@{}} 155.68 +/- 0.38 \\ 155.83 +/- 0.63 \\ 0.2 \end{tabular} \\
+     \hline 
+    N202 & \begin{tabular}{@{}c@{}} 168.14 +/- 0.68 \\ 168.28 +/- 0.66 \\ 0.15 \end{tabular} & \begin{tabular}{@{}c@{}} 168.45 +/- 0.69 \\ 168.59 +/- 0.67 \\ 0.15 \end{tabular} & \begin{tabular}{@{}c@{}} 158.36 +/- 0.67 \\ 158.54 +/- 0.67 \\ 0.19 \end{tabular} & \begin{tabular}{@{}c@{}} 159.92 +/- 0.68 \\ 160.08 +/- 0.68 \\ 0.17 \end{tabular} \\
+     \hline 
+    N300 & \begin{tabular}{@{}c@{}} 160.99 +/- 0.59 \\ 163.44 +/- 1.11 \\ 1.96 \end{tabular} & \begin{tabular}{@{}c@{}} 161.08 +/- 0.59 \\ 163.59 +/- 1.09 \\ 2.02 \end{tabular} & \begin{tabular}{@{}c@{}} 156.34 +/- 0.59 \\ 158.78 +/- 1.11 \\ 1.94 \end{tabular} & \begin{tabular}{@{}c@{}} 156.89 +/- 0.59 \\ 159.36 +/- 1.09 \\ 1.99 \end{tabular} \\
+     \hline 
+    H102 & \begin{tabular}{@{}c@{}} 178.54 +/- 0.52 \\ 179.31 +/- 0.6 \\ 0.97 \end{tabular} & \begin{tabular}{@{}c@{}} 179.75 +/- 0.52 \\ 180.5 +/- 0.58 \\ 0.97 \end{tabular} & \begin{tabular}{@{}c@{}} 157.27 +/- 0.53 \\ 157.79 +/- 0.63 \\ 0.63 \end{tabular} & \begin{tabular}{@{}c@{}} 162.26 +/- 0.53 \\ 162.9 +/- 0.6 \\ 0.81 \end{tabular} \\
+     \hline 
+    N101 & \begin{tabular}{@{}c@{}} 186.31 +/- 0.43 \\ 186.59 +/- 0.39 \\ 0.49 \end{tabular} & \begin{tabular}{@{}c@{}} 187.56 +/- 0.42 \\ 187.81 +/- 0.35 \\ 0.46 \end{tabular} & \begin{tabular}{@{}c@{}} 165.61 +/- 0.44 \\ 165.66 +/- 0.44 \\ 0.09 \end{tabular} & \begin{tabular}{@{}c@{}} 170.48 +/- 0.43 \\ 170.63 +/- 0.36 \\ 0.27 \end{tabular} \\
+     \hline 
+    C101 & \begin{tabular}{@{}c@{}} 192.19 +/- 0.41 \\ 192.85 +/- 0.46 \\ 1.08 \end{tabular} & \begin{tabular}{@{}c@{}} 193.4 +/- 0.41 \\ 194.03 +/- 0.43 \\ 1.06 \end{tabular} & \begin{tabular}{@{}c@{}} 172.25 +/- 0.43 \\ 172.69 +/- 0.48 \\ 0.68 \end{tabular} & \begin{tabular}{@{}c@{}} 176.94 +/- 0.42 \\ 177.48 +/- 0.44 \\ 0.88 \end{tabular} \\
+     \hline 
+    N203 & \begin{tabular}{@{}c@{}} 173.75 +/- 0.43 \\ 174.35 +/- 0.59 \\ 0.82 \end{tabular} & \begin{tabular}{@{}c@{}} 174.11 +/- 0.43 \\ 174.7 +/- 0.59 \\ 0.82 \end{tabular} & \begin{tabular}{@{}c@{}} 164.22 +/- 0.43 \\ 164.83 +/- 0.62 \\ 0.82 \end{tabular} & \begin{tabular}{@{}c@{}} 165.77 +/- 0.43 \\ 166.36 +/- 0.6 \\ 0.79 \end{tabular} \\
+     \hline 
+    N200 & \begin{tabular}{@{}c@{}} 180.17 +/- 0.43 \\ 180.72 +/- 0.59 \\ 0.75 \end{tabular} & \begin{tabular}{@{}c@{}} 180.43 +/- 0.42 \\ 180.99 +/- 0.59 \\ 0.77 \end{tabular} & \begin{tabular}{@{}c@{}} 171.02 +/- 0.44 \\ 171.59 +/- 0.61 \\ 0.76 \end{tabular} & \begin{tabular}{@{}c@{}} 172.41 +/- 0.43 \\ 172.97 +/- 0.59 \\ 0.77 \end{tabular} \\
+     \hline 
+    D200 & \begin{tabular}{@{}c@{}} 188.37 +/- 0.38 \\ 188.77 +/- 0.48 \\ 0.66 \end{tabular} & \begin{tabular}{@{}c@{}} 188.69 +/- 0.37 \\ 189.11 +/- 0.47 \\ 0.71 \end{tabular} & \begin{tabular}{@{}c@{}} 179.52 +/- 0.39 \\ 179.96 +/- 0.51 \\ 0.68 \end{tabular} & \begin{tabular}{@{}c@{}} 180.91 +/- 0.38 \\ 181.34 +/- 0.49 \\ 0.69 \end{tabular} \\
+     \hline 
+    E250 & \begin{tabular}{@{}c@{}} 194.75 +/- 0.26 \\ 194.9 +/- 0.18 \\ 0.48 \end{tabular} & \begin{tabular}{@{}c@{}} 194.96 +/- 0.26 \\ 195.19 +/- 0.18 \\ 0.72 \end{tabular} & \begin{tabular}{@{}c@{}} 186.36 +/- 0.27 \\ 186.54 +/- 0.23 \\ 0.5 \end{tabular} & \begin{tabular}{@{}c@{}} 187.61 +/- 0.26 \\ 187.82 +/- 0.19 \\ 0.65 \end{tabular} \\
+     \hline 
+    J303 & \begin{tabular}{@{}c@{}} 179.51 +/- 0.54 \\ 180.08 +/- 0.6 \\ 0.71 \end{tabular} & \begin{tabular}{@{}c@{}} 179.57 +/- 0.55 \\ 179.93 +/- 0.84 \\ 0.36 \end{tabular} & \begin{tabular}{@{}c@{}} 175.24 +/- 0.55 \\ 175.84 +/- 0.61 \\ 0.73 \end{tabular} & \begin{tabular}{@{}c@{}} 175.67 +/- 0.55 \\ 176.04 +/- 0.86 \\ 0.36 \end{tabular} \\
+     \hline 
+    E300 & \begin{tabular}{@{}c@{}} 188.05 +/- 0.49 \\ 188.24 +/- 0.31 \\ 0.33 \end{tabular} & \begin{tabular}{@{}c@{}} 188.13 +/- 0.49 \\ 188.54 +/- 0.48 \\ 0.6 \end{tabular} & \begin{tabular}{@{}c@{}} 183.96 +/- 0.49 \\ 184.22 +/- 0.34 \\ 0.44 \end{tabular} & \begin{tabular}{@{}c@{}} 184.38 +/- 0.5 \\ 184.83 +/- 0.49 \\ 0.65 \end{tabular} \\
+     \hline 
+    J500 & \begin{tabular}{@{}c@{}} 162.0 +/- 0.72 \\ 162.59 +/- 1.07 \\ 0.46 \end{tabular} & \begin{tabular}{@{}c@{}} 162.04 +/- 0.72 \\ 162.63 +/- 1.07 \\ 0.46 \end{tabular} & \begin{tabular}{@{}c@{}} 159.69 +/- 0.72 \\ 160.28 +/- 1.07 \\ 0.45 \end{tabular} & \begin{tabular}{@{}c@{}} 159.97 +/- 0.72 \\ 160.56 +/- 1.07 \\ 0.46 \end{tabular} \\
+     \hline 
+    N451 & \begin{tabular}{@{}c@{}} 183.4 +/- 0.28 \\ 183.68 +/- 0.31 \\ 0.69 \end{tabular} & \begin{tabular}{@{}c@{}} 184.05 +/- 0.28 \\ 184.37 +/- 0.3 \\ 0.78 \end{tabular} & \begin{tabular}{@{}c@{}} 168.49 +/- 0.27 \\ 168.76 +/- 0.35 \\ 0.61 \end{tabular} & \begin{tabular}{@{}c@{}} 171.4 +/- 0.27 \\ 171.71 +/- 0.32 \\ 0.73 \end{tabular} \\
+     \hline 
+    D452 & \begin{tabular}{@{}c@{}} 194.96 +/- 0.33 \\ 195.45 +/- 0.3 \\ 1.1 \end{tabular} & \begin{tabular}{@{}c@{}} 195.61 +/- 0.33 \\ 196.11 +/- 0.3 \\ 1.14 \end{tabular} & \begin{tabular}{@{}c@{}} 181.21 +/- 0.34 \\ 181.73 +/- 0.34 \\ 1.07 \end{tabular} & \begin{tabular}{@{}c@{}} 183.97 +/- 0.34 \\ 184.48 +/- 0.31 \\ 1.11 \end{tabular} \\
+     \hline 
+    J501 & \begin{tabular}{@{}c@{}} 170.16 +/- 0.98 \\ 171.0 +/- 0.95 \\ 0.61 \end{tabular} & \begin{tabular}{@{}c@{}} 170.15 +/- 0.98 \\ 170.73 +/- 1.0 \\ 0.42 \end{tabular} & \begin{tabular}{@{}c@{}} 167.92 +/- 0.98 \\ 168.76 +/- 0.95 \\ 0.61 \end{tabular} & \begin{tabular}{@{}c@{}} 168.13 +/- 0.98 \\ 168.72 +/- 1.0 \\ 0.42 \end{tabular} \\
+     \hline 
+    \hline
+    \end{tabular}
+    \caption{Comparison iso-vector}
+\end{table}
+
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|c|c|c|c|c|}
+    \hline
+    ens & Set 1 ll & Set 1 lc & Set 2 ll & Set 2 lc \\
+    \hline
+    \hline
+    
+    H101 & \begin{tabular}{@{}c@{}} 172.1 $\pm$ 0.39 \\ 172.21 $\pm$ 0.42 \\ 0.2 \end{tabular} & \begin{tabular}{@{}c@{}} 173.35 $\pm$ 0.39 \\ 173.43 $\pm$ 0.4 \\ 0.15 \end{tabular} & \begin{tabular}{@{}c@{}} 150.16 $\pm$ 0.39 \\ 150.03 $\pm$ 0.45 \\ 0.23 \end{tabular} & \begin{tabular}{@{}c@{}} 155.36 $\pm$ 0.39 \\ 155.33 $\pm$ 0.41 \\ 0.05 \end{tabular} \\
+     \hline 
+    B450 & \begin{tabular}{@{}c@{}} 168.12 $\pm$ 0.38 \\ 167.74 $\pm$ 0.64 \\ 0.51 \end{tabular} & \begin{tabular}{@{}c@{}} 168.82 $\pm$ 0.38 \\ 168.46 $\pm$ 0.63 \\ 0.49 \end{tabular} & \begin{tabular}{@{}c@{}} 152.53 $\pm$ 0.38 \\ 152.18 $\pm$ 0.64 \\ 0.46 \end{tabular} & \begin{tabular}{@{}c@{}} 155.68 $\pm$ 0.38 \\ 155.34 $\pm$ 0.63 \\ 0.46 \end{tabular} \\
+     \hline 
+    N202 & \begin{tabular}{@{}c@{}} 168.14 $\pm$ 0.68 \\ 167.78 $\pm$ 0.66 \\ 0.38 \end{tabular} & \begin{tabular}{@{}c@{}} 168.45 $\pm$ 0.69 \\ 168.09 $\pm$ 0.67 \\ 0.38 \end{tabular} & \begin{tabular}{@{}c@{}} 158.36 $\pm$ 0.67 \\ 158.07 $\pm$ 0.67 \\ 0.3 \end{tabular} & \begin{tabular}{@{}c@{}} 159.92 $\pm$ 0.68 \\ 159.59 $\pm$ 0.68 \\ 0.34 \end{tabular} \\
+     \hline 
+    N300 & \begin{tabular}{@{}c@{}} 160.99 $\pm$ 0.59 \\ 162.93 $\pm$ 1.11 \\ 1.55 \end{tabular} & \begin{tabular}{@{}c@{}} 161.08 $\pm$ 0.59 \\ 163.08 $\pm$ 1.09 \\ 1.61 \end{tabular} & \begin{tabular}{@{}c@{}} 156.34 $\pm$ 0.59 \\ 158.29 $\pm$ 1.11 \\ 1.55 \end{tabular} & \begin{tabular}{@{}c@{}} 156.89 $\pm$ 0.59 \\ 158.86 $\pm$ 1.09 \\ 1.58 \end{tabular} \\
+     \hline 
+    H102 & \begin{tabular}{@{}c@{}} 178.54 $\pm$ 0.52 \\ 178.83 $\pm$ 0.6 \\ 0.37 \end{tabular} & \begin{tabular}{@{}c@{}} 179.75 $\pm$ 0.52 \\ 180.01 $\pm$ 0.58 \\ 0.34 \end{tabular} & \begin{tabular}{@{}c@{}} 157.27 $\pm$ 0.53 \\ 157.4 $\pm$ 0.63 \\ 0.15 \end{tabular} & \begin{tabular}{@{}c@{}} 162.26 $\pm$ 0.53 \\ 162.45 $\pm$ 0.6 \\ 0.24 \end{tabular} \\
+     \hline 
+    N101 & \begin{tabular}{@{}c@{}} 186.31 $\pm$ 0.43 \\ 186.17 $\pm$ 0.39 \\ 0.24 \end{tabular} & \begin{tabular}{@{}c@{}} 187.56 $\pm$ 0.42 \\ 187.36 $\pm$ 0.35 \\ 0.36 \end{tabular} & \begin{tabular}{@{}c@{}} 165.61 $\pm$ 0.44 \\ 165.31 $\pm$ 0.44 \\ 0.49 \end{tabular} & \begin{tabular}{@{}c@{}} 170.48 $\pm$ 0.43 \\ 170.21 $\pm$ 0.36 \\ 0.47 \end{tabular} \\
+     \hline 
+    C101 & \begin{tabular}{@{}c@{}} 192.19 $\pm$ 0.41 \\ 192.49 $\pm$ 0.46 \\ 0.48 \end{tabular} & \begin{tabular}{@{}c@{}} 193.4 $\pm$ 0.41 \\ 193.64 $\pm$ 0.43 \\ 0.4 \end{tabular} & \begin{tabular}{@{}c@{}} 172.25 $\pm$ 0.43 \\ 172.38 $\pm$ 0.48 \\ 0.2 \end{tabular} & \begin{tabular}{@{}c@{}} 176.94 $\pm$ 0.42 \\ 177.11 $\pm$ 0.44 \\ 0.28 \end{tabular} \\
+     \hline 
+    N203 & \begin{tabular}{@{}c@{}} 173.75 $\pm$ 0.43 \\ 173.89 $\pm$ 0.59 \\ 0.19 \end{tabular} & \begin{tabular}{@{}c@{}} 174.11 $\pm$ 0.43 \\ 174.24 $\pm$ 0.59 \\ 0.17 \end{tabular} & \begin{tabular}{@{}c@{}} 164.22 $\pm$ 0.43 \\ 164.4 $\pm$ 0.62 \\ 0.24 \end{tabular} & \begin{tabular}{@{}c@{}} 165.77 $\pm$ 0.43 \\ 165.91 $\pm$ 0.6 \\ 0.18 \end{tabular} \\
+     \hline 
+    N200 & \begin{tabular}{@{}c@{}} 180.17 $\pm$ 0.43 \\ 180.3 $\pm$ 0.59 \\ 0.17 \end{tabular} & \begin{tabular}{@{}c@{}} 180.43 $\pm$ 0.42 \\ 180.56 $\pm$ 0.59 \\ 0.18 \end{tabular} & \begin{tabular}{@{}c@{}} 171.02 $\pm$ 0.44 \\ 171.19 $\pm$ 0.61 \\ 0.23 \end{tabular} & \begin{tabular}{@{}c@{}} 172.41 $\pm$ 0.43 \\ 172.56 $\pm$ 0.59 \\ 0.2 \end{tabular} \\
+     \hline 
+    D200 & \begin{tabular}{@{}c@{}} 188.37 $\pm$ 0.38 \\ 188.41 $\pm$ 0.48 \\ 0.07 \end{tabular} & \begin{tabular}{@{}c@{}} 188.69 $\pm$ 0.37 \\ 188.75 $\pm$ 0.47 \\ 0.1 \end{tabular} & \begin{tabular}{@{}c@{}} 179.52 $\pm$ 0.39 \\ 179.61 $\pm$ 0.51 \\ 0.15 \end{tabular} & \begin{tabular}{@{}c@{}} 180.91 $\pm$ 0.38 \\ 180.98 $\pm$ 0.49 \\ 0.12 \end{tabular} \\
+     \hline 
+    E250 & \begin{tabular}{@{}c@{}} 194.75 $\pm$ 0.26 \\ 194.61 $\pm$ 0.18 \\ 0.45 \end{tabular} & \begin{tabular}{@{}c@{}} 194.96 $\pm$ 0.26 \\ 194.89 $\pm$ 0.18 \\ 0.23 \end{tabular} & \begin{tabular}{@{}c@{}} 186.36 $\pm$ 0.27 \\ 186.26 $\pm$ 0.23 \\ 0.28 \end{tabular} & \begin{tabular}{@{}c@{}} 187.61 $\pm$ 0.26 \\ 187.53 $\pm$ 0.19 \\ 0.26 \end{tabular} \\
+     \hline 
+    J303 & \begin{tabular}{@{}c@{}} 179.51 $\pm$ 0.54 \\ 179.67 $\pm$ 0.6 \\ 0.2 \end{tabular} & \begin{tabular}{@{}c@{}} 179.57 $\pm$ 0.55 \\ 179.52 $\pm$ 0.84 \\ 0.05 \end{tabular} & \begin{tabular}{@{}c@{}} 175.24 $\pm$ 0.55 \\ 175.44 $\pm$ 0.61 \\ 0.25 \end{tabular} & \begin{tabular}{@{}c@{}} 175.67 $\pm$ 0.55 \\ 175.64 $\pm$ 0.86 \\ 0.03 \end{tabular} \\
+     \hline 
+    E300 & \begin{tabular}{@{}c@{}} 188.05 $\pm$ 0.49 \\ 187.91 $\pm$ 0.31 \\ 0.25 \end{tabular} & \begin{tabular}{@{}c@{}} 188.13 $\pm$ 0.49 \\ 188.21 $\pm$ 0.48 \\ 0.12 \end{tabular} & \begin{tabular}{@{}c@{}} 183.96 $\pm$ 0.49 \\ 183.89 $\pm$ 0.34 \\ 0.11 \end{tabular} & \begin{tabular}{@{}c@{}} 184.38 $\pm$ 0.5 \\ 184.51 $\pm$ 0.49 \\ 0.18 \end{tabular} \\
+     \hline 
+    J500 & \begin{tabular}{@{}c@{}} 162.0 $\pm$ 0.72 \\ 162.1 $\pm$ 1.07 \\ 0.08 \end{tabular} & \begin{tabular}{@{}c@{}} 162.04 $\pm$ 0.72 \\ 162.14 $\pm$ 1.07 \\ 0.08 \end{tabular} & \begin{tabular}{@{}c@{}} 159.69 $\pm$ 0.72 \\ 159.8 $\pm$ 1.07 \\ 0.08 \end{tabular} & \begin{tabular}{@{}c@{}} 159.97 $\pm$ 0.72 \\ 160.08 $\pm$ 1.07 \\ 0.08 \end{tabular} \\
+     \hline 
+    N451 & \begin{tabular}{@{}c@{}} 183.4 $\pm$ 0.28 \\ 183.26 $\pm$ 0.31 \\ 0.34 \end{tabular} & \begin{tabular}{@{}c@{}} 184.05 $\pm$ 0.28 \\ 183.93 $\pm$ 0.3 \\ 0.28 \end{tabular} & \begin{tabular}{@{}c@{}} 168.49 $\pm$ 0.27 \\ 168.38 $\pm$ 0.35 \\ 0.26 \end{tabular} & \begin{tabular}{@{}c@{}} 171.4 $\pm$ 0.27 \\ 171.29 $\pm$ 0.32 \\ 0.26 \end{tabular} \\
+     \hline 
+    D452 & \begin{tabular}{@{}c@{}} 194.96 $\pm$ 0.33 \\ 195.13 $\pm$ 0.3 \\ 0.38 \end{tabular} & \begin{tabular}{@{}c@{}} 195.61 $\pm$ 0.33 \\ 195.78 $\pm$ 0.3 \\ 0.39 \end{tabular} & \begin{tabular}{@{}c@{}} 181.21 $\pm$ 0.34 \\ 181.44 $\pm$ 0.34 \\ 0.48 \end{tabular} & \begin{tabular}{@{}c@{}} 183.97 $\pm$ 0.34 \\ 184.16 $\pm$ 0.31 \\ 0.41 \end{tabular} \\
+     \hline 
+    J501 & \begin{tabular}{@{}c@{}} 170.16 $\pm$ 0.98 \\ 170.55 $\pm$ 0.95 \\ 0.28 \end{tabular} & \begin{tabular}{@{}c@{}} 170.15 $\pm$ 0.98 \\ 170.28 $\pm$ 1.0 \\ 0.09 \end{tabular} & \begin{tabular}{@{}c@{}} 167.92 $\pm$ 0.98 \\ 168.32 $\pm$ 0.95 \\ 0.29 \end{tabular} & \begin{tabular}{@{}c@{}} 168.13 $\pm$ 0.98 \\ 168.27 $\pm$ 1.0 \\ 0.1 \end{tabular} \\
+     \hline 
+    \hline
+    \end{tabular}
+    \caption{Comparison iso-vector}
+\end{table}
+
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|c|c|c|c|c|}
+    \hline
+    ens & Set 1 ll & Set 1 lc & Set 2 ll & Set 2 lc \\
+    \hline
+    \hline
+    
+    H101 & \begin{tabular}{@{}c@{}} 57.36 $\pm$ 0.13 \\ 57.4 $\pm$ 0.14 \\ 0.23 \end{tabular} & \begin{tabular}{@{}c@{}} 57.78 $\pm$ 0.13 \\ 57.81 $\pm$ 0.13 \\ 0.17 \end{tabular} & \begin{tabular}{@{}c@{}} 50.05 $\pm$ 0.13 \\ 50.01 $\pm$ 0.15 \\ 0.21 \end{tabular} & \begin{tabular}{@{}c@{}} 51.78 $\pm$ 0.13 \\ 51.78 $\pm$ 0.14 \\ 0.02 \end{tabular} \\
+     \hline 
+    B450 & \begin{tabular}{@{}c@{}} 56.04 $\pm$ 0.13 \\ 55.91 $\pm$ 0.21 \\ 0.51 \end{tabular} & \begin{tabular}{@{}c@{}} 56.27 $\pm$ 0.13 \\ 56.15 $\pm$ 0.21 \\ 0.47 \end{tabular} & \begin{tabular}{@{}c@{}} 50.84 $\pm$ 0.13 \\ 50.73 $\pm$ 0.21 \\ 0.45 \end{tabular} & \begin{tabular}{@{}c@{}} 51.89 $\pm$ 0.13 \\ 51.78 $\pm$ 0.21 \\ 0.45 \end{tabular} \\
+     \hline 
+    N202 & \begin{tabular}{@{}c@{}} 56.05 $\pm$ 0.23 \\ 55.93 $\pm$ 0.22 \\ 0.39 \end{tabular} & \begin{tabular}{@{}c@{}} 56.15 $\pm$ 0.23 \\ 56.03 $\pm$ 0.22 \\ 0.38 \end{tabular} & \begin{tabular}{@{}c@{}} 52.79 $\pm$ 0.22 \\ 52.69 $\pm$ 0.22 \\ 0.32 \end{tabular} & \begin{tabular}{@{}c@{}} 53.31 $\pm$ 0.23 \\ 53.2 $\pm$ 0.23 \\ 0.35 \end{tabular} \\
+     \hline 
+    N300 & \begin{tabular}{@{}c@{}} 53.66 $\pm$ 0.2 \\ 54.31 $\pm$ 0.37 \\ 1.55 \end{tabular} & \begin{tabular}{@{}c@{}} 53.69 $\pm$ 0.2 \\ 54.36 $\pm$ 0.36 \\ 1.61 \end{tabular} & \begin{tabular}{@{}c@{}} 52.11 $\pm$ 0.2 \\ 52.76 $\pm$ 0.37 \\ 1.55 \end{tabular} & \begin{tabular}{@{}c@{}} 52.3 $\pm$ 0.2 \\ 52.95 $\pm$ 0.36 \\ 1.57 \end{tabular} \\
+     \hline 
+    H102 & \begin{tabular}{@{}c@{}} 55.3 $\pm$ 0.16 \\ 55.36 $\pm$ 0.14 \\ 0.28 \end{tabular} & \begin{tabular}{@{}c@{}} 55.71 $\pm$ 0.16 \\ 55.76 $\pm$ 0.12 \\ 0.23 \end{tabular} & \begin{tabular}{@{}c@{}} 47.94 $\pm$ 0.16 \\ 47.96 $\pm$ 0.15 \\ 0.08 \end{tabular} & \begin{tabular}{@{}c@{}} 49.7 $\pm$ 0.16 \\ 49.73 $\pm$ 0.13 \\ 0.16 \end{tabular} \\
+     \hline 
+    N101 & \begin{tabular}{@{}c@{}} 53.55 $\pm$ 0.11 \\ 53.48 $\pm$ 0.11 \\ 0.44 \end{tabular} & \begin{tabular}{@{}c@{}} 53.97 $\pm$ 0.11 \\ 53.89 $\pm$ 0.1 \\ 0.53 \end{tabular} & \begin{tabular}{@{}c@{}} 46.18 $\pm$ 0.11 \\ 46.08 $\pm$ 0.11 \\ 0.61 \end{tabular} & \begin{tabular}{@{}c@{}} 47.99 $\pm$ 0.11 \\ 47.9 $\pm$ 0.1 \\ 0.62 \end{tabular} \\
+     \hline 
+    C101 & \begin{tabular}{@{}c@{}} 52.67 $\pm$ 0.11 \\ 52.72 $\pm$ 0.1 \\ 0.36 \end{tabular} & \begin{tabular}{@{}c@{}} 53.08 $\pm$ 0.11 \\ 53.13 $\pm$ 0.09 \\ 0.37 \end{tabular} & \begin{tabular}{@{}c@{}} 45.39 $\pm$ 0.11 \\ 45.4 $\pm$ 0.1 \\ 0.09 \end{tabular} & \begin{tabular}{@{}c@{}} 47.18 $\pm$ 0.11 \\ 47.22 $\pm$ 0.09 \\ 0.26 \end{tabular} \\
+     \hline 
+    N203 & \begin{tabular}{@{}c@{}} 53.41 $\pm$ 0.13 \\ 53.46 $\pm$ 0.14 \\ 0.27 \end{tabular} & \begin{tabular}{@{}c@{}} 53.5 $\pm$ 0.13 \\ 53.56 $\pm$ 0.14 \\ 0.31 \end{tabular} & \begin{tabular}{@{}c@{}} 50.12 $\pm$ 0.13 \\ 50.19 $\pm$ 0.15 \\ 0.35 \end{tabular} & \begin{tabular}{@{}c@{}} 50.65 $\pm$ 0.13 \\ 50.71 $\pm$ 0.15 \\ 0.32 \end{tabular} \\
+     \hline 
+    N200 & \begin{tabular}{@{}c@{}} 51.61 $\pm$ 0.11 \\ 51.64 $\pm$ 0.11 \\ 0.18 \end{tabular} & \begin{tabular}{@{}c@{}} 51.7 $\pm$ 0.1 \\ 51.73 $\pm$ 0.11 \\ 0.22 \end{tabular} & \begin{tabular}{@{}c@{}} 48.35 $\pm$ 0.11 \\ 48.4 $\pm$ 0.12 \\ 0.28 \end{tabular} & \begin{tabular}{@{}c@{}} 48.88 $\pm$ 0.1 \\ 48.92 $\pm$ 0.11 \\ 0.27 \end{tabular} \\
+     \hline 
+    D200 & \begin{tabular}{@{}c@{}} 50.36 $\pm$ 0.1 \\ 50.41 $\pm$ 0.09 \\ 0.35 \end{tabular} & \begin{tabular}{@{}c@{}} 50.46 $\pm$ 0.1 \\ 50.53 $\pm$ 0.08 \\ 0.51 \end{tabular} & \begin{tabular}{@{}c@{}} 47.11 $\pm$ 0.1 \\ 47.18 $\pm$ 0.09 \\ 0.51 \end{tabular} & \begin{tabular}{@{}c@{}} 47.67 $\pm$ 0.09 \\ 47.74 $\pm$ 0.08 \\ 0.54 \end{tabular} \\
+     \hline 
+    E250 & \begin{tabular}{@{}c@{}} 49.65 $\pm$ 0.09 \\ 49.69 $\pm$ 0.08 \\ 0.37 \end{tabular} & \begin{tabular}{@{}c@{}} 49.76 $\pm$ 0.09 \\ 49.82 $\pm$ 0.08 \\ 0.5 \end{tabular} & \begin{tabular}{@{}c@{}} 46.45 $\pm$ 0.09 \\ 46.51 $\pm$ 0.08 \\ 0.51 \end{tabular} & \begin{tabular}{@{}c@{}} 47.01 $\pm$ 0.09 \\ 47.08 $\pm$ 0.08 \\ 0.57 \end{tabular} \\
+     \hline 
+    J303 & \begin{tabular}{@{}c@{}} 49.8 $\pm$ 0.12 \\ 49.79 $\pm$ 0.09 \\ 0.07 \end{tabular} & \begin{tabular}{@{}c@{}} 49.82 $\pm$ 0.12 \\ 49.8 $\pm$ 0.13 \\ 0.12 \end{tabular} & \begin{tabular}{@{}c@{}} 48.25 $\pm$ 0.12 \\ 48.26 $\pm$ 0.1 \\ 0.08 \end{tabular} & \begin{tabular}{@{}c@{}} 48.43 $\pm$ 0.12 \\ 48.42 $\pm$ 0.14 \\ 0.03 \end{tabular} \\
+     \hline 
+    E300 & \begin{tabular}{@{}c@{}} 48.77 $\pm$ 0.08 \\ 48.74 $\pm$ 0.06 \\ 0.34 \end{tabular} & \begin{tabular}{@{}c@{}} 48.8 $\pm$ 0.08 \\ 48.8 $\pm$ 0.09 \\ 0.02 \end{tabular} & \begin{tabular}{@{}c@{}} 47.24 $\pm$ 0.08 \\ 47.23 $\pm$ 0.06 \\ 0.07 \end{tabular} & \begin{tabular}{@{}c@{}} 47.44 $\pm$ 0.08 \\ 47.45 $\pm$ 0.09 \\ 0.1 \end{tabular} \\
+     \hline 
+    J500 & \begin{tabular}{@{}c@{}} 54.0 $\pm$ 0.24 \\ 54.03 $\pm$ 0.36 \\ 0.08 \end{tabular} & \begin{tabular}{@{}c@{}} 54.01 $\pm$ 0.24 \\ 54.05 $\pm$ 0.36 \\ 0.09 \end{tabular} & \begin{tabular}{@{}c@{}} 53.23 $\pm$ 0.24 \\ 53.27 $\pm$ 0.36 \\ 0.08 \end{tabular} & \begin{tabular}{@{}c@{}} 53.32 $\pm$ 0.24 \\ 53.36 $\pm$ 0.36 \\ 0.09 \end{tabular} \\
+     \hline 
+    N451 & \begin{tabular}{@{}c@{}} 52.8 $\pm$ 0.06 \\ 52.74 $\pm$ 0.05 \\ 0.8 \end{tabular} & \begin{tabular}{@{}c@{}} 53.01 $\pm$ 0.06 \\ 52.97 $\pm$ 0.04 \\ 0.51 \end{tabular} & \begin{tabular}{@{}c@{}} 47.51 $\pm$ 0.06 \\ 47.47 $\pm$ 0.06 \\ 0.4 \end{tabular} & \begin{tabular}{@{}c@{}} 48.6 $\pm$ 0.06 \\ 48.56 $\pm$ 0.05 \\ 0.48 \end{tabular} \\
+     \hline 
+    D452 & \begin{tabular}{@{}c@{}} 50.9 $\pm$ 0.1 \\ 50.89 $\pm$ 0.06 \\ 0.1 \end{tabular} & \begin{tabular}{@{}c@{}} 51.12 $\pm$ 0.1 \\ 51.13 $\pm$ 0.06 \\ 0.05 \end{tabular} & \begin{tabular}{@{}c@{}} 45.74 $\pm$ 0.1 \\ 45.76 $\pm$ 0.07 \\ 0.14 \end{tabular} & \begin{tabular}{@{}c@{}} 46.84 $\pm$ 0.1 \\ 46.86 $\pm$ 0.06 \\ 0.13 \end{tabular} \\
+     \hline 
+    \hline
+    \end{tabular}
+    \caption{Comparison iso-scalar}
+\end{table}
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|c|c|c|c|c|}
+    \hline
+    ens & Set 1 ll & Set 1 lc & Set 2 ll & Set 2 lc \\
+    \hline
+    \hline
+    
+    H101 & \begin{tabular}{@{}c@{}} 171.24 $\pm$ 0.39 \\ 171.36 $\pm$ 0.36 \\ 0.22 \end{tabular} & \begin{tabular}{@{}c@{}} 172.49 $\pm$ 0.39 \\ 172.57 $\pm$ 0.33 \\ 0.16 \end{tabular} & \begin{tabular}{@{}c@{}} 149.3 $\pm$ 0.39 \\ 149.17 $\pm$ 0.39 \\ 0.24 \end{tabular} & \begin{tabular}{@{}c@{}} 154.5 $\pm$ 0.39 \\ 154.47 $\pm$ 0.35 \\ 0.06 \end{tabular} \\
+     \hline 
+    B450 & \begin{tabular}{@{}c@{}} 166.28 $\pm$ 0.38 \\ 165.88 $\pm$ 0.44 \\ 0.68 \end{tabular} & \begin{tabular}{@{}c@{}} 166.98 $\pm$ 0.38 \\ 166.6 $\pm$ 0.43 \\ 0.66 \end{tabular} & \begin{tabular}{@{}c@{}} 150.69 $\pm$ 0.38 \\ 150.33 $\pm$ 0.45 \\ 0.62 \end{tabular} & \begin{tabular}{@{}c@{}} 153.84 $\pm$ 0.38 \\ 153.48 $\pm$ 0.43 \\ 0.62 \end{tabular} \\
+     \hline 
+    N202 & \begin{tabular}{@{}c@{}} 167.69 $\pm$ 0.68 \\ 167.34 $\pm$ 0.65 \\ 0.37 \end{tabular} & \begin{tabular}{@{}c@{}} 168.0 $\pm$ 0.69 \\ 167.65 $\pm$ 0.66 \\ 0.37 \end{tabular} & \begin{tabular}{@{}c@{}} 157.91 $\pm$ 0.67 \\ 157.64 $\pm$ 0.67 \\ 0.29 \end{tabular} & \begin{tabular}{@{}c@{}} 159.47 $\pm$ 0.68 \\ 159.16 $\pm$ 0.66 \\ 0.33 \end{tabular} \\
+     \hline 
+    N300 & \begin{tabular}{@{}c@{}} 158.99 $\pm$ 0.59 \\ 160.92 $\pm$ 0.98 \\ 1.68 \end{tabular} & \begin{tabular}{@{}c@{}} 159.08 $\pm$ 0.59 \\ 161.06 $\pm$ 0.97 \\ 1.75 \end{tabular} & \begin{tabular}{@{}c@{}} 154.34 $\pm$ 0.59 \\ 156.27 $\pm$ 0.99 \\ 1.68 \end{tabular} & \begin{tabular}{@{}c@{}} 154.89 $\pm$ 0.59 \\ 156.84 $\pm$ 0.97 \\ 1.72 \end{tabular} \\
+     \hline 
+    H102 & \begin{tabular}{@{}c@{}} 177.16 $\pm$ 0.52 \\ 177.15 $\pm$ 0.43 \\ 0.01 \end{tabular} & \begin{tabular}{@{}c@{}} 178.37 $\pm$ 0.52 \\ 178.33 $\pm$ 0.4 \\ 0.06 \end{tabular} & \begin{tabular}{@{}c@{}} 155.89 $\pm$ 0.53 \\ 155.71 $\pm$ 0.47 \\ 0.25 \end{tabular} & \begin{tabular}{@{}c@{}} 160.88 $\pm$ 0.53 \\ 160.77 $\pm$ 0.42 \\ 0.16 \end{tabular} \\
+     \hline 
+    N101 & \begin{tabular}{@{}c@{}} 186.01 $\pm$ 0.43 \\ 185.86 $\pm$ 0.38 \\ 0.26 \end{tabular} & \begin{tabular}{@{}c@{}} 187.26 $\pm$ 0.42 \\ 187.06 $\pm$ 0.35 \\ 0.38 \end{tabular} & \begin{tabular}{@{}c@{}} 165.31 $\pm$ 0.44 \\ 165.0 $\pm$ 0.43 \\ 0.51 \end{tabular} & \begin{tabular}{@{}c@{}} 170.18 $\pm$ 0.43 \\ 169.91 $\pm$ 0.36 \\ 0.49 \end{tabular} \\
+     \hline 
+    C101 & \begin{tabular}{@{}c@{}} 191.42 $\pm$ 0.41 \\ 191.68 $\pm$ 0.41 \\ 0.45 \end{tabular} & \begin{tabular}{@{}c@{}} 192.63 $\pm$ 0.41 \\ 192.83 $\pm$ 0.38 \\ 0.37 \end{tabular} & \begin{tabular}{@{}c@{}} 171.48 $\pm$ 0.43 \\ 171.57 $\pm$ 0.43 \\ 0.15 \end{tabular} & \begin{tabular}{@{}c@{}} 176.17 $\pm$ 0.42 \\ 176.31 $\pm$ 0.39 \\ 0.24 \end{tabular} \\
+     \hline 
+    N203 & \begin{tabular}{@{}c@{}} 172.98 $\pm$ 0.43 \\ 173.01 $\pm$ 0.55 \\ 0.04 \end{tabular} & \begin{tabular}{@{}c@{}} 173.34 $\pm$ 0.43 \\ 173.35 $\pm$ 0.54 \\ 0.02 \end{tabular} & \begin{tabular}{@{}c@{}} 163.45 $\pm$ 0.43 \\ 163.51 $\pm$ 0.57 \\ 0.09 \end{tabular} & \begin{tabular}{@{}c@{}} 165.0 $\pm$ 0.43 \\ 165.02 $\pm$ 0.56 \\ 0.03 \end{tabular} \\
+     \hline 
+    N200 & \begin{tabular}{@{}c@{}} 178.63 $\pm$ 0.43 \\ 178.63 $\pm$ 0.42 \\ 0.0 \end{tabular} & \begin{tabular}{@{}c@{}} 178.89 $\pm$ 0.42 \\ 178.9 $\pm$ 0.42 \\ 0.02 \end{tabular} & \begin{tabular}{@{}c@{}} 169.48 $\pm$ 0.44 \\ 169.53 $\pm$ 0.45 \\ 0.08 \end{tabular} & \begin{tabular}{@{}c@{}} 170.87 $\pm$ 0.43 \\ 170.89 $\pm$ 0.42 \\ 0.04 \end{tabular} \\
+     \hline 
+    D200 & \begin{tabular}{@{}c@{}} 187.28 $\pm$ 0.38 \\ 187.29 $\pm$ 0.39 \\ 0.02 \end{tabular} & \begin{tabular}{@{}c@{}} 187.6 $\pm$ 0.37 \\ 187.63 $\pm$ 0.38 \\ 0.05 \end{tabular} & \begin{tabular}{@{}c@{}} 178.43 $\pm$ 0.39 \\ 178.49 $\pm$ 0.43 \\ 0.11 \end{tabular} & \begin{tabular}{@{}c@{}} 179.82 $\pm$ 0.38 \\ 179.86 $\pm$ 0.41 \\ 0.08 \end{tabular} \\
+     \hline 
+    E250 & \begin{tabular}{@{}c@{}} 194.22 $\pm$ 0.26 \\ 194.07 $\pm$ 0.12 \\ 0.53 \end{tabular} & \begin{tabular}{@{}c@{}} 194.43 $\pm$ 0.26 \\ 194.35 $\pm$ 0.12 \\ 0.28 \end{tabular} & \begin{tabular}{@{}c@{}} 185.83 $\pm$ 0.27 \\ 185.72 $\pm$ 0.19 \\ 0.33 \end{tabular} & \begin{tabular}{@{}c@{}} 187.08 $\pm$ 0.26 \\ 186.99 $\pm$ 0.14 \\ 0.31 \end{tabular} \\
+     \hline 
+    J303 & \begin{tabular}{@{}c@{}} 177.72 $\pm$ 0.54 \\ 177.78 $\pm$ 0.37 \\ 0.1 \end{tabular} & \begin{tabular}{@{}c@{}} 177.78 $\pm$ 0.55 \\ 177.63 $\pm$ 0.69 \\ 0.17 \end{tabular} & \begin{tabular}{@{}c@{}} 173.45 $\pm$ 0.55 \\ 173.55 $\pm$ 0.39 \\ 0.15 \end{tabular} & \begin{tabular}{@{}c@{}} 173.88 $\pm$ 0.55 \\ 173.75 $\pm$ 0.72 \\ 0.15 \end{tabular} \\
+     \hline 
+    E300 & \begin{tabular}{@{}c@{}} 187.27 $\pm$ 0.49 \\ 187.11 $\pm$ 0.24 \\ 0.29 \end{tabular} & \begin{tabular}{@{}c@{}} 187.35 $\pm$ 0.49 \\ 187.42 $\pm$ 0.44 \\ 0.11 \end{tabular} & \begin{tabular}{@{}c@{}} 183.18 $\pm$ 0.49 \\ 183.1 $\pm$ 0.28 \\ 0.14 \end{tabular} & \begin{tabular}{@{}c@{}} 183.6 $\pm$ 0.5 \\ 183.71 $\pm$ 0.45 \\ 0.17 \end{tabular} \\
+     \hline 
+    J500 & \begin{tabular}{@{}c@{}} 160.34 $\pm$ 0.72 \\ 160.43 $\pm$ 0.99 \\ 0.07 \end{tabular} & \begin{tabular}{@{}c@{}} 160.38 $\pm$ 0.72 \\ 160.47 $\pm$ 0.98 \\ 0.08 \end{tabular} & \begin{tabular}{@{}c@{}} 158.03 $\pm$ 0.72 \\ 158.12 $\pm$ 0.99 \\ 0.08 \end{tabular} & \begin{tabular}{@{}c@{}} 158.31 $\pm$ 0.72 \\ 158.41 $\pm$ 0.98 \\ 0.08 \end{tabular} \\
+     \hline 
+    N451 & \begin{tabular}{@{}c@{}} 182.83 $\pm$ 0.28 \\ 182.66 $\pm$ 0.27 \\ 0.43 \end{tabular} & \begin{tabular}{@{}c@{}} 183.48 $\pm$ 0.28 \\ 183.34 $\pm$ 0.26 \\ 0.37 \end{tabular} & \begin{tabular}{@{}c@{}} 167.92 $\pm$ 0.27 \\ 167.78 $\pm$ 0.32 \\ 0.34 \end{tabular} & \begin{tabular}{@{}c@{}} 170.83 $\pm$ 0.27 \\ 170.69 $\pm$ 0.29 \\ 0.34 \end{tabular} \\
+     \hline 
+    D452 & \begin{tabular}{@{}c@{}} 194.01 $\pm$ 0.33 \\ 194.07 $\pm$ 0.14 \\ 0.16 \end{tabular} & \begin{tabular}{@{}c@{}} 194.66 $\pm$ 0.33 \\ 194.72 $\pm$ 0.13 \\ 0.17 \end{tabular} & \begin{tabular}{@{}c@{}} 180.26 $\pm$ 0.34 \\ 180.38 $\pm$ 0.22 \\ 0.29 \end{tabular} & \begin{tabular}{@{}c@{}} 183.02 $\pm$ 0.34 \\ 183.1 $\pm$ 0.16 \\ 0.21 \end{tabular} \\
+     \hline 
+    J501 & \begin{tabular}{@{}c@{}} 167.42 $\pm$ 0.98 \\ 167.24 $\pm$ 0.48 \\ 0.17 \end{tabular} & \begin{tabular}{@{}c@{}} 167.41 $\pm$ 0.98 \\ 166.97 $\pm$ 0.56 \\ 0.39 \end{tabular} & \begin{tabular}{@{}c@{}} 165.18 $\pm$ 0.98 \\ 165.0 $\pm$ 0.48 \\ 0.16 \end{tabular} & \begin{tabular}{@{}c@{}} 165.39 $\pm$ 0.98 \\ 164.96 $\pm$ 0.56 \\ 0.38 \end{tabular} \\
+     \hline 
+    \hline
+    \end{tabular}
+    \caption{Comparison iso-vector (No FVC)}
+\end{table}
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|c|c|c|c|c|}
+    \hline
+    ens & Set 1 ll & Set 1 lc & Set 2 ll & Set 2 lc \\
+    \hline
+    \hline
+    
+    H101 & \begin{tabular}{@{}c@{}} 57.07 $\pm$ 0.13 \\ 57.12 $\pm$ 0.12 \\ 0.25 \end{tabular} & \begin{tabular}{@{}c@{}} 57.49 $\pm$ 0.13 \\ 57.52 $\pm$ 0.11 \\ 0.18 \end{tabular} & \begin{tabular}{@{}c@{}} 49.76 $\pm$ 0.13 \\ 49.72 $\pm$ 0.13 \\ 0.22 \end{tabular} & \begin{tabular}{@{}c@{}} 51.49 $\pm$ 0.13 \\ 51.49 $\pm$ 0.12 \\ 0.02 \end{tabular} \\
+     \hline 
+    B450 & \begin{tabular}{@{}c@{}} 55.43 $\pm$ 0.13 \\ 55.29 $\pm$ 0.15 \\ 0.68 \end{tabular} & \begin{tabular}{@{}c@{}} 55.66 $\pm$ 0.13 \\ 55.53 $\pm$ 0.14 \\ 0.63 \end{tabular} & \begin{tabular}{@{}c@{}} 50.23 $\pm$ 0.13 \\ 50.11 $\pm$ 0.15 \\ 0.59 \end{tabular} & \begin{tabular}{@{}c@{}} 51.28 $\pm$ 0.13 \\ 51.16 $\pm$ 0.14 \\ 0.6 \end{tabular} \\
+     \hline 
+    N202 & \begin{tabular}{@{}c@{}} 55.9 $\pm$ 0.23 \\ 55.78 $\pm$ 0.22 \\ 0.38 \end{tabular} & \begin{tabular}{@{}c@{}} 56.0 $\pm$ 0.23 \\ 55.88 $\pm$ 0.22 \\ 0.37 \end{tabular} & \begin{tabular}{@{}c@{}} 52.64 $\pm$ 0.22 \\ 52.55 $\pm$ 0.22 \\ 0.3 \end{tabular} & \begin{tabular}{@{}c@{}} 53.16 $\pm$ 0.23 \\ 53.05 $\pm$ 0.22 \\ 0.34 \end{tabular} \\
+     \hline 
+    N300 & \begin{tabular}{@{}c@{}} 52.99 $\pm$ 0.2 \\ 53.64 $\pm$ 0.33 \\ 1.68 \end{tabular} & \begin{tabular}{@{}c@{}} 53.02 $\pm$ 0.2 \\ 53.69 $\pm$ 0.32 \\ 1.75 \end{tabular} & \begin{tabular}{@{}c@{}} 51.44 $\pm$ 0.2 \\ 52.09 $\pm$ 0.33 \\ 1.68 \end{tabular} & \begin{tabular}{@{}c@{}} 51.63 $\pm$ 0.2 \\ 52.28 $\pm$ 0.32 \\ 1.7 \end{tabular} \\
+     \hline 
+    H102 & \begin{tabular}{@{}c@{}} 55.02 $\pm$ 0.16 \\ 55.26 $\pm$ 0.13 \\ 1.17 \end{tabular} & \begin{tabular}{@{}c@{}} 55.42 $\pm$ 0.16 \\ 55.65 $\pm$ 0.12 \\ 1.15 \end{tabular} & \begin{tabular}{@{}c@{}} 47.66 $\pm$ 0.16 \\ 47.86 $\pm$ 0.14 \\ 0.93 \end{tabular} & \begin{tabular}{@{}c@{}} 49.42 $\pm$ 0.16 \\ 49.63 $\pm$ 0.13 \\ 1.05 \end{tabular} \\
+     \hline 
+    N101 & \begin{tabular}{@{}c@{}} 53.54 $\pm$ 0.11 \\ 53.48 $\pm$ 0.11 \\ 0.36 \end{tabular} & \begin{tabular}{@{}c@{}} 53.96 $\pm$ 0.11 \\ 53.89 $\pm$ 0.1 \\ 0.44 \end{tabular} & \begin{tabular}{@{}c@{}} 46.16 $\pm$ 0.11 \\ 46.08 $\pm$ 0.11 \\ 0.53 \end{tabular} & \begin{tabular}{@{}c@{}} 47.98 $\pm$ 0.11 \\ 47.9 $\pm$ 0.1 \\ 0.54 \end{tabular} \\
+     \hline 
+    C101 & \begin{tabular}{@{}c@{}} 52.66 $\pm$ 0.11 \\ 52.72 $\pm$ 0.1 \\ 0.44 \end{tabular} & \begin{tabular}{@{}c@{}} 53.06 $\pm$ 0.11 \\ 53.13 $\pm$ 0.09 \\ 0.46 \end{tabular} & \begin{tabular}{@{}c@{}} 45.38 $\pm$ 0.11 \\ 45.4 $\pm$ 0.1 \\ 0.18 \end{tabular} & \begin{tabular}{@{}c@{}} 47.16 $\pm$ 0.11 \\ 47.21 $\pm$ 0.09 \\ 0.35 \end{tabular} \\
+     \hline 
+    N203 & \begin{tabular}{@{}c@{}} 53.28 $\pm$ 0.13 \\ 53.42 $\pm$ 0.14 \\ 0.75 \end{tabular} & \begin{tabular}{@{}c@{}} 53.36 $\pm$ 0.13 \\ 53.52 $\pm$ 0.14 \\ 0.79 \end{tabular} & \begin{tabular}{@{}c@{}} 49.98 $\pm$ 0.13 \\ 50.15 $\pm$ 0.15 \\ 0.82 \end{tabular} & \begin{tabular}{@{}c@{}} 50.52 $\pm$ 0.13 \\ 50.67 $\pm$ 0.15 \\ 0.79 \end{tabular} \\
+     \hline 
+    N200 & \begin{tabular}{@{}c@{}} 51.5 $\pm$ 0.11 \\ 51.6 $\pm$ 0.11 \\ 0.63 \end{tabular} & \begin{tabular}{@{}c@{}} 51.6 $\pm$ 0.1 \\ 51.7 $\pm$ 0.11 \\ 0.7 \end{tabular} & \begin{tabular}{@{}c@{}} 48.24 $\pm$ 0.11 \\ 48.36 $\pm$ 0.12 \\ 0.72 \end{tabular} & \begin{tabular}{@{}c@{}} 48.78 $\pm$ 0.1 \\ 48.89 $\pm$ 0.11 \\ 0.75 \end{tabular} \\
+     \hline 
+    D200 & \begin{tabular}{@{}c@{}} 50.34 $\pm$ 0.1 \\ 50.4 $\pm$ 0.09 \\ 0.45 \end{tabular} & \begin{tabular}{@{}c@{}} 50.44 $\pm$ 0.1 \\ 50.52 $\pm$ 0.08 \\ 0.61 \end{tabular} & \begin{tabular}{@{}c@{}} 47.1 $\pm$ 0.1 \\ 47.18 $\pm$ 0.09 \\ 0.6 \end{tabular} & \begin{tabular}{@{}c@{}} 47.66 $\pm$ 0.09 \\ 47.73 $\pm$ 0.08 \\ 0.65 \end{tabular} \\
+     \hline 
+    E250 & \begin{tabular}{@{}c@{}} 49.65 $\pm$ 0.09 \\ 49.69 $\pm$ 0.08 \\ 0.37 \end{tabular} & \begin{tabular}{@{}c@{}} 49.76 $\pm$ 0.09 \\ 49.82 $\pm$ 0.08 \\ 0.5 \end{tabular} & \begin{tabular}{@{}c@{}} 46.45 $\pm$ 0.09 \\ 46.51 $\pm$ 0.08 \\ 0.51 \end{tabular} & \begin{tabular}{@{}c@{}} 47.01 $\pm$ 0.09 \\ 47.08 $\pm$ 0.08 \\ 0.57 \end{tabular} \\
+     \hline 
+    J303 & \begin{tabular}{@{}c@{}} 49.72 $\pm$ 0.12 \\ 49.77 $\pm$ 0.09 \\ 0.28 \end{tabular} & \begin{tabular}{@{}c@{}} 49.74 $\pm$ 0.12 \\ 49.78 $\pm$ 0.13 \\ 0.17 \end{tabular} & \begin{tabular}{@{}c@{}} 48.18 $\pm$ 0.12 \\ 48.24 $\pm$ 0.1 \\ 0.42 \end{tabular} & \begin{tabular}{@{}c@{}} 48.36 $\pm$ 0.12 \\ 48.4 $\pm$ 0.14 \\ 0.26 \end{tabular} \\
+     \hline 
+    E300 & \begin{tabular}{@{}c@{}} 48.77 $\pm$ 0.08 \\ 48.74 $\pm$ 0.06 \\ 0.34 \end{tabular} & \begin{tabular}{@{}c@{}} 48.8 $\pm$ 0.08 \\ 48.8 $\pm$ 0.09 \\ 0.02 \end{tabular} & \begin{tabular}{@{}c@{}} 47.24 $\pm$ 0.08 \\ 47.23 $\pm$ 0.06 \\ 0.08 \end{tabular} & \begin{tabular}{@{}c@{}} 47.44 $\pm$ 0.08 \\ 47.45 $\pm$ 0.09 \\ 0.09 \end{tabular} \\
+     \hline 
+    J500 & \begin{tabular}{@{}c@{}} 53.45 $\pm$ 0.24 \\ 53.48 $\pm$ 0.33 \\ 0.07 \end{tabular} & \begin{tabular}{@{}c@{}} 53.46 $\pm$ 0.24 \\ 53.49 $\pm$ 0.33 \\ 0.08 \end{tabular} & \begin{tabular}{@{}c@{}} 52.68 $\pm$ 0.24 \\ 52.71 $\pm$ 0.33 \\ 0.08 \end{tabular} & \begin{tabular}{@{}c@{}} 52.77 $\pm$ 0.24 \\ 52.8 $\pm$ 0.33 \\ 0.09 \end{tabular} \\
+     \hline 
+    N451 & \begin{tabular}{@{}c@{}} 52.77 $\pm$ 0.06 \\ 52.73 $\pm$ 0.05 \\ 0.51 \end{tabular} & \begin{tabular}{@{}c@{}} 52.98 $\pm$ 0.06 \\ 52.96 $\pm$ 0.04 \\ 0.22 \end{tabular} & \begin{tabular}{@{}c@{}} 47.48 $\pm$ 0.06 \\ 47.47 $\pm$ 0.06 \\ 0.16 \end{tabular} & \begin{tabular}{@{}c@{}} 48.57 $\pm$ 0.06 \\ 48.55 $\pm$ 0.05 \\ 0.2 \end{tabular} \\
+     \hline 
+    D452 & \begin{tabular}{@{}c@{}} 50.9 $\pm$ 0.1 \\ 50.89 $\pm$ 0.06 \\ 0.1 \end{tabular} & \begin{tabular}{@{}c@{}} 51.12 $\pm$ 0.1 \\ 51.13 $\pm$ 0.06 \\ 0.05 \end{tabular} & \begin{tabular}{@{}c@{}} 45.74 $\pm$ 0.1 \\ 45.76 $\pm$ 0.07 \\ 0.14 \end{tabular} & \begin{tabular}{@{}c@{}} 46.84 $\pm$ 0.1 \\ 46.85 $\pm$ 0.06 \\ 0.13 \end{tabular} \\
+     \hline 
+    \hline
+    \end{tabular}
+    \caption{Comparison iso-scalar (No FVC)}
+\end{table}
+
+\end{document}
