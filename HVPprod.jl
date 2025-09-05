@@ -464,13 +464,13 @@ end # end timer
 
 # using Distributions
 
-scale = ""  # t0  fPi
+scale = "fPi"  # t0  fPi
 
-OVERWRITE = false  # Allows to erase data and overwrite it with new data, use carefully !!
+OVERWRITE = true  # Allows to erase data and overwrite it with new data, use carefully !!
 
-path_bdio_w = path_bdio_dict["local"]
+path_bdio = path_bdio_dict["local"]
 
-# BLIND = value(BDIOread_TMR(path_bdio_w,"A653","NLOb",BLIND=true)[2] / BDIOread_TMR(path_bdio_w,"A653","NLOb",BLIND=false)[2])  #  rand(Uniform(0.5, 2))
+# BLIND = value(BDIOread_TMR(path_bdio,"A653","NLOb",BLIND=true)[2] / BDIOread_TMR(path_bdio,"A653","NLOb",BLIND=false)[2])  #  rand(Uniform(0.5, 2))
 
 @time begin
     for ens in ensInfo
@@ -479,10 +479,10 @@ path_bdio_w = path_bdio_dict["local"]
         println("   - Reading t0...")
 
         if scale == "t0"
-            t0 = BDIOread_t0(path_bdio_w,ens.id)
+            t0 = BDIOread_t0(path_bdio,ens.id)
             factor = hbarc * sqrt(t0)/sqrtt0_ph
         elseif scale == "fPi"
-            fPi = BDIOread_fPS(path_bdio_w,ens.id)["fPi"]
+            fPi = BDIOread_fPS(path_bdio,ens.id)["fPi"]
             factor = fPi_ph/fPi
         else
             error("Scale = $scale cannot be accepted; please choose between 't0',  't0su3', 'fPi' or 'fPiph'")
@@ -503,7 +503,7 @@ path_bdio_w = path_bdio_dict["local"]
         
         println("   - Writing BDIO...")
 
-        pBDIONLOab = create_path(path_bdio_w,["Corr&Kernel&t0",ens.id,"$(ens.id)_BlindTMR$(scale)_NLOab"],OVERWRITE=OVERWRITE)
+        pBDIONLOab = create_path(path_bdio,["Corr&Kernel&t0",ens.id,"$(ens.id)_BlindTMR$(scale)_NLOab"],OVERWRITE=OVERWRITE)
 
         io = IOBuffer()
         write(io, "$(ens.id) TMR NLOa & NLOb Kernels")
@@ -518,7 +518,7 @@ end # end timer
 
 # println("- Writing TXT...")
 
-# open(joinpath(path_bdio_w,"..","BlindVal.txt"), "w") do io
+# open(joinpath(path_bdio,"..","BlindVal.txt"), "w") do io
 #     write(io, string(BLIND))  # Convert to string and write to file
 # end
 

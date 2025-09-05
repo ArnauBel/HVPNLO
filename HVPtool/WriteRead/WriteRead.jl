@@ -12,6 +12,8 @@ using ALPHAio
 
 include("../isovModel.jl")
 
+include("../uwConst.jl")
+
 # needed functions
 
 DictComptoKey = Dict{String,Vector{String}}(

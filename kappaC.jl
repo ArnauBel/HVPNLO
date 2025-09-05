@@ -192,7 +192,7 @@ MDs_SU3_prime = Dict{String, uwreal}()
 for beta in b_values
     MDs_SU3_prime["$beta"] = MD_ph_prime * (sqrtt0_ph / sqrt(t0sym(beta,Bruno=true))) / hbarc
 end
-MDs_SU3_prime
+
 [uwerr(MDs_SU3_prime[key]) for key in keys(MDs_SU3_prime)]
 
 if NOERR_MDs

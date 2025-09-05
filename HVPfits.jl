@@ -82,17 +82,17 @@ DictComptoKey = Dict{String,Vector{String}}(
 
 ##==========================> Fits [LO, NLOa&b, NLOa, NLOb, NLOc] <==========================##
 
-diag = ""  #  LO  NLOa  NLOb  NLOc  NLOa&b
-wind = ""  #  NW  SD  SDsub  ID  LD  ILD
+diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOc  NLOa&b
+wind = "LD"  #  NW  SD  SDsub  ID  LD  ILD
 
 readIMPR_SET = ["1","2"] #  ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
 
-BLIND = false
+BLIND = true
 
-tl_IMPR    = false
 STD_DERIV  = false
-RESC       = true
+tl_IMPR    = false
 VREF       = false
+RESC       = false
 
 path_bdio_r = path_bdio_dict["local"]
 
@@ -142,28 +142,28 @@ end
 
 ##==========================> Data ready to fit
 
-comp = ""  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+comp = "gCCconn"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
-model_var_list = Function[a3,a2phi2,phi2sqr,phi2log]  #  [a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]  [a3,a2phi2,phi2sqr,phi2log]
-# model_var_list = Function[a3,a2y,ysqr,ylog]  #  [a3,a4,a2y,a2z,a3y,ysqr,ylog]  [a3,a2y,ysqr,ylog]
+model_var_list = Function[a3,a2phi2,phi2sqr,phi2log,phi2inv,logphi2]  #  [a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]  [a3,a2phi2,phi2sqr,phi2log]
+# model_var_list = Function[a3,a4,a2y,ysqr,ylog]  #  [a3,a4,a2y,a2z,a3y,ysqr,ylog]  [a3,a2y,ysqr,ylog]
 
 MultFunc = nothing  #  nothing  deltaphi
 
 IMPR_SET = readIMPR_SET  #  readIMPR_SET  ["1"]  ["2"]  ["1","2"]  ["1old","2"]  ["1","1old","2"]
 
-FITCUT = ["None","mass","beta","beta&mass"]  #  ["None","mass","beta","beta&mass"]  ["None","mass","beta"]  ["None","mass"]  ["beta","beta&mass"]
+FITCUT = ["None","mass","beta","beta&mass"]  #  ["None","mass","beta","beta&mass"]
 # FitCut = "beta"  #  None  beta  mass  beta&mass
 
-SimpleBase = false
+SimpleBase = true
 a2RESC     = true
 
 FitINFO    = false
 
 PVAL       = false
 
-WRITE      = false
+WRITE      = true
 OVERWRITE  = false
 
 mdof = 4  # minimum number of d.o.f. allowed
@@ -173,9 +173,9 @@ mykeys = DictComptoKey[comp]  #  [DictComptoKey[comp][1]]
 path_bdio_w = path_bdio_dict["local"]
 
 # Following the LD paper, when it comes to the iso-vector analysis, the 'untrusted' ensembles are: H105, H200, N300,  N302, S400
-ensExcl = ["H105","H200","N300","N302","S400","B450"] # Good for 33 & 88; ?B450 seems quite bad, not sure why
+# ensExcl = ["H105","H200","N300","N302","S400","B450"] # Good for 33 & 88; ?B450 seems quite bad, not sure why
 # ensExcl = ["H105","H200","N300","N302","S400"] # Good for ∆lc(b); the same as 33 but B450 seems to work now?
-# ensExcl = [] # handy for charmed contributions
+ensExcl = [] # handy for charmed contributions
 
 # ensExcl = ["N300","N302","S400","H101"] # handy for CCconn LD ¿?
 # ensExcl = ["N300","N302","S400","J303"] # handy for CCconn SD ¿?
@@ -188,9 +188,9 @@ end
 for FitCut in FITCUT
 
     aDP      = FitCut in ["beta","beta&mass"] ? 5 : 6
-    aDOF     = comp in ["gCCconn"] ? 1 : 3
+    aDOF     = comp in ["gCCconn"] ? 1 : 2
     na_max   = aDP - aDOF
-    nmPi_max = (FitCut in ["mass","beta&mass"] ? 1 : 2)
+    nmPi_max = ((FitCut in ["mass","beta&mass"] || comp == "gCCconn") ? 1 : 2)
     nmK_max  = 1
     # add a limit to "pure" phi2 terms
     if wind in ["LD","ILD"]
@@ -295,9 +295,10 @@ for FitCut in FITCUT
             par[impr_set][key] = Vector{Vector{Vector{Float64}}}()
             fit[impr_set][key] = Vector{FitRes}()
             myFor = FitINFO ? collect(1:length(f_tot_isov)) : ProgressBar(collect(1:length(f_tot_isov)))
-            for i in myFor
+            for (n,i) in enumerate(myFor)
                 myfit, fitresid = fit_routine(f_tot_isov[i], value.(xdata), ydata[impr_set][key], n_par_tot_isov[i], pval=PVAL, info=false, lineprint=FitINFO, fitRes=true)
                 if FitINFO
+                    println("n: $n")
                     println("---------------------------------------------------------------------")
                     println("Model permutative structure")
                     println("  $(label_tot_isov[i])")
@@ -399,11 +400,9 @@ end # end FitCut loop
 
 ##==========================> READING TEST <==========================##
 
-# include("HVPtools/Reader.jl")
-
-diag = "LO"  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = "ID"  # NW  SD  SDsub  ID  LD  ILD
-comp = "g33"  # g33  g88  ∆ls_amu  ∆lc_b  gCCconn  gCCdisc  gC8disc
+diag = "NLOb"  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
+wind = "SDsub"  # NW  SD  SDsub  ID  LD  ILD
+comp = "gCCconn"  # g33  g88  ∆ls_amu  ∆lc_b  gCCconn  gCCdisc  gC8disc
 
 BLIND = false
 
@@ -411,7 +410,7 @@ impr_set = "2"
 
 Q = 5.0  # virtuality for SDsub
 
-model_var_list = [a3,a2y,ysqr,ylog,yinv,logy]
+model_var_list = [a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi4]
 MultFunc = nothing  # nothing  deltaphi
 
 FitCut = "None"  # "None"  "beta"  "mass"  "beta&mass"
@@ -419,11 +418,11 @@ FitCut = "None"  # "None"  "beta"  "mass"  "beta&mass"
 STD_DERIV  = false
 tl_IMPR    = false
 VREF       = false
-RESC       = true
+RESC       = false
 
-SimpleBase = false
+SimpleBase = true
 
-path_bdio = path_bdio_dict["local"]
+path_bdio = path_bdio_dict["clust"]
 
 xData, yData = BDIOread_XYdata(path_bdio,diag,wind,comp,model_var_list,FitCut,impr_set;resc=RESC,SimpleBase=SimpleBase,MultFunc=MultFunc,StdDer=STD_DERIV,tlImpr=tl_IMPR,Vref=VREF,BLIND=BLIND,Q=Q)
 

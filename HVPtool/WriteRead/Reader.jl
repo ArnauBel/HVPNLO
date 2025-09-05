@@ -111,10 +111,11 @@ function BDIOread_FVCens(pBDIO::String,diag::String,wind::String,ensid::String;I
             FVCens  = BDIOread_dim0(p)
         end
     elseif diag == "NLOc"
+        FVCens = Dict()
         DERstr = STD ? "_std" : "" 
         for impr_set in IMPR_SET
             p = joinpath(pBDIO,"HVP&FVC",wind,ensid,"$(ensid)_$(BLINstr)FVC$(diag)_set$(impr_set)$(RESCstr)$(VREFstr)$(DERstr)")
-            FVCens[impr_set] = BDIOread_simple(p)
+            FVCens[impr_set] = BDIOread_dim0(p)
         end
     end
     return FVCens
@@ -301,15 +302,28 @@ BDIOread_fPS(pBDIO::String,ens::EnsInfo) = BDIOread_fPS(pBDIO,ens.id)
 
 function BDIOread_mDs(pBDIO::String)
     p  = joinpath(pBDIO,"mass&dec","mDs_prime")
-    mDs_ph = BDIOread_scalar(p)
+    i = 0
+    mDs_ph = 0.0
+    mDs_SU3 = 0.0
+    fb = BDIO_open(p,"r")
+    while ALPHAdobs_next_p(fb)
+        d = ALPHAdobs_read_parameters(fb)
+        i=i+1
+        if i==1
+            mDs_ph = ALPHAdobs_read_next(fb)
+        elseif i==2
+            ks = collect(d["keys"])
+            mDs_SU3 = ALPHAdobs_read_next(fb, keys=ks)
+        end
+    end
+    BDIO_close!(fb)
+    return mDs_ph, mDs_SU3
 end
 
 function BDIOread_mDs_kappaC(pBDIO::String,ensid::String)
-    p_mDs_ph  = joinpath(pBDIO,"mass&dec","mDs_prime")
+    mDs_ph, mDs_SU3 = BDIOread_mDs(pBDIO)
+
     p_Ds_dict = joinpath(pBDIO,"mass&dec",ensid,"$(ensid)_mDsKappa")
-
-    mDs_ph = BDIOread_scalar(p_mDs_ph)
-
     Ds_dict = Dict()
 
     fb = BDIO_open(p_Ds_dict,"r")
@@ -325,7 +339,7 @@ function BDIOread_mDs_kappaC(pBDIO::String,ensid::String)
         end
     end
     BDIO_close!(fb)
-    return mDs_ph, Ds_dict
+    return mDs_ph, mDs_SU3, Ds_dict
 end
 BDIOread_mDs_kappaC(pBDIO::String,ens::EnsInfo) = BDIOread_mDs_kappaC(pBDIO,ens.id)
 
@@ -342,11 +356,15 @@ end
 
 # ChiPT FVC reader
 
-function JDL2read_FVC_ChPT(pFVCcont::String,diag::String,wind::String)
+function JDL2read_FVC_ChPT(pFVCcont::String,diag::String,wind::String;Q::Float64=5.0)
     p = joinpath(pFVCcont,"$(diag)_ChPT.jld2")
+    fvc = load(p, "ChPT_FVC")
     if wind != "all"
-        fvc = load(p, "ChPT_FVC")
-        return fvc[wind]
+        if wind != "SDsub"
+            return fvc[wind]
+        else
+            return fvc[wind][Q.==Qlist][1]
+        end
     else
         return fvc
     end

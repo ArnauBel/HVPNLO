@@ -73,8 +73,8 @@ FITdata = true
 # Set plot parameters
 
 diag = "NLOb"  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = "ID"  #  NW  SD  SDsub  ID  LD  ILD
-comp = "g33"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+wind = "SDsub"  #  NW  SD  SDsub  ID  LD  ILD
+comp = "gCCconn"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
@@ -82,7 +82,7 @@ BLIND = false
 
 STD_DERIV  = false
 tl_IMPR    = false
-VREF       = true
+VREF       = false
 RESC       = false
 
 path_bdio = path_bdio_dict["local"]
@@ -230,9 +230,8 @@ end
 
 #-- Stop for only plot compilation
 
-SAVE     = true
+SAVE     = false
 OVERSAVE = false
-
 
 # IMPR_SET = readIMPR_SET
 
@@ -284,7 +283,7 @@ if diag != "LO" # we multiply the y axis by a factor 10
 end
 xlim(right=0.065)
 # ylim(top=-60/10)
-ylim(bottom=27/10)
+# ylim(bottom=27/10)
 diag_str = diag == "LO" ? "\\rm{LO}" : (diag == "NLOa&b" ? "\\rm{NLO}_{\\rm{a}\\&\\rm{b}}" : "\\rm{NLO}_{\\rm{$(diag[end])}}")
 comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : "\\mathrm{$(comp[2]),$(comp[3])}"
 Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q\\ GeV)" : ""

@@ -21,8 +21,6 @@ using TimerOutputs
 
 # include("HVPtool/uwConst.jl")
 
-# BDIO path definition (set 'STD_DERIV = true' to use the standard sym. derivative in the impr.)
-
 julia_script_directory = @__DIR__
 
 path_bdio_dict = Dict{String,String}(
@@ -39,7 +37,7 @@ path_coef = joinpath(julia_script_directory, "..", "KernelCoeff")
 # H102, N101, C101, S400, N203, N200, D200, N302
 
 # All considered ensembles are:
-ensList = ["A653","A654","B450","C101","C102","D150","D200","D201","D251","D450","D451","D452","E250","E300","F300","H101","H102","H200","J303","J304","J306","J307","J500","J501","N101","N200","N202","N203","N300","N302","N451","N452","S400"]
+ensList = ["A653","A654","B450","C101","C102","D150","D200","D201","D251","D450","D451","D452","E250","E300","F300","H101","H200","J303","J304","J306","J307","J500","J501","N101","N200","N202","N203","N302","N451","N452","S400"] # "H102","N300"
 
 ensInfo = EnsInfo.(ensList)
 
@@ -58,9 +56,9 @@ ensNOdisc   = ["F300","J306"]
 
 ##==========================> 1D HVP computation [LO, NLOa, NLOb] <==========================##
 
-diag = "LO"  # LO  NLOa  NLOb  NLOa&b
+diag = ""  # LO  NLOa  NLOb  NLOa&b
 
-IMPR_SET = ["1old","2"] # ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
+IMPR_SET = ["1","2"] # ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
 
 STD_DERIV = false
 RESC      = false
@@ -83,7 +81,7 @@ corr33tl_v3s03_ll, corr33tl_v3s03_lc = read_tree_level_v3sig03(path_tl, cons=tru
 corr33tl_ll = uwreal.(corr33tl_ll); corr33tl_lc = uwreal.(corr33tl_lc)
 
 @time begin
-    for ens in ensInfo[end-7:end]
+    for ens in ensInfo
 
         @info("Computing for ensemble $(ens.id)")
         ens.id ∈ ensNOcharm ? @info("  > NO CHARM DATA FOR $(ens.id)") : nothing
@@ -324,22 +322,33 @@ end
 
         @info("Computing for ensemble $(ens.id)")
 
-        println("   - Reading t0...")
-        t0 = BDIOread_t0(path_bdio,ens)
+        sym_points = Int64(HVPobs.Data.get_T(ens.id)/2+1); t = collect(1:sym_points)
+
+        if !RESC
+            println("   - Reading t0...")
+            t0 = BDIOread_t0(path_bdio,ens)
+            aens = sqrtt0_ph / sqrt(t0); tfm = aens.*(t.-1)
+            factor = hbarc * sqrt(t0) / sqrtt0_ph  
+            # if (ens.id ∉ ensNOcharm) || (ens.id ∉ ensNOdisc && ens.kappa_l != ens.kappa_s)
+            #     a_ß = sqrtt0_ph / sqrt(t0sym(ens.beta)); tfm_ß = a_ß.*(t.-1)
+            #     factor_ß = hbarc * sqrt(t0sym(ens.beta)) / sqrtt0_ph
+            # end
+        else
+            println("   - Reading fPi...")
+            fPi = BDIOread_fPS(path_bdio,ens)["fPi"]
+            aens = hbarc * fPi / fPi_ph; tfm = aens.*(t.-1)
+            factor = fPi_ph / fPi  
+            # if (ens.id ∉ ensNOcharm) || (ens.id ∉ ensNOdisc && ens.kappa_l != ens.kappa_s)
+            #     a_ß = hbarc * fPiph(ens.beta) / fPi_ph; tfm_ß = a_ß.*(t.-1)
+            #     factor_ß = fPi_ph / fPiph(ens.beta)
+            # end
+        end
 
         println("   - Reading TMR...")
-        TMR = BDIOread_TMR(path_bdio,ens,diag,beta=false,resc=RESC)
+        TMR = BDIOread_TMR(path_bdio,ens,diag,beta=false,resc=RESC); TMR = TMR[t]
         # if ens.id ∉ ensNOcharm
         #     TMR_beta = BDIOread_TMR(path_bdio,ens,diag,beta=true)
-        #     t0_sym = t0sym(ens.beta)
-        #     factor_ß = hbarc * sqrt(t0_sym)/sqrtt0_ph
         # end
-
-        # define windowed kernel
-        sym_points = Int64(HVPobs.Data.get_T(ens.id)/2+1); t = collect(1:sym_points)
-        aens = sqrtt0_ph / sqrt(t0); tfm = aens.*(t.-1)
-
-        factor = hbarc * sqrt(t0)/sqrtt0_ph  
 
         TMRw = TMR .* Window("SD")(tfm)
 

@@ -39,7 +39,14 @@ pFVC_MLL  = joinpath(julia_script_directory, "..", "HVPData", "FSE_MLL")
 # H102, N101, C101, S400, N203, N200, D200, N302
 
 # All considered ensembles are:
-ensList = ["A653","A654","B450","C101","C102","D150","D200","D201","D251","D450","D451","D452","E250","E300","F300","H101","H200","J303","J304","J306","J307","J500","J501","N101","N200","N202","N203","N302","N451","N452","S400"] # "H102","N300"
+ensList = [
+    "A653","A654","B450","C101","C102",
+    "D150","D200","D201","D251","D450",
+    "D451","D452","E250","E300","F300",
+    "H101","H200","J303","J304","J306",
+    "J307","J500","J501","N101","N200",
+    "N202","N203","N302","N451","N452",
+    "S400"] # "H102","N300"
 
 
 ensInfo = EnsInfo.(ensList)
@@ -50,7 +57,7 @@ ensNOdisc   = ["F300","J306"]
 
 ensSPECdata = ["D200","E250"]  # J303
 
-ensTAILfit  = ["A653","A654","B450"]
+# ensTAILfit  = ["A653","A654","B450"]
 
 wpm = Dict{String, Vector{Float64}}()
 
@@ -70,7 +77,7 @@ wind = ""  # NW  SD  ID  LD  ILD
 IMPR_SET = ["1","2"] # ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
 
 STD_DERIV = false
-RESC      = true
+RESC      = false
 
 OVERWRITE = false  # Allows to erase data and overwrite it with new data, use carefully !!
 
@@ -148,7 +155,7 @@ end
             println("      - Reading corr...")
             corr = BDIOread_corr(path_bdio,ens,impr_set,STD=STD_DERIV)
 
-            if ens.kappa_l == ens.kappa_s || ens.id in ensNOdisc
+            if ens.kappa_l == ens.kappa_s || ens.id ∈ ensNOdisc
                 println("      - SU(3) flavour sym point or no disc. data available")
 
                 light_keys = ["g33_ll","g33_lc"]
@@ -340,13 +347,13 @@ end
                     HVP[key[1:8]*"SU3"*key[8:end]] = amu_SU3
                 end
 
-                println("      - Reading kappaC target...")
+                println("         - Reading kappaC target...")
 
                 # kappaC_tar = BDIOread_KappaC_tar(path_bdio,ens)
-                mDs_ph_prime, Ds_dict = BDIOread_mDs_kappaC(path_bdio,ens)
+                mDs_ph_prime, mDs_beta, Ds_dict = BDIOread_mDs_kappaC(path_bdio,ens)
                 kappaC_tar = Ds_dict["kappaC"]
 
-                println("         - Interpolating charm contribution...")
+                println("         - Interpolating charm contributions...")
 
                 # kappaC_tar = uwreal([kcd_in[ens.id]["kappaC"],kcd_in[ens.id]["kappaC_err"]], "kappaC target")   # extract KappaC from tables
                 kappaC = [kcd_in[ens.id]["kappaC_sim"],kcd_in[ens.id]["kappaC_sim_plus"]]
@@ -424,7 +431,7 @@ end # end timer
 ##==========================> 1D FVC computation [LO NLOa NLOb] <==========================##
 
 diag = ""  # LO  NLOa  NLOb  NLOa&b
-wind = ""  # NW  SD  ID  LD  ILD
+wind = "¡"  # NW  SD  ID  LD  ILD
 
 RESC  = false
 VREF  = false

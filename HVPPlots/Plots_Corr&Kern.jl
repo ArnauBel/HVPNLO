@@ -144,7 +144,10 @@ end
 
 @info("SD-Substracted Kernel plot")
 
-diag = "NLOb"  # [LO]  [NLOa,NLOb]  [LO,NLOa,NLOc]
+diag = ""  # [LO]  [NLOa,NLOb]  [LO,NLOa,NLOc]
+
+SAVE     = false
+OVERSAVE = false
 
 QLIST = Qlist  # Required for wind = SDsub
 
@@ -176,6 +179,10 @@ ylabel(latexstring("\\frac{1}{\\left(m_\\mu t\\right)^3}\\tilde{K}^{(\\rm{$diag_
 legend()
 tight_layout()
 display(gcf())
+if SAVE
+    p = create_path(path_plot,["Other","SDsubKernel_$diag.pdf"],OVERWRITE=OVERSAVE)
+    PyPlot.savefig(p)
+end
 close()
 
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
@@ -183,9 +190,12 @@ close()
 
 @info("Kernel comparison plot")
 
-DIAG = ["NLOa&b"]  # [LO]  [NLOa,NLOb]  [LO,NLOa,NLOc]   ["LO","NLOa","NLOb","NLOa&b"]
+DIAG = ["LO","NLOa","NLOb","NLOa&b"]  # [LO]  [NLOa,NLOb]  [LO,NLOa,NLOc]   ["LO","NLOa","NLOb","NLOa&b"]
 
 NORMtoLO = false
+
+SAVE     = true
+OVERSAVE = false
 
 t = collect(range(0.0,6.0,1000))
 TMRDict = Dict{String,Vector{Float64}}(
@@ -195,8 +205,8 @@ TMRDict = Dict{String,Vector{Float64}}(
     "NLOa&b" => hbarc^2 .* (Tildef4a((massmu/hbarc) .* t, path_coef) .+ Tildef4b((massmu/hbarc) .* t, path_coef))
 )
 
-color = ["orange","lightblue","darkblue","blue"]
-linestyle = ["-","-","-","--"]
+color = ["orange","lightblue","blue","darkblue"]
+linestyle = [":","--","--","-"]
 
 fig = figure(figsize=(8,6))
 if !NORMtoLO
@@ -218,11 +228,15 @@ if !NORMtoLO
 else
     ylabel(latexstring("\\tilde{f}^{(i)}(m_\\mu t)/\\tilde{f}^{(\\rm{LO})}(m_\\mu t)"))
 end
-# xlim(0.0,5.0)
-# ylim(bottom=-20)
+xlim(0.0,5.0)
+ylim(-100,100)
 legend()
 tight_layout()
 display(gcf())
+if SAVE
+    p = create_path(path_plot,["Other","Kernel_$(DIAG).pdf"],OVERWRITE=OVERSAVE)
+    PyPlot.savefig(p)
+end
 close()
 
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##

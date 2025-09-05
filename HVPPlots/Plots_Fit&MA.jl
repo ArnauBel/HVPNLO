@@ -58,28 +58,28 @@ rcParams["axes.titlesize"] = 18
 
 # Set plot parameters
 
-wind = "ID"  #  NW  SD  SDsub  ID  LD  ILD
-diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-comp = "g33"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+diag = "NLOb"  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
+wind = "SDsub"  #  NW  SD  SDsub  ID  LD  ILD
+comp = "gCCconn"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
-# model_var_list = Function[a3,a2phi2,phi2sqr,phi2log,phi2inv,logphi2]
-model_var_list = Function[a3,a2y,ysqr,ylog,yinv,logy]
+model_var_list = Function[a3,a4,a2phi2,phi2sqr,phi2log,phi4]
+# model_var_list = Function[a3,a2y,ysqr,ylog,yinv,logy]
 MultFunc = nothing  # nothing  deltaphi
 
 readIMPR_SET = ["1","2"] # ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
 
 BLIND = false
 
-FitCUT = "None"  # "None"  "beta"  "mass"  "beta&mass"
+FitCUT = "beta&mass"  # "None"  "beta"  "mass"  "beta&mass"
 
 STD_DERIV  = false
 tl_IMPR    = false
-VREF       = true
-RESC       = true
+VREF       = false
+RESC       = false
 
-SimpleBase = false
+SimpleBase = true
 
 path_bdio = path_bdio_dict["local"]
 
@@ -173,7 +173,7 @@ PROJpoints = true
 
 println("   - Computing 'x' and 'y' plot points \n       Projected points ..... $PROJpoints")
 
-noRESCALarg = !RESCAL ? collect(1:model_len) : collect(1:2:model_len)
+noRESCALarg = !a2RESCAL ? collect(1:model_len) : collect(1:2:model_len)
 
 xarr = [Float64.(range(1e-5, 1.5*maximum(value.(xydata["xdata"][:,1])), length=npoints)) fill(value(phi2_ph), npoints) fill(value(phi4_ph), npoints)]; yarr = Dict()
 if PROJpoints
@@ -196,7 +196,7 @@ for (j,impr_set) in enumerate(IMPR_SET)
 
         valid_indices = filter(i -> label_tot_isov[i][1] ∉ ["baseResc","baseSimpResc"], eachindex(info[impr_set]["weight"][key]))
         w = info[impr_set]["weight"][key][valid_indices]
-        w = RESCAL ? w./sum(w) : w
+        w = a2RESCAL ? w./sum(w) : w
 
         warg[impr_set][key] = sortperm(info[impr_set]["weight"][key][valid_indices]; rev=true) .|> i -> valid_indices[i]
         warg[impr_set][key] = warg[impr_set][key][info[impr_set]["weight"][key][warg[impr_set][key]] .> info[impr_set]["weight"][key][warg[impr_set][key][1]]/10000]
@@ -250,7 +250,8 @@ fig = figure(figsize=(10,7.5))
 for (j,impr_set) in enumerate(IMPR_SET)
     for (k,key) in enumerate(mykeys)
         for i=1:length(yarr[impr_set][key])
-            fill_between(xarr[:,1], value.(yarr[impr_set][key][i]).-err.(yarr[impr_set][key][i]), value.(yarr[impr_set][key][i]).+err.(yarr[impr_set][key][i]), alpha=(!RESCAL ? 1 : 2)*info[impr_set]["weight"][key][warg[impr_set][key][i]]*wPen, color=color_dict[impr_set]["$(key[end-1:end])"])
+            # fill_between(xarr[:,1], value.(yarr[impr_set][key][i]).-err.(yarr[impr_set][key][i]), value.(yarr[impr_set][key][i]).+err.(yarr[impr_set][key][i]), alpha=(!a2RESCAL ? 1 : 2)*info[impr_set]["weight"][key][warg[impr_set][key][i]]*wPen, color=color_dict[impr_set]["$(key[end-1:end])"])
+            PyPlot.plot(xarr[:,1], value.(yarr[impr_set][key][i]), alpha=(!a2RESCAL ? 1 : 2)*info[impr_set]["weight"][key][warg[impr_set][key][i]]*wPen, color=color_dict[impr_set]["$(key[end-1:end])"])
         end
         if PROJpoints
             errorbar(value.(xproj[:,1]), value.(yproj[impr_set][key]), err.(yproj[impr_set][key]), fmt=fmt_list[key_len*(j-1)+k], capsize=2, color=color_dict[impr_set]["$(key[end-1:end])"], mfc="none")
@@ -298,7 +299,7 @@ close()
 
 @info("Chiral projection plot")
 
-SAVE     = true
+SAVE     = false
 OVERSAVE = false
 
 ARGPLOT = 1  #  set to 1 for best plot
@@ -333,6 +334,8 @@ for (i,impr_set) in enumerate(IMPR_SET)
         println("- chi2/dof     = $(fit.chi2/fit.dof)")
         println("- chi2/chi2exp = $(fit.chi2/fit.chi2exp)")
 
+        fig = figure(figsize=(8,6))
+
         for (k,b) in  enumerate(sort(unique(getfield.(ensInfo, :beta))))
             push!(label,L"$\beta=$"*"$b")
             n_ = findall(x->x.beta == b, ensInfo)
@@ -349,7 +352,7 @@ for (i,impr_set) in enumerate(IMPR_SET)
         push!(label,"ph.")
         PyPlot.plot(xxx_ph[:,2],value.(yyy_ph),ls="--",color="gray",lw=0.5)
         fill_between(xxx_ph[:,2], value.(yyy_ph)-err.(yyy_ph), value.(yyy_ph)+err.(yyy_ph), alpha=0.2, color="gray")
-        PyPlot.title("Chiral and continuum extrapolation (Discr. $(key[end-1:end]); impr. set $impr_set)")
+        # PyPlot.title("Chiral and continuum extrapolation (Discr. $(key[end-1:end]); impr. set $impr_set)")
         axvline(x=value(Pi_ph), ls="dashed", color="black", lw=0.2, alpha=0.7) 
         if !RESC
             xlabel(L"$\Phi_2$")

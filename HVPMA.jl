@@ -64,19 +64,19 @@ DictComptoKey = Dict{String,Vector{String}}(
 
 ##==========================> Model Average <==========================##
 
-diag = ""  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = ""  #  NW  SD  SDsub  ID  LD  ILD
-comp = ""  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+diag = "NLOa"  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
+wind = "LD"  #  NW  SD  SDsub  ID  LD  ILD
+comp = "g33"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
-model_var_list = Function[a3,a2phi2,phi2sqr,phi2log]
+model_var_list = Function[a3,a2phi2,phi2sqr,phi2log,phi4]
 # model_var_list = Function[a3,a2y,ysqr,ylog]
 MultFunc = nothing  #  nothing  deltaphi
 
 IMPR_SET = ["1","2"]  #  ["1"]  ["1old"]  ["2"]  ["1","2"]  ["1old","2"]  ["1","1old","2"]
 
-FITCUT = ["None","mass","beta","beta&mass"]  #  ["None","mass","beta","beta&mass"]  ["None","mass","beta"]  ["None","mass"]  ["beta","beta&mass"]
+FITCUT = ["None","mass","beta","beta&mass"]  #  ["None","mass","beta","beta&mass"]
 
 BLIND = false
 
@@ -85,9 +85,9 @@ tl_IMPR    = false
 VREF       = false
 RESC       = false
 
-SimpleBase = false
+SimpleBase = true
 
-WRITE      = false
+WRITE      = true
 OVERWRITE  = false
 
 path_bdio_r = path_bdio_dict["local"]
@@ -204,9 +204,9 @@ end # end FitCut loop
 
 ##==========================> ENSEMBLE CUT COMBINATION <==========================##
 
-diag = "NLOb"  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = "ID"  #  NW  SD  SDsub  ID  LD  ILD
-comp = "g88"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
+wind = "LD"  #  NW  SD  SDsub  ID  LD  ILD
+comp = "gCCconn"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
@@ -224,7 +224,7 @@ VREF       = false
 RESC       = false
 
 WRITE      = true
-OVERWRITE  = true
+OVERWRITE  = false
 
 path_bdio_r = path_bdio_dict["local"]
 path_bdio_w = path_bdio_dict["local"]
@@ -232,22 +232,24 @@ path_bdio_w = path_bdio_dict["local"]
 
 # SD:
 # FITCUTtoMODEL = Dict{String,Any}(
-#     "None"      => [false,Function[a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]],
-#     "beta"      => [false,Function[a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]],
-#     "mass"      => [false,Function[a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]],
-#     "beta&mass" => [false,Function[a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]],
+#     "None"      => [false,Function[a3,a4,a2phi2,phi2sqr,phi2log]],
+#     "beta"      => [false,Function[a3,a4,a2phi2,phi2sqr,phi2log]],
+#     "mass"      => [false,Function[a3,a4,a2phi2,phi2sqr,phi2log]],
+#     "beta&mass" => [false,Function[a3,a4,a2phi2,phi2sqr,phi2log]],
 # )
 # FITCUTtoMODEL = Dict{String,Any}(
 #     "None"      => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
 #     "beta"      => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
 # )
 # FITCUTtoMODEL = Dict{String,Any}(
-#     "None"      => [true,Function[a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi4]],
-#     "beta"      => [true,Function[a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi4]],
+#     "None"      => [true,Function[a3,a4,a2phi2,phi2sqr,phi2log,phi4]],
+#     "beta"      => [true,Function[a3,a2phi2,phi2sqr,phi2log,phi4]],
+#     "mass"      => [true,Function[a3,a4,a2phi2,phi2sqr,phi2log,phi4]],
+#     "beta&mass" => [true,Function[a3,a2phi2,phi2sqr,phi2log,phi4]],
 # )
 # FITCUTtoMODEL = Dict{String,Any}(
-#     "None"      => [false,Function[a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]],
-#     "beta"      => [false,Function[a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]],
+#     "None"      => [false,Function[a3,a4,a2phi2,phi2sqr,phi2log]],
+#     "beta"      => [false,Function[a3,a4,a2phi2,phi2sqr,phi2log]],
 # )
 
 # ID:
@@ -263,12 +265,12 @@ path_bdio_w = path_bdio_dict["local"]
 #     "mass"      => [false,Function[a3,a2y,ysqr,ylog,yinv,logy]],
 #     "beta&mass" => [false,Function[a3,a2y,ysqr,ylog,yinv,logy]],
 # )
-FITCUTtoMODEL = Dict{String,Any}(
-    "None"      => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
-    "beta"      => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
-    "mass"      => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
-    "beta&mass" => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
-)
+# FITCUTtoMODEL = Dict{String,Any}(
+#     "None"      => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
+#     "beta"      => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
+#     "mass"      => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
+#     "beta&mass" => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
+# )
 # FITCUTtoMODEL = Dict{String,Any}(
 #     "None"      => [false,Function[a3,a2y,ysqr,ylog]],
 #     "beta"      => [false,Function[a3,a2y,ysqr,ylog]],
@@ -296,15 +298,17 @@ FITCUTtoMODEL = Dict{String,Any}(
 #     "beta&mass" => [false,Function[a2y,ysqr,ylog,yinv,logy]],
 # )
 # FITCUTtoMODEL = Dict{String,Any}(
-#     "None"      => [false,Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]],
-#     "beta"      => [false,Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]],
-#     "mass"      => [false,Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]],
-#     "beta&mass" => [false,Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]],
+#     "None"      => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
+#     "beta"      => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
+#     "mass"      => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
+#     "beta&mass" => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
 # )
-# FITCUTtoMODEL = Dict{String,Any}(
-#     "None"      => [true,Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi4]],
-#     "beta"      => [true,Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi4]],
-# )
+FITCUTtoMODEL = Dict{String,Any}(
+    "None"      => [true,Function[a3,a2phi2,phi2sqr,phi2log,phi4]],
+    "beta"      => [true,Function[a3,a2phi2,phi2sqr,phi2log,phi4]],
+    "mass"      => [true,Function[a3,a2phi2,phi2sqr,phi2log,phi4]],
+    "beta&mass" => [true,Function[a3,a2phi2,phi2sqr,phi2log,phi4]],
+)
 
 
 if wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]
@@ -536,7 +540,7 @@ uwerr(res); 10 .* [value(res),err(res),syst]
 
 diag = "NLOa&b"  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
 wind = "ID"  # NW  SD  SDsub  ID  LD  ILD
-comp = "g88"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+comp = "gCCconn"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
@@ -551,7 +555,7 @@ path_bdio_r = path_bdio_dict["local"]
 
 AMU, INFO = BDIOread_MAtot(path_bdio_r,diag,wind,comp,resc=RESC,StdDer=STD_DERIV,tlImpr=tl_IMPR,Vref=VREF,BLIND=BLIND,Q=Q)
 
-uwerr(AMU); [AMU,INFO["syst"]]
+uwerr(AMU); 4/9 .* [AMU.mean,AMU.err,INFO["syst"]]
 
 # get_t0err([AMU],sqrtt0_ph_Regensburg)[1]
 
@@ -578,28 +582,29 @@ INFO_set["syst"]
 
 # include("HVPtools/Reader.jl")
 
-diag = "NLOa"  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = "ID"  # NW  SD  ID  LD  ILD
-comp = "g33"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+diag = "NLOb"  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
+wind = "SDsub"  # NW  SD  SDsuub  ID  LD  ILD
+comp = "gCCconn"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
-impr_set = "1"
+impr_set = "2"
 
 Q = 5.0  # virtuality for SDsub
 
 BLIND = false
 
-# model_var_list = [a3,a2phi2,phi2sqr,phi2log,phi2inv,logphi2]
-model_var_list = [a3,a2y,ysqr,ylog,yinv,logy]
+model_var_list = [a3,a4,a2phi2,phi2sqr,phi2log,phi4]
+# model_var_list = [a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi4]
+# model_var_list = [a3,a2y,ysqr,ylog,yinv,logy]
 MultFunc = nothing  #  nothing  deltaphi
 
 FitCut = "None"  # "None"  "beta"  "mass"  "beta&mass"
 
 STD_DERIV  = false
 tl_IMPR    = false
-VREF       = true
-RESC       = true
+VREF       = false
+RESC       = false
 
-SimpleBase = false
+SimpleBase = true
 
 path_bdio = path_bdio_dict["local"]
 

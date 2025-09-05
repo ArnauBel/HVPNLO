@@ -36,15 +36,15 @@ function apply_syst_FVC(fvc::Dict,diag::String,wind::String,ensid::String;factor
     if diag != "NLOc"
         for key in fvckeys
             if typeof(FVC[key]) == uwreal
-                FVC[key] = fvc[key] + uwreal([0.0,factor*value(FVC[key])],"FVC syst.  [$ensid-$diag,$wind,$key]")
+                FVC[key] = fvc[key] + uwreal([0.0,factor*FVC[key].mean],"FVC syst.  [$ensid-$diag,$wind,$key]")
             elseif typeof(FVC[key]) == Vector{uwreal}
-                FVC[key] = fvc[key] .+ [uwreal([0.0,factor*value(FVC[key][i])],"FVC syst. $systname [$ensid-$diag,$wind,$key]") for i=1:length(FVC[key])]
+                FVC[key] = fvc[key] .+ [uwreal([0.0,factor*FVC[key][i].mean],"FVC syst. $systname [$ensid-$diag,$wind,$key]") for i=1:length(FVC[key])]
             end
         end
     else
         for impr_set = IMPR_SET
             for key in fvckeys
-                FVC[impr_set][key] = fvc[impr_set][key][end] + uwreal([0.0,factor*value(fvc[impr_set][key])],"FVC syst.  [$ensid-$diag,$wind,$key]")
+                FVC[impr_set][key] = fvc[impr_set][key][end] + uwreal([0.0,factor*fvc[impr_set][key].mean],"FVC syst.  [$ensid-$diag,$wind,$key]")
             end
         end
     end
@@ -57,15 +57,15 @@ function apply_syst_FVC!(FVC::Dict,diag::String,wind::String,ensid::String;facto
     if diag != "NLOc"
         for key in fvckeys
             if typeof(FVC[key]) == uwreal
-                FVC[key] += uwreal([0.0,factor*value(FVC[key])],"FVC syst.  [$ensid-$diag,$wind,$key]")
+                FVC[key] += uwreal([0.0,factor*FVC[key].mean],"FVC syst.  [$ensid-$diag,$wind,$key]")
             elseif typeof(FVC[key]) == Vector{uwreal}
-                FVC[key] .+= [uwreal([0.0,factor*value(FVC[key][i])],"FVC syst. [$ensid-$diag,$wind,$key]") for i=1:length(FVC[key])]
+                FVC[key] .+= [uwreal([0.0,factor*FVC[key][i].mean],"FVC syst. [$ensid-$diag,$wind,$key]") for i=1:length(FVC[key])]
             end
         end
     else
         for impr_set = IMPR_SET
             for key in fvckeys
-                FVC[impr_set][key] += uwreal([0.0,factor*value(FVC[impr_set][key][i])],"FVC syst.  [$ensid-$diag,$wind,$key]")
+                FVC[impr_set][key] += uwreal([0.0,factor*fvc[impr_set][key].mean],"FVC syst.  [$ensid-$diag,$wind,$key]")
             end
         end
     end
@@ -81,7 +81,7 @@ function HVP_VolCorrect(HVP::Dict,FVC::Dict,diag::String;IMPR_SET::Vector{String
         "∆ls_amu_ll" in hvpkeys ? push!(COMP,"∆ls_amu") : nothing
         "∆lc_b_ll" in hvpkeys ? push!(COMP,"∆lc_b") : nothing
     else
-        COMP = ["3333","8888","3388","33CC","88CC"]
+        COMP = ["g3333","g8888","g3388","g33CC","g88CC"]
     end
 
     amu_ens = deepcopy(HVP)
@@ -115,7 +115,7 @@ function HVP_VolCorrect!(HVP::Dict,FVC::Dict,diag::String;IMPR_SET::Vector{Strin
         "∆ls_amu_ll" in hvpkeys ? push!(COMP,"∆ls_amu") : nothing
         "∆lc_b_ll" in hvpkeys ? push!(COMP,"∆lc_b") : nothing
     else
-        COMP = ["3333","8888","3388","33CC","88CC"]
+        COMP = ["g3333","g8888","g3388","g33CC","g88CC"]
     end
 
     for impr_set in IMPR_SET
