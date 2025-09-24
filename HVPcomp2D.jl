@@ -48,7 +48,8 @@ ensList = [
     "N202","N203","N302","N451","N452",
     "S400"
     ] # "H102","N300"
-# ensList = ["E250","E300","F300","J303","J304","J306","J307","J500","J501"]
+ensList = ["E250","E300","F300","J303","J304","J306","J307","J500","J501"]
+# E250 & D200 have spectroscopy data !!
 
 ensInfo = EnsInfo.(ensList)
 
@@ -88,7 +89,7 @@ path_bdio = path_bdio_dict["local"]
 STD_DERIV ? @info("SRANDART DERIVATIVE is being employed in the IMPROVEMENT") : nothing
 
 @time begin
-    for ens in [ensInfo[28]]
+    for ens in [ensInfo[1]]
 
         @info("Computing HVP for ensemble $(ens.id)")
         ens.id ∈ ensNOcharm ? @info("  > NO CHARM DATA FOR $(ens.id)") : nothing

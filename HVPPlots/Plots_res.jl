@@ -72,17 +72,17 @@ FITdata = true
 
 # Set plot parameters
 
-diag = "NLOb"  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = "SDsub"  #  NW  SD  SDsub  ID  LD  ILD
-comp = "gCCconn"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
+wind = "LD"  #  NW  SD  SDsub  ID  LD  ILD
+comp = "g33"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
-BLIND = false
+BLIND = true
 
 STD_DERIV  = false
-tl_IMPR    = false
-VREF       = false
+tl_IMPR    = true
+VREF       = true
 RESC       = false
 
 path_bdio = path_bdio_dict["local"]
@@ -284,9 +284,9 @@ end
 xlim(right=0.065)
 # ylim(top=-60/10)
 # ylim(bottom=27/10)
-diag_str = diag == "LO" ? "\\rm{LO}" : (diag == "NLOa&b" ? "\\rm{NLO}_{\\rm{a}\\&\\rm{b}}" : "\\rm{NLO}_{\\rm{$(diag[end])}}")
+diag_str = diag == "LO" ? "\\rm{LO}" : (diag == "NLOa&b" ? "\\rm{NLOa\\&b}" : "\\rm{NLO$(diag[end])}")
 comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : "\\mathrm{$(comp[2]),$(comp[3])}"
-Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q\\ GeV)" : ""
+Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q\\ \\rm{GeV})" : ""
 fact_str = diag == "LO" ? "\\times10^{10}" : "\\times10^{11}"
 if wind == "NW"
     ylabel(latexstring("a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]$Q_str$fact_str"))
@@ -301,7 +301,8 @@ for impr_set in IMPR_SET
         push!(handles,Line2D([], [], color=color_dict[impr_set]["$(key[end-1:end])"], linestyle="-", label="discr. $(key[end-1:end]); set $impr_set"))
     end
 end
-legend(handles=handles, loc="lower center")
+ylim(top=-1.0)
+legend(handles=handles, loc="upper center")
 tight_layout()
 display(gcf())
 if SAVE

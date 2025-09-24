@@ -127,33 +127,33 @@ function BDIOread_general(path::String; merge::Bool=true, extra::Bool=false)
     end
     extra ? (return mydict, xtra) : (return mydict)
 end
-function BDIOread_general_2first(path::String; merge::Bool=true, extra::Bool=false)
-    fb = BDIO_open(path,"r")
-    mydict = Dict(); xtra = 0.0
-    mydictvec = Vector{Dict}()
-    i = 0
-    while ALPHAdobs_next_p(fb) && i < 2
-        d = ALPHAdobs_read_parameters(fb)
-        sz = tuple(d["size"]...)
-        ks = collect(d["keys"])
-        xtra = d["extra"]
-        push!(mydictvec,ALPHAdobs_read_next(fb, size=sz, keys=ks))
-        i+=1
-    end
-    BDIO_close!(fb)
-    if merge
-        if length(mydictvec)>1
-            for dict in mydictvec
-                merge!(mydict, dict)
-            end
-        else
-            mydict = mydictvec[1]
-        end
-    else
-        mydict = mydictvec
-    end
-    extra ? (return mydict, xtra) : (return mydict)
-end
+# function BDIOread_general_2first(path::String; merge::Bool=true, extra::Bool=false)
+#     fb = BDIO_open(path,"r")
+#     mydict = Dict(); xtra = 0.0
+#     mydictvec = Vector{Dict}()
+#     i = 0
+#     while ALPHAdobs_next_p(fb) && i < 2
+#         d = ALPHAdobs_read_parameters(fb)
+#         sz = tuple(d["size"]...)
+#         ks = collect(d["keys"])
+#         xtra = d["extra"]
+#         push!(mydictvec,ALPHAdobs_read_next(fb, size=sz, keys=ks))
+#         i+=1
+#     end
+#     BDIO_close!(fb)
+#     if merge
+#         if length(mydictvec)>1
+#             for dict in mydictvec
+#                 merge!(mydict, dict)
+#             end
+#         else
+#             mydict = mydictvec[1]
+#         end
+#     else
+#         mydict = mydictvec
+#     end
+#     extra ? (return mydict, xtra) : (return mydict)
+# end
 
 function BDIOread_scalar(path::String; extra::Bool=false)
     fb = BDIO_open(path,"r")

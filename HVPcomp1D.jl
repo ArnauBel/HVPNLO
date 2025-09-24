@@ -431,7 +431,7 @@ end # end timer
 ##==========================> 1D FVC computation [LO NLOa NLOb] <==========================##
 
 diag = ""  # LO  NLOa  NLOb  NLOa&b
-wind = "¡"  # NW  SD  ID  LD  ILD
+wind = ""  # NW  SD  ID  LD  ILD
 
 RESC  = false
 VREF  = false
@@ -563,13 +563,13 @@ end # end timer
 
 ##==========================> READING TEST <==========================##
 
-diag     = "NLOa"  #  "LO"  "NLOa"  "NLOb"  "NLOc"
+diag     = "NLOa&b"  #  "LO"  "NLOa"  "NLOb"  "NLOc"
 wind     = "ID"  #  "NW"  "SD"  "ID"  "LD"  "ILD"
-ensid    = "D450"
-impr_set = "1"
+ensid    = "H101"
+impr_set = "2"
 
 STD   = false
-VREF  = false
+VREF  = true
 RESC  = false
 
 BLIND = false

@@ -400,11 +400,11 @@ end # end FitCut loop
 
 ##==========================> READING TEST <==========================##
 
-diag = "NLOb"  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = "SDsub"  # NW  SD  SDsub  ID  LD  ILD
-comp = "gCCconn"  # g33  g88  ∆ls_amu  ∆lc_b  gCCconn  gCCdisc  gC8disc
+diag = "NLOa&b"  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
+wind = "LD"  # NW  SD  SDsub  ID  LD  ILD
+comp = "g33"  # g33  g88  ∆ls_amu  ∆lc_b  gCCconn  gCCdisc  gC8disc
 
-BLIND = false
+BLIND = true
 
 impr_set = "2"
 

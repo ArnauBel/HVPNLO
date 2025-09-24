@@ -533,9 +533,9 @@ end # end timer
 
 ##==========================> READING TEST <==========================##
 
-diag     = ""
-ensid    = "J307"
-impr_set = "1"
+diag     = "NLOa&b"
+ensid    = "H101"
+impr_set = "2"
 
 STD_DERIV = false
 VREF      = false
