@@ -46,15 +46,15 @@ charge_factor = Dict(
 ##==========================> INDIVIDUAL RESULTS <==========================##
 
 
-diag = "NLOa"  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = "LD"  # NW  SD  SDsub  ID  LD  ILD
+diag = "NLOa&b"  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
+wind = "ID"  # NW  SD  SDsub  ID  LD  ILD
 comp = "g33"  # g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 IMPR = "all"  # "all"  "1"  "1old"  "2"
 
 Q = 5.0  # virtuality for SDsub
 
-BLIND = true
+BLIND = false
 
 STD_DERIV  = false
 tl_IMPR    = false
@@ -88,8 +88,12 @@ end
 scale_ph = !RESC ? sqrtt0_ph_Regensburg :  fPi_ph_PDGFLAG
 SCALEerr = get_t0err([AMU],scale_ph,resc=RESC)[1]
 
-if VREF && !BLIND
-    FVC_ChPT = 1.5*JDL2read_FVC_ChPT(path_FVCcont,diag,wind,Q=Q)
+# if VREF && !BLIND
+#     FVC_ChPT = 1.5*JDL2read_FVC_ChPT(path_FVCcont,diag,wind,Q=Q)
+#     AMU += FVC_ChPT
+# end
+if VREF
+    FVC_ChPT = JDL2read_FVC_ChPT(path_FVCcont,diag,wind,Q=Q)
     AMU += FVC_ChPT
 end
 uwerr(AMU)

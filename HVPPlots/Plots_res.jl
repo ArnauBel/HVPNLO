@@ -73,15 +73,15 @@ FITdata = true
 # Set plot parameters
 
 diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = "LD"  #  NW  SD  SDsub  ID  LD  ILD
+wind = "ID"  #  NW  SD  SDsub  ID  LD  ILD
 comp = "g33"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
-BLIND = true
+BLIND = false
 
 STD_DERIV  = false
-tl_IMPR    = true
+tl_IMPR    = false
 VREF       = true
 RESC       = false
 
@@ -281,7 +281,9 @@ if diag != "LO" # we multiply the y axis by a factor 10
     ax = gca()
     ax.yaxis.set_major_formatter(PyPlot.matplotlib.ticker.FuncFormatter(formatter))
 end
-xlim(right=0.065)
+# xlim(right=0.065)
+# ylim(top=-32/10)
+# ylim(top=-40/10)
 # ylim(top=-60/10)
 # ylim(bottom=27/10)
 diag_str = diag == "LO" ? "\\rm{LO}" : (diag == "NLOa&b" ? "\\rm{NLOa\\&b}" : "\\rm{NLO$(diag[end])}")
@@ -301,13 +303,12 @@ for impr_set in IMPR_SET
         push!(handles,Line2D([], [], color=color_dict[impr_set]["$(key[end-1:end])"], linestyle="-", label="discr. $(key[end-1:end]); set $impr_set"))
     end
 end
-ylim(top=-1.0)
 legend(handles=handles, loc="upper center")
 tight_layout()
 display(gcf())
 if SAVE
     RESCstr = !RESC ? "" : "_resc"
-    p = create_path(path_plot,[diag,wind,"ContExtr.$(RESCstr).pdf"],OVERWRITE=OVERSAVE)
+    p = create_path(path_plot,[diag,wind,"$(diag)_$(comp)_ContExtr.$(RESCstr).pdf"],OVERWRITE=OVERSAVE)
     PyPlot.savefig(p)
 end
 close()
@@ -320,6 +321,9 @@ close()
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
 
 @info("Ensemble cut convergence plot")
+
+SAVE     = true
+OVERSAVE = false
 
 sqrtt0_ph_TAR = nothing  # 0.1443  sqrtt0_ph_CLS  nothing
 
@@ -427,9 +431,9 @@ V_str    = VREF ? "(V_{\\rm{ref}})" : ""
 Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q\\ GeV)" : ""
 fact_str = diag == "LO" ? "\\times10^{10}" : "\\times10^{11}"
 if wind == "NW"
-    ax1.set_xlabel(latexstring("a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]$Q_str$fact_str"))
+    ax1.set_xlabel(latexstring("$(factor[comp*"s"])a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]$Q_str$fact_str"))
 else
-    ax1.set_xlabel(latexstring("\\left(a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]$(V_str)\\right)^{\\rm{$wind}}$Q_str$fact_str"))
+    ax1.set_xlabel(latexstring("$(factor[comp*"s"])\\left(a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]$(V_str)\\right)^{\\rm{$wind}}$Q_str$fact_str"))
 end
 ax1.set_yticks(yTicksPos, yTicks, rotation = 30, fontsize=15)
 labels = ax1.get_yticklabels()
@@ -459,6 +463,278 @@ for i in eachindex(groupLabel)
 end
 
 tight_layout()
+display(gcf())
+if SAVE
+    RESCstr = !RESC ? "" : "_resc"
+    p = create_path(path_plot,[diag,wind,"$(diag)_$(comp)_StabilityPlot$(RESCstr).pdf"],OVERWRITE=OVERSAVE)
+    PyPlot.savefig(p)
+end
+close()
+
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+
+
+@info("Model average plot")
+
+nBEST = 50
+
+Norm2DOF = false
+
+color_dict = Dict(
+    ""     => Dict("cc" => "cyan"),
+    "1"    => Dict("ll" => "blue",  "lc" => "red"  ),
+    "2"    => Dict("ll" => "green", "lc" => "brown")
+); color_dict["1old"] = color_dict["1"]
+
+alpha_dict = Dict(
+    "None" => 0.8,
+    "beta" => 0.6,
+    "mass" => 0.4,
+    "beta&mass" => 0.2
+)
+
+
+myFactor = factor[comp] # * (diag == "LO" ? 1 : 10)
+
+argBEST = sortperm(INFO["weight"],rev=true)[1:nBEST]
+sort!(argBEST)
+
+PVAL = sum(isnothing.(vcat([vcat([vcat([getfield.(fitres[impr_set][FitCut][key],:pval) for FitCut in FITCUT]...) for key in mykeys]...) for impr_set in IMPR_SET]...))) < 1
+
+w_ = Dict(); p_ = Dict(); r_ = Dict(); c_ = Dict(); m_ = Dict(); x_ = Dict();
+i = 1
+for impr_set in IMPR_SET
+    w_[impr_set] = Dict(); p_[impr_set] = Dict(); r_[impr_set] = Dict(); c_[impr_set] = Dict(); m_[impr_set] = Dict(); x_[impr_set] = Dict();
+    for key in mykeys
+        w_[impr_set][key] = Dict(); p_[impr_set][key] = Dict(); r_[impr_set][key] = Dict(); c_[impr_set][key] = Dict(); m_[impr_set][key] = Dict(); x_[impr_set][key] = Dict();
+        for FitCut in FITCUT
+            j = i + length(res[impr_set][FitCut][key]) - 1
+
+            arg  = argBEST[(i .<= argBEST) .& (argBEST .<= j)]
+            arg_ = arg .- (i - 1)
+
+            x_[impr_set][key][FitCut] = i:j
+            w_[impr_set][key][FitCut] = INFO["weight"][arg]
+            p_[impr_set][key][FitCut] = getfield.(fitres[impr_set][FitCut][key],:pval)[arg_]
+            r_[impr_set][key][FitCut] = res[impr_set][FitCut][key][arg_]
+            c_[impr_set][key][FitCut] = !Norm2DOF ? (getfield.(fitres[impr_set][FitCut][key],:chi2)./getfield.(fitres[impr_set][FitCut][key],:chi2exp))[arg_] : (getfield.(fitres[impr_set][FitCut][key],:chi2)./getfield.(fitres[impr_set][FitCut][key],:dof))[arg_]
+            m_[impr_set][key][FitCut] = modelinfo[FitCut]["label_tot_isov"][arg_]
+            
+            i = j + 1
+        end
+    end
+end
+
+v = myFactor*RES.mean
+e = myFactor*RES.err; esyst = myFactor*sqrt(RES.err^2+INFO["syst"]^2)
+
+fig = figure(figsize=(15,10))
+
+subplots_adjust(hspace=0.1)
+subplot(411)
+ax1 = gca()
+x = 1:nBEST
+
+PyPlot.title("$nBEST best fits")
+fill_between(x, (v-e) * 1e-10, (v+e) * 1e-10, color="limegreen", alpha=0.2)
+fill_between(x, (v-esyst) * 1e-10, (v+esyst) * 1e-10, color="limegreen", alpha=0.2)
+
+i = 1
+for impr_set in IMPR_SET
+    for key in mykeys
+        for FitCut in FITCUT
+            r = myFactor .* r_[impr_set][key][FitCut] * 1e-10; uwerr.(r)
+            j = i + length(r) - 1
+            errorbar(collect(i:j), value.(r), err.(r), fmt="o", mfc="none", color=color_dict[impr_set]["$(key[end-1:end])"], alpha=alpha_dict[FitCut], ms=10, capsize=2)
+            i = j + 1
+        end
+    end
+end
+PyPlot.xticks([], [])
+# ax1.yaxis.offsetText.set_visible(false)   # hide automatic offset
+# ax1.ticklabel_format(axis="y", style="sci", scilimits=(0,0))  # force scientific
+# ax1.yaxis.get_offset_text().set_text(L"\times10^{-11}")
+# ax1.yaxis.offsetText.set_visible(true)
+# setp(ax1.get_xticklabels(),visible=false) # Disable x tick labels
+diag_str = diag == "LO" ? "\\rm{LO}" : (diag == "NLOa&b" ? "\\rm{NLO}_{\\rm{a}\\&\\rm{b}}" : "\\rm{NLO}_{\\rm{$(diag[end])}}")
+comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : "\\mathrm{$(comp[2]),$(comp[3])}"
+Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q)" : ""
+# fact_str = diag == "LO" ? "\\times10^{10}" : "\\times10^{11}"
+if wind == "NW"
+    ylabel(latexstring("a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]$Q_str"))
+else
+    ylabel(latexstring("\\left(a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]\\right)^{\\rm{$wind}}$Q_str"))
+end
+# ylim([v-6*e,v+6*e])
+
+subplot(412)
+ax2=gca()
+
+i = 1
+for impr_set in IMPR_SET
+    for key in mykeys
+        for FitCut in FITCUT
+            w = w_[impr_set][key][FitCut]
+            j = i + length(w) - 1
+            PyPlot.bar(collect(i:j), w, color=color_dict[impr_set]["$(key[end-1:end])"], alpha=alpha_dict[FitCut])
+            i = j + 1
+        end
+    end
+end
+PyPlot.xticks([], [])
+# setp(ax2.get_xticklabels(),visible=false) # Disable x tick labels
+ylabel(latexstring("\\rm{w}\\ [\\rm{TIC}]"))
+
+subplot(413)
+ax3=gca()
+
+i = 1
+for impr_set in IMPR_SET
+    for key in mykeys
+        for FitCut in FITCUT
+            c = c_[impr_set][key][FitCut]
+            j = i + length(c) - 1
+            PyPlot.bar(collect(i:j), c, color=color_dict[impr_set]["$(key[end-1:end])"], alpha=alpha_dict[FitCut])
+            i = j + 1
+        end
+    end
+end
+PyPlot.xticks([], [])
+# setp(ax3.get_xticklabels(),visible=false) # Disable x tick labels
+!Norm2DOF ? ylabel(L"$\chi^2/\chi^2_{\mathrm{exp}}$") : ylabel(L"$\chi^2/\mathrm{d.o.f.}$")
+# ylim([0.0,2.0])
+
+if PVAL
+    subplot(414)
+
+    i = 1
+    for impr_set in IMPR_SET
+        for key in mykeys
+            for FitCut in FITCUT
+                p = p_[impr_set][key][FitCut]
+                j = i + length(p) - 1
+                PyPlot.bar(collect(i:j), p, color=color_dict[impr_set]["$(key[end-1:end])"], alpha=alpha_dict[FitCut])
+                i = j + 1
+            end
+        end
+    end
+    ylabel(L"$\rm{p-values}$")
+    ylim([0.0,1.0])
+end
+
+m = vcat([ vcat([vcat([m_[impr_set][key][FitCut] for FitCut in FITCUT]...) for key in mykeys]...) for impr_set in IMPR_SET]...)
+m_str = []; x_str = []
+i = 0
+while i < length(m)
+    i += 1
+    str = m[i][2]
+    for s in m[i][3:end]
+        str *= ","*s
+    end
+    push!(m_str, str)
+    if m[i][2:end] == m[i+1][2:end]
+        push!(x_str, i+0.5)
+        i += 1
+    else
+        push!(x_str, i)
+    end
+end
+PyPlot.xticks(x_str, m_str, rotation=70, ha="right")
+tight_layout()
+display(fig)
+close("all")
+
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+
+@info("Hit plot")
+
+SAVE     = true
+OVERSAVE = false
+
+path_bdio = path_bdio_dict["local"]
+
+
+color_dict = Dict(
+    ""     => Dict("cc" => "gold"),
+    "1"    => Dict("ll" => "blue",  "lc" => "red"  ),
+    "2"    => Dict("ll" => "green", "lc" => "brown")
+); color_dict["1old"] = color_dict["1"]
+fmt_dict = Dict(
+    "None"      => "o",
+    "mass"      => "s",
+    "beta"      => "d",
+    "beta&mass" => "x"
+)
+
+myFactor = factor[comp] * (diag == "LO" ? 1 : 10)
+
+RESTOT = []; WEIGHT = []
+for (i,impr_set) in enumerate(IMPR_SET)
+    for (k,key) in enumerate(mykeys)
+        for FitCut in FITCUT
+            restot = myFactor .* MA[impr_set][FitCut]["res_tot"][key]; uwerr.(restot)
+            weight = info[impr_set][FitCut]["weight"][key]
+
+            # to make the plot go faster we only plot the best 1000 prediction
+            # bitvec = weight .> maximum(weight)/100000
+
+            # restot = restot[bitvec]; weight = weight[bitvec]
+
+            color = color_dict[impr_set][key[end-1:end]]
+            fmt   = fmt_dict[FitCut]
+
+            errorbar(value.(restot), xerr=err.(restot), weight, 0.0, fmt=fmt, color=color, ms=5, capsize=1, alpha=0.2, label="impr. set $impr_set; discr. $(key[end-1:end])")
+            push!(RESTOT,restot)
+            push!(WEIGHT,weight)
+        end
+    end
+end
+
+x_lim = xlim()
+y_lim = ylim()
+
+RESTOT = vcat(RESTOT...)
+WEIGHT = vcat(WEIGHT...)
+
+valerr = [value.(RESTOT) err.(RESTOT)]
+dist = [Normal(val,err) for (val,err) in [collect(row) for row in eachrow(valerr)]]
+
+x = collect(range(x_lim[1],x_lim[2],length=1000))
+Npdf = pdf.(dist, Ref(x))
+
+y = zeros(length(x))
+for (i,npdf) in enumerate(Npdf)
+    y += npdf.*WEIGHT[i]
+end
+y *= maximum(WEIGHT)/maximum(y)
+
+fill_between(x, y, 0.0, color="orange", alpha=0.2)
+PyPlot.plot(x, y, color="orange", ls="--", alpha=0.5)
+
+fill_betweenx([0.0,1.0], myFactor*(RES.mean-RES.err), myFactor*(RES.mean+RES.err), color="gray", alpha=0.2)
+fill_betweenx([0.0,1.0], myFactor*(RES.mean-sqrt(RES.err^2+INFO["syst"]^2)), myFactor*(RES.mean+sqrt(RES.err^2+INFO["syst"]^2)), color="gray", alpha=0.2)
+
+diag_str = diag == "LO" ? "\\rm{LO}" : (diag == "NLOa&b" ? "\\rm{NLO}_{\\rm{a}\\&\\rm{b}}" : "\\rm{NLO}_{\\rm{$(diag[end])}}")
+comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : "\\mathrm{$(comp[2]),$(comp[3])}"
+V_str    = VREF ? "(V_{\\rm{ref}})" : ""
+Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q\\ GeV)" : ""
+fact_str = diag == "LO" ? "\\times10^{10}" : "\\times10^{11}"
+if wind == "NW"
+    xlabel(latexstring("$(factor[comp*"s"])a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]$Q_str$fact_str"))
+else
+    xlabel(latexstring("$(factor[comp*"s"])\\left(a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]$(V_str)\\right)^{\\rm{$wind}}$Q_str$fact_str"))
+end
+# legend()
+ylim(y_lim)
+ylabel(latexstring("w"))
 display(gcf())
 close()
 
@@ -614,27 +890,46 @@ close()
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
 
-diag = "NLOb"
-wind = "LD"
-comp = "g88"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+RES = 
+[
+    [-35.59972,0.09114,0.06019,0.04326],
+    # [-35.58123,0.09663,0.05868,0.04395],
+    [-35.65578,0.09550,0.07430,0.04395],
+    # [-35.63630,0.10050,0.07760,0.04326],
+    [-35.67449,0.09408,0.06824,0.04098],
+    # [-35.65642,0.09909,0.07088,0.04156],
+    [-35.74577,0.09734,0.08227,0.03355],
+    # [-35.72728,0.09734,0.08227,0.03355],
+    [-35.68598,0.10070,0.05890,0.04098],
+    [-35.69013,0.13117,0.15917,0.00968],
+]
+myRES = [-35.65578,0.09550,0.07430,0.04395]
 
-Q = 5.0  # virtuality for SDsub
-
-RES = [[0.95685,0.03573,0.04939],[0.98004,0.03395,0.03629],[1.00879,0.03095,0.02714]]
+# AleRES = [-35.73,0.16]
+AleRES = [-35.697,0.16]
 
 
 for (y,res) in enumerate(RES)
-    mult = diag == "LO" ? 1 : 10
-    errorbar(mult*res[1], xerr=mult*res[2], y, 0.0, fmt="o", mfc="none", color="black", ms=10, capsize=2, alpha=0.4)
-    errorbar(mult*res[1], xerr=mult*sqrt(res[2]^2+res[3]^2), y, 0.0, fmt="o", mfc="none", color="black", ms=10, capsize=2, alpha=0.4)
+    fmt = "o"
+    mfc = "none"
+    if y == 2
+        color = "blue"
+    elseif y == 6
+        color = "gray"
+        fmt = "s"
+    else
+        color = "black"
+    end
+    errorbar(res[1], xerr=res[2], y, 0.0, fmt=fmt, mfc=mfc, color=color, ms=10, capsize=2, alpha=0.4)
+    errorbar(res[1], xerr=sqrt(res[2]^2+res[3]^2), y, 0.0, fmt=fmt, mfc=mfc, color=color, ms=10, capsize=2, alpha=0.4)
+    errorbar(res[1], xerr=sqrt(res[2]^2+res[3]^2+res[4]^2), y, 0.0, fmt=fmt, mfc=mfc, color=color, ms=10, capsize=2, alpha=0.4)
 end
-diag_str = diag == "NLOa&b" ? "\\rm{NLOa}\\&\\rm{b}" : diag
-comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : "\\mathrm{$(comp[2:3])}"
-wind_str = wind != "NW" ? "_{\\mathrm{$wind}}" : ""
-Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q\\ GeV)" : ""
-ExpTimes = diag == "LO" ? 10 : 11
-xlabel(latexstring("$(factor[comp*"s"])a_{\\mu}^{\\rm{hvp}}[\\rm{$(diag_str)}^{$comp_str}$wind_str]$Q_str\\times10^{$ExpTimes}"))
-PyPlot.yticks([1,2,3], ["a3 in [None,Mass]","a3 in [None]","No a3"], rotation = 30, fontsize=15)
+errorbar(AleRES[1], xerr=AleRES[2], 7, 0.0, fmt="x", color="purple", ms=10, capsize=2, alpha=0.4)
+fill_betweenx([0,8], myRES[1]-sqrt(myRES[2]^2+myRES[3]^2+myRES[4]^2), myRES[1]+sqrt(myRES[2]^2+myRES[3]^2+myRES[4]^2), color="gray", alpha=0.4)
+xlabel(latexstring("\\left(a_{\\mu}^{3,3}[\\rm{NLOa\\&b}]\\right)^{\\rm{ID}}\\times10^{11}"))
+# PyPlot.yticks([1,2,3,4,5,6,7,8,9,10], ["Vref, t0","Vinf, t0","(w. a2phi4) Vref, t0","(w. a2phi4) Vinf, t0","(w. D201) Vref, t0","(w. D201) Vinf, t0","(w. D201, a2phi4) Vref, t0","(w. D201, a2phi4) Vinf, t0","Vref, fpi","(w. a2phi4) Alessandro C."], rotation = 30, fontsize=15)
+PyPlot.yticks([1,2,3,4,5,6,7], ["(no a2phi4) t0","t0","(w. D201, no a2phi4) t0","(w. D201) t0","(no b=3.34) t0","(no a2phi4) fpi","(no b=3.34) Alessandro C."], rotation = 30, fontsize=15)
+# ylim()
 tight_layout()
 display(gcf())
 close()

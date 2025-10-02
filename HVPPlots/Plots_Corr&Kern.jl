@@ -69,7 +69,7 @@ rcParams["axes.titlesize"] = 18
 
 # Set plot parameters
 
-ens = "E250"; ens = EnsInfo(ens)
+ens = "H101"; ens = EnsInfo(ens)
 
 readIMPR_SET = ["1","2"] # ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
 
@@ -471,9 +471,9 @@ close()
 
 @info("Gunaris-Sakurai vs Hansen-Patella FSE")
 
-diag = "LO"
+diag = "NLOa&b"
 
-VREF = false
+VREF = true
 
 Tover2 = Int64(HVPobs.Data.get_T(ens.id)/2+1)
 t = collect(1:Tover2)
@@ -541,7 +541,7 @@ end
 axvline(aens * (t_gs[1]-1), color="gray", ls="--", alpha=0.6)
 # xlabel(latexstring("t/a"))
 xlabel(latexstring("t\\ [\\rm{fm}]"))
-ylabel(latexstring("\\Delta G(t)^{(3,3)}\\tilde{K}^{(\\rm{$diag})}(m_\\mu t)"))
+# ylabel(latexstring("\\Delta G(t)^{(3,3)}\\tilde{K}^{(\\rm{$diag})}(m_\\mu t)"))
 # yscale("log")
 # xlim(right=50)
 xlim(right=3.3) # fm
@@ -1017,5 +1017,50 @@ legend()
 xlabel("t/a")
 ylabel(L"\tilde{K}(\hat{t})\times G(t)")
 
+display(gcf())
+close()
+
+##
+
+impr_set = "1"
+
+path_bdio = path_bdio_dict["local"]
+
+TMRD200 = BDIOread_TMR(path_bdio,"D200",resc=false,"1D",beta=false)
+TMRD201 = BDIOread_TMR(path_bdio,"D201",resc=false,"1D",beta=false)
+
+TMRD450 = BDIOread_TMR(path_bdio,"D450",resc=false,"1D",beta=false)
+TMRD451 = BDIOread_TMR(path_bdio,"D451",resc=false,"1D",beta=false)
+
+corrC101 = BDIOread_corr(path_bdio,"C101",impr_set,STD=false)
+corrC102 = BDIOread_corr(path_bdio,"C102",impr_set,STD=false)
+
+corrD200 = BDIOread_corr(path_bdio,"D200",impr_set,STD=false)
+corrD201 = BDIOread_corr(path_bdio,"D201",impr_set,STD=false)
+
+corrD450 = BDIOread_corr(path_bdio,"D450",impr_set,STD=false)
+corrD451 = BDIOread_corr(path_bdio,"D451",impr_set,STD=false)
+
+corrJ303 = BDIOread_corr(path_bdio,"J303",impr_set,STD=false)
+corrJ304 = BDIOread_corr(path_bdio,"J304",impr_set,STD=false)
+
+##
+
+RC1 = (corrC101["g33_ll"] ./ corrC102["g33_ll"])[1:49]; uwerr.(RC1)
+RD2 = (corrD200["g33_ll"] ./ corrD201["g33_ll"])[1:65]; uwerr.(RD2)
+RD4 = (corrD450["g33_ll"] ./ corrD451["g33_ll"])[1:65]; uwerr.(RD4)
+RJ3 = (corrJ303["g33_ll"] ./ corrJ304["g33_ll"])[1:97]; uwerr.(RJ3)
+
+# errorbar(collect(1:length(RC1)), value.(RC1), err.(RC1), fmt="d", mfc="none", color="red" , label = "C101/C102")
+errorbar(collect(1:length(RD2)).*asym(3.55).mean, value.(RD2), err.(RD2), fmt="o", mfc="none", color="black", label = "D200/D201")
+errorbar(collect(1:length(RD4)).*asym(3.46).mean, value.(RD4), err.(RD4), fmt="o", mfc="none", color="blue" , label = "D450/D451")
+# errorbar(collect(1:length(RJ3)), value.(RJ3), err.(RJ3), fmt="s", mfc="none", color="green", label = "J303/J304")
+PyPlot.plot([1,length(RD2)], [1.0,1.0], ls="--", color="gray", alpha=0.5)
+ylabel(L"G(t)/G^{m_s^{\rm{ph}}}(t)")
+# xlabel(L"t/a")
+xlabel(L"t/\rm{fm}")
+xlim(0,3.0)
+ylim(0.9,1.1)
+legend()
 display(gcf())
 close()

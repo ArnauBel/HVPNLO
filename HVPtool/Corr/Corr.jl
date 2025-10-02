@@ -4,7 +4,7 @@ using HVPobs
 ##-- corr functions
 
 @doc raw"""
-    corr33(path_data::String, ens::EnsInfo; path_rw::Union{Nothing,String}=nothing, L::Int64=1, frw_bcwd::Bool=true, impr::Bool=true, cons::Bool=true, std::Bool=false)
+    corr33(path_data::String, ens::EnsInfo; path_rw::Union{Nothing,String}=nothing, L::Int64=1, frw_bcwd::Bool=true, impr::Bool=true, cons::Bool=true, std::Bool=false, lma::Bool=true)
 
 This function return the G33 correlator given path_data and the EnsInfo data type of the corresponding ensemble.  
 
@@ -17,27 +17,28 @@ Optional flags:
     - impr_set : either "1" or "2", to select set1 or set2 of improvement coefficients accordingly.  
     - cons     : if true, the function returns both the local-local and the local-conserved G88 correlators, else only the local-local is returned.  
     - std      : if true, standard symmetric derivatives are used for the vector-tensor correlator. If false, improved derivatives are used. The latter are thought to improve the short distance cutoff effects.
+    -lma       : if true, allows for LMA data to be used
 
 Examples:
 ```@example
 g33_ll, g33_lc = corr33(path, ensinfo, path_rw=path_rw, frw_bcwd=true, impr=true, cons=true, std=false) 
 ```
 """
-function corr33(path_data::String, ens::EnsInfo; path_rw::Union{Nothing,String}=nothing, L::Int64=1, frw_bcwd::Bool=true, impr::Bool=true, impr_set::String="1", cons::Bool=true, std::Bool=false)
+function corr33(path_data::String, ens::EnsInfo; path_rw::Union{Nothing,String}=nothing, L::Int64=1, frw_bcwd::Bool=true, impr::Bool=true, impr_set::String="1", cons::Bool=true, std::Bool=false, lma::Bool=true)
     
     Gamma_l = ["V1V1", "V2V2", "V3V3", "V1T10", "V2T20", "V3T30"]
     Gamma_c = ["V1V1c", "V2V2c", "V3V3c", "V1cT10", "V2cT20", "V3cT30"]
 
-    v1v1 = get_corr(path_data, ens, "light", Gamma_l[1], path_rw=path_rw, frw_bcwd=false, L=L)
-    v2v2 = get_corr(path_data, ens, "light", Gamma_l[2], path_rw=path_rw, frw_bcwd=false, L=L)
-    v3v3 = get_corr(path_data, ens, "light", Gamma_l[3], path_rw=path_rw, frw_bcwd=false, L=L)
+    v1v1 = get_corr(path_data, ens, "light", Gamma_l[1], path_rw=path_rw, frw_bcwd=false, L=L, lma=lma)
+    v2v2 = get_corr(path_data, ens, "light", Gamma_l[2], path_rw=path_rw, frw_bcwd=false, L=L, lma=lma)
+    v3v3 = get_corr(path_data, ens, "light", Gamma_l[3], path_rw=path_rw, frw_bcwd=false, L=L, lma=lma)
 
     vvobs = -(v1v1.obs .+ v2v2.obs .+ v3v3.obs)/3.
 
     if impr
-        v1t10 = get_corr(path_data, ens, "light", Gamma_l[4], path_rw=path_rw, frw_bcwd=false, L=L)
-        v2t20 = get_corr(path_data, ens, "light", Gamma_l[5], path_rw=path_rw, frw_bcwd=false, L=L)
-        v3t30 = get_corr(path_data, ens, "light", Gamma_l[6], path_rw=path_rw, frw_bcwd=false, L=L)
+        v1t10 = get_corr(path_data, ens, "light", Gamma_l[4], path_rw=path_rw, frw_bcwd=false, L=L, lma=lma)
+        v2t20 = get_corr(path_data, ens, "light", Gamma_l[5], path_rw=path_rw, frw_bcwd=false, L=L, lma=lma)
+        v3t30 = get_corr(path_data, ens, "light", Gamma_l[6], path_rw=path_rw, frw_bcwd=false, L=L, lma=lma)
 
         vtobs = -(v1t10.obs .+ v2t20.obs .+ v3t30.obs)/3.
 
@@ -57,16 +58,16 @@ function corr33(path_data::String, ens::EnsInfo; path_rw::Union{Nothing,String}=
     end
 
     if cons
-        v1v1_c = get_corr(path_data, ens, "light", Gamma_c[1], path_rw=path_rw, frw_bcwd=false, L=L)
-        v2v2_c = get_corr(path_data, ens, "light", Gamma_c[2], path_rw=path_rw, frw_bcwd=false, L=L)
-        v3v3_c = get_corr(path_data, ens, "light", Gamma_c[3], path_rw=path_rw, frw_bcwd=false, L=L)
+        v1v1_c = get_corr(path_data, ens, "light", Gamma_c[1], path_rw=path_rw, frw_bcwd=false, L=L, lma=lma)
+        v2v2_c = get_corr(path_data, ens, "light", Gamma_c[2], path_rw=path_rw, frw_bcwd=false, L=L, lma=lma)
+        v3v3_c = get_corr(path_data, ens, "light", Gamma_c[3], path_rw=path_rw, frw_bcwd=false, L=L, lma=lma)
 
         vvobs_c = -(v1v1_c.obs .+ v2v2_c.obs .+ v3v3_c.obs)/3.
 
         if impr
-            v1t10_c = get_corr(path_data, ens, "light", Gamma_c[4], path_rw=path_rw, frw_bcwd=false, L=L)
-            v2t20_c = get_corr(path_data, ens, "light", Gamma_c[5], path_rw=path_rw, frw_bcwd=false, L=L)    
-            v3t30_c = get_corr(path_data, ens, "light", Gamma_c[6], path_rw=path_rw, frw_bcwd=false, L=L)
+            v1t10_c = get_corr(path_data, ens, "light", Gamma_c[4], path_rw=path_rw, frw_bcwd=false, L=L, lma=lma)
+            v2t20_c = get_corr(path_data, ens, "light", Gamma_c[5], path_rw=path_rw, frw_bcwd=false, L=L, lma=lma)    
+            v3t30_c = get_corr(path_data, ens, "light", Gamma_c[6], path_rw=path_rw, frw_bcwd=false, L=L, lma=lma)
 
             vtobs_c = -(v1t10_c.obs .+ v2t20_c.obs .+ v3t30_c.obs)/3.
 

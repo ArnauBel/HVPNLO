@@ -83,11 +83,11 @@ DictComptoKey = Dict{String,Vector{String}}(
 ##==========================> Fits [LO, NLOa&b, NLOa, NLOb, NLOc] <==========================##
 
 diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOc  NLOa&b
-wind = "LD"  #  NW  SD  SDsub  ID  LD  ILD
+wind = "ID"  #  NW  SD  SDsub  ID  LD  ILD
 
 readIMPR_SET = ["1","2"] #  ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
 
-BLIND = true
+BLIND = false
 
 STD_DERIV  = false
 tl_IMPR    = false
@@ -142,12 +142,12 @@ end
 
 ##==========================> Data ready to fit
 
-comp = "gCCconn"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+comp = "g88"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
-model_var_list = Function[a3,a2phi2,phi2sqr,phi2log,phi2inv,logphi2]  #  [a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]  [a3,a2phi2,phi2sqr,phi2log]
-# model_var_list = Function[a3,a4,a2y,ysqr,ylog]  #  [a3,a4,a2y,a2z,a3y,ysqr,ylog]  [a3,a2y,ysqr,ylog]
+model_var_list = Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]  #  [a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]  [a3,a2phi2,phi2sqr,phi2log]
+# model_var_list = Function[a3,a2y,ysqr,ylog,yinv,logy]  #  [a3,a4,a2y,a2z,a3y,ysqr,ylog]  [a3,a2y,ysqr,ylog]
 
 MultFunc = nothing  #  nothing  deltaphi
 
@@ -156,7 +156,7 @@ IMPR_SET = readIMPR_SET  #  readIMPR_SET  ["1"]  ["2"]  ["1","2"]  ["1old","2"]
 FITCUT = ["None","mass","beta","beta&mass"]  #  ["None","mass","beta","beta&mass"]
 # FitCut = "beta"  #  None  beta  mass  beta&mass
 
-SimpleBase = true
+SimpleBase = false
 a2RESC     = true
 
 FitINFO    = false
@@ -174,15 +174,16 @@ path_bdio_w = path_bdio_dict["local"]
 
 # Following the LD paper, when it comes to the iso-vector analysis, the 'untrusted' ensembles are: H105, H200, N300,  N302, S400
 # ensExcl = ["H105","H200","N300","N302","S400","B450"] # Good for 33 & 88; ?B450 seems quite bad, not sure why
+ensExcl = ["H105","H200","N300","N302","S400","B450","D201"] # Good for 33 & 88; ?B450 seems quite bad, not sure why
 # ensExcl = ["H105","H200","N300","N302","S400"] # Good for ∆lc(b); the same as 33 but B450 seems to work now?
-ensExcl = [] # handy for charmed contributions
+# ensExcl = [] # handy for charmed contributions
 
 # ensExcl = ["N300","N302","S400","H101"] # handy for CCconn LD ¿?
 # ensExcl = ["N300","N302","S400","J303"] # handy for CCconn SD ¿?
 # ensExcl = ["S400","A654"] # handy for CCconn SD ¿?
 
 if comp != "g33" && VREF
-    @error("Cannot project to Vref for chosen iso-spin")
+    error("Cannot project to Vref for chosen iso-spin")
 end
 
 for FitCut in FITCUT

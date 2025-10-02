@@ -71,17 +71,17 @@ wpm = Dict{String, Vector{Float64}}()
 
 ##==========================> 1D HVP computation (+ BM) [LO, NLOa, NLOb] <==========================##
 
-diag = ""  # LO  NLOa  NLOb  NLOa&b
-wind = ""  # NW  SD  ID  LD  ILD
+diag = "NLOa&b"  # LO  NLOa  NLOb  NLOa&b
+wind = "LD"  # NW  SD  ID  LD  ILD
 
 IMPR_SET = ["1","2"] # ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
 
 STD_DERIV = false
 RESC      = false
 
-OVERWRITE = false  # Allows to erase data and overwrite it with new data, use carefully !!
+OVERWRITE = true  # Allows to erase data and overwrite it with new data, use carefully !!
 
-BLIND = false
+BLIND = true
 
 path_bdio = path_bdio_dict["local"]
 
@@ -565,7 +565,7 @@ end # end timer
 
 diag     = "NLOa&b"  #  "LO"  "NLOa"  "NLOb"  "NLOc"
 wind     = "ID"  #  "NW"  "SD"  "ID"  "LD"  "ILD"
-ensid    = "H101"
+ensid    = "C101"
 impr_set = "2"
 
 STD   = false
@@ -576,6 +576,7 @@ BLIND = false
 
 path_bdio = path_bdio_dict["local"]
 
+# ensid = "D200"; HVP, info = BDIOread_HVPens(path_bdio,diag,wind,ensid,impr_set,info=true,resc=RESC,STD=STD,BLIND=BLIND); println("$(ensid) -> $(print_uwreal(HVP["g33_ll"]*10))")
 HVP, info = BDIOread_HVPens(path_bdio,diag,wind,ensid,impr_set,info=true,resc=RESC,STD=STD,BLIND=BLIND)
 
 FVC = BDIOread_FVCens(path_bdio,diag,wind,ensid,Vref=VREF,resc=RESC,BLIND=BLIND)
@@ -606,45 +607,29 @@ println("- amu(c) = $charm")
 
 ##
 
-diag = ""  # LO  NLOa  NLOb  NLOa&b
-wind = ""  # NW  SD  ID  LD  ILD
+diag     = "NLOa&b"  #  "LO"  "NLOa"  "NLOb"  "NLOc"
+wind     = "ID"  #  "NW"  "SD"  "ID"  "LD"  "ILD"
+impr_set = "2"
 
-IMPR_SET = ["1","2"] # ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
-
-STD_DERIV = false
-
-OVERWRITE = false  # Allows to erase data and overwrite it with new data, use carefully !!
+STD   = false
+VREF  = true
+RESC  = false
 
 BLIND = false
 
 path_bdio = path_bdio_dict["local"]
+for ens in EnsInfo.(["C101","C102","D450","D451","D200","D201"])
+    HVP = BDIOread_HVPens(path_bdio,diag,wind,ens.id,impr_set,info=false,resc=RESC,STD=STD,BLIND=BLIND)
+    FVC = BDIOread_FVCens(path_bdio,diag,wind,ens.id,Vref=VREF,resc=RESC,BLIND=BLIND)
 
-for ens in ensInfo
-
-    HVP, info = BDIOread_HVPens(path_bdio,diag,wind,ensid,impr_set,info=true,BLIND=BLIND)
-
-    DERstr = STD_DERIV ? "_std" : "" 
-    BLstr  = BLIND ? "Blind" : ""
-    pBDIO  = create_path(path_bdio,["HVP&FVC",wind,ens.id,"$(ens.id)_$(BLstr)HVP$(diag)_set$(impr_set)$(DERstr)"],OVERWRITE=true)
-    pjdl2  = create_path(path_bdio,["HVP&FVC",wind,ens.id,"$(ens.id)_$(BLstr)HVP$(diag)_info_set$(impr_set)$(DERstr).jld2"],OVERWRITE=true)
-
-    if BM
-        HVPinfo = Dict{String,Dict}(
-            "HVPsyst" => HVPsyst,
-            "plateau/Reconstr" => PlatRec,
-        )
-    else
-        HVPinfo = Dict{String,Dict}(
-            "HVPsyst" => HVPsyst,
-        )            
-    end
-
-    io = IOBuffer()
-    write(io, "$(ens.id) HVP")
-    fb = ALPHAdobs_create(pBDIO, io)
-
-    extra = Dict{String, Any}("ens" => ens.id, "impr_set" => impr_set, "diag" => diag, "wind" => wind, "HVPinfo" => HVPinfo)
-    ALPHAdobs_write(fb, HVP, extra=extra)
-
-    ALPHAdobs_close(fb)
+    println("$(ens.id) -> $(print_uwreal((HVP["g33_ll"]+FVC["FVCg33"])*10))")
 end
+
+##
+ens = EnsInfo("D451")
+HVP = BDIOread_HVPens(path_bdio,diag,wind,ens.id,impr_set,info=false,resc=RESC,STD=STD,BLIND=BLIND)
+FVC = BDIOread_FVCens(path_bdio,diag,wind,ens.id,Vref=VREF,resc=RESC,BLIND=BLIND)
+
+a2 = (HVP["g33_ll"]+FVC["FVCg33"])*10
+
+print_uwreal(abs(a1-a2))

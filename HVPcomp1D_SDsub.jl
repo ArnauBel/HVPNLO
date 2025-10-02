@@ -56,14 +56,14 @@ ensNOdisc   = ["F300","J306"]
 
 ##==========================> 1D HVP computation [LO, NLOa, NLOb] <==========================##
 
-diag = ""  # LO  NLOa  NLOb  NLOa&b
+diag = "NLOa&b"  # LO  NLOa  NLOb  NLOa&b
 
 IMPR_SET = ["1","2"] # ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
 
 STD_DERIV = false
 RESC      = false
 
-OVERWRITE = false  # Allows to erase data and overwrite it with new data, use carefully !!
+OVERWRITE = true  # Allows to erase data and overwrite it with new data, use carefully !!
 
 path_bdio = path_bdio_dict["local"]
 
@@ -81,7 +81,7 @@ corr33tl_v3s03_ll, corr33tl_v3s03_lc = read_tree_level_v3sig03(path_tl, cons=tru
 corr33tl_ll = uwreal.(corr33tl_ll); corr33tl_lc = uwreal.(corr33tl_lc)
 
 @time begin
-    for ens in ensInfo
+    for ens in EnsInfo.(["E300","J303"])
 
         @info("Computing for ensemble $(ens.id)")
         ens.id ∈ ensNOcharm ? @info("  > NO CHARM DATA FOR $(ens.id)") : nothing
@@ -212,9 +212,8 @@ corr33tl_ll = uwreal.(corr33tl_ll); corr33tl_lc = uwreal.(corr33tl_lc)
 
                 println("      - Reading kappaC target...")
 
-                mDs_ph_prime, Ds_dict = BDIOread_mDs_kappaC(path_bdio,ens)
+                mDs_ph_prime, mDs_beta, Ds_dict = BDIOread_mDs_kappaC(path_bdio,ens)
                 kappaC_tar = Ds_dict["kappaC"]
-
                 println("         - Interpolating charm contribution...")
 
                 kappaC = [kcd_in[ens.id]["kappaC_sim"],kcd_in[ens.id]["kappaC_sim_plus"]]

@@ -54,13 +54,13 @@ corr_bound(t::Vector{Int64}, tcut::Int64, corr::Corr, Eeff::Union{uwreal,Float64
 #     return returnVec
 # end
 
-function bounding_method(ub::Vector{uwreal},lb::Vector{uwreal},aEns::uwreal;PLAT::Bool=false,AVER::Bool=false,tcut0::Union{Int64,Nothing}=nothing)
+function bounding_method(ub::Vector{uwreal},lb::Vector{uwreal},aEns::uwreal;PLAT::Bool=false,AVER::Bool=false,tcut0::Union{Int64,Nothing}=nothing,tstep::Union{Int64,Nothing}=nothing)
     averb = (ub.+lb)./2; uwerr.(averb)
     x0   = findfirst(abs.(value.(ub).-value.(lb)) .< err.(averb))
-    xend = (4*value(aEns) > 0.25) ? Int64(x0 + round(0.25/value(aEns),RoundUp)) : Int64(x0 + 4)
+    xend = (4*tstep*aEns.mean < 0.25) ? Int64(x0 + round(0.25/(tstep*aEns.mean),RoundUp)) : Int64(x0 + round(4/tstep,RoundUp))
     if xend > length(averb)
         xend = length(averb)
-        @warn(" - BM converging too slow! t=T/2 was reached. Average will be produced with shorter plateau.")
+        @warn(" - BM converging too slow! t=tmax (T/2) was reached. Average will be produced with shorter plateau.")
     end
     hvp  = mean(averb[x0:xend])
     aux1 = mean(averb[x0:xend].^2)
@@ -68,7 +68,7 @@ function bounding_method(ub::Vector{uwreal},lb::Vector{uwreal},aEns::uwreal;PLAT
     syst = sqrt(abs(value(aux1 - aux2)))
 
     if PLAT
-        !isnothing(tcut0) ? plateau_fm = value(aEns).*(collect(x0:xend).+tcut0.-2) : error("tcut0 required to output plateau")
+        !isnothing(tcut0) ? plateau_fm = aEns.mean.*(tstep.*collect(x0:xend) .+ (tcut0-1-tstep)) : error("tcut0 required to output plateau")
     end
 
     returnVec = [hvp,syst]

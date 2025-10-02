@@ -60,11 +60,11 @@ rcParams["axes.titlesize"] = 18
 
 diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
 wind = "ID"  #  NW  SD  SDsub  ID  LD  ILD
-comp = "g33"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+comp = "g88"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
-model_var_list = Function[a3,a2phi2,phi2sqr,phi2log,phi2inv,logphi2]
+model_var_list = Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]
 # model_var_list = Function[a3,a2y,ysqr,ylog,yinv,logy]
 MultFunc = nothing  # nothing  deltaphi
 
@@ -76,7 +76,7 @@ FitCUT = "None"  # "None"  "beta"  "mass"  "beta&mass"
 
 STD_DERIV  = false
 tl_IMPR    = false
-VREF       = true
+VREF       = false
 RESC       = false
 
 SimpleBase = false
@@ -297,9 +297,11 @@ close()
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
 
 
-@info("Chiral projection plot")
+@info("Pion chiral projection plot")
 
-SAVE     = true
+ShowGHOST = true
+
+SAVE     = false
 OVERSAVE = false
 
 ARGPLOT = 1  #  set to 1 for best plot
@@ -328,7 +330,9 @@ for (i,impr_set) in enumerate(IMPR_SET)
 
         xproj_ch = deepcopy(xydata["xdata"])
         xproj_ch[:,3] = fill(K_ph, length(xydata["xdata"][:,1]))::Vector{uwreal}
-        ydata = f_tot_isov[argPlot](xproj_ch,value.(myparam)); uwerr.(ydata)
+        # ydata = f_tot_isov[argPlot](xproj_ch,value.(myparam)); uwerr.(ydata)
+        Deltay = f_tot_isov[argPlot](xproj_ch,value.(myparam)) - f_tot_isov[argPlot](xydata["xdata"],value.(myparam))
+        ydata = xydata["ydata"][impr_set][key] + Deltay; uwerr.(ydata)
 
         println("Chosen model (diag=$diag, set=$impr_set, discr=$discr): $(label_tot_isov[argPlot]) (n: $argPlot)")
         println("- chi2/dof     = $(fit.chi2/fit.dof)")
@@ -341,6 +345,10 @@ for (i,impr_set) in enumerate(IMPR_SET)
             n_ = findall(x->x.beta == b, ensInfo)
             a2_aux = mean(value.(xydata["xdata"][:,1][n_]))
             errorbar(value.(xydata["xdata"][n_,2]), value.(ydata[n_]), err.(ydata[n_]), fmt=fmt[k], capsize=2, color=color[k], mfc="none", label=label[k])
+            if ShowGHOST
+                uwerr.(xydata["ydata"][impr_set][key])
+                errorbar(value.(xydata["xdata"][n_,2]), value.(xydata["ydata"][impr_set][key][n_]), err.(xydata["ydata"][impr_set][key][n_]), fmt=fmt[k], capsize=2, color=color[k], mfc="none", alpha=0.1)
+            end
             xxx = !RESC ? [fill(a2_aux,100) Float64.(range(0.04, 0.8, length=100)) fill(value(phi4_ph), 100)] : [fill(a2_aux,100) Float64.(range(0.02, 0.4, length=100)) fill(value(z_ph), 100)]
             yyy = f_tot_isov[argPlot](xxx, myparam)
             PyPlot.plot(xxx[:,2],value.(yyy),ls="--",color=color[k],lw=0.5)
@@ -375,6 +383,108 @@ for (i,impr_set) in enumerate(IMPR_SET)
             ylabel(latexstring("\\left(a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]\\right)^{\\rm{$wind}}$Q_str$fact_str"))
         end
         # xlim(left=0.04)
+        legend(label,loc="best")
+        tight_layout()
+        display(gcf())
+        if SAVE
+            RESCstr = !RESC ? "" : "_resc"
+            p = create_path(path_plot,[diag,wind,"ChExtr_$(key)_$(impr_set)$(RESCstr).pdf"],OVERWRITE=OVERSAVE)
+            PyPlot.savefig(p)
+        end
+        close()
+    end
+end
+
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+
+
+@info("Kaon chiral projection plot")
+
+ShowGHOST = false
+
+SAVE     = false
+OVERSAVE = false
+
+ARGPLOT = 1  #  set to 1 for best plot
+
+IMPR_SET = readIMPR_SET  #  readIMPR_SET  ["1"]  ["2"]  ["1","2"]  ["1old","2"]  ["1","1old","2"]
+
+color = ["orange","red","purple","blue","green","brown"]
+fmt = ["o","^","s","d","h","v"]
+
+Pi_ph = !RESC ? phi2_ph : y_ph
+K_ph  = !RESC ? phi4_ph : z_ph
+
+for (i,impr_set) in enumerate(IMPR_SET)
+    for (j,key) in enumerate(mykeys)
+        label = []
+        # firstarg, lastarg = [(key_len*(i-1)+j-1)*model_len+1,(key_len*(i-1)+j)*model_len]
+        argSort = sortperm(eachindex(info[impr_set]["weight"][key]), 
+                   by=i -> label_tot_isov[i][1] in ["baseResc", "baseSimpResc"] ? -Inf : info[impr_set]["weight"][key][i], 
+                   rev=true)
+        argPlot = argSort[ARGPLOT]
+        discr   = key[end-1:end]
+        fit     = fitres[impr_set][key][argPlot]
+        model   = label_tot_isov[argPlot]
+        myres   = res[impr_set][key][argPlot]; uwerr(myres)
+        myparam = param[impr_set][key][argPlot]; uwerr.(myparam)
+
+        xproj_ch = deepcopy(xydata["xdata"])
+        xproj_ch[:,2] = fill(Pi_ph, length(xydata["xdata"][:,1]))::Vector{uwreal}
+        # ydata = f_tot_isov[argPlot](xproj_ch,value.(myparam)); uwerr.(ydata)
+        Deltay = f_tot_isov[argPlot](xproj_ch,value.(myparam)) - f_tot_isov[argPlot](xydata["xdata"],value.(myparam))
+        ydata = xydata["ydata"][impr_set][key] + Deltay; uwerr.(ydata)
+
+
+        println("Chosen model (diag=$diag, set=$impr_set, discr=$discr): $(label_tot_isov[argPlot]) (n: $argPlot)")
+        println("- chi2/dof     = $(fit.chi2/fit.dof)")
+        println("- chi2/chi2exp = $(fit.chi2/fit.chi2exp)")
+
+        fig = figure(figsize=(8,6))
+
+        for (k,b) in  enumerate(sort(unique(getfield.(ensInfo, :beta))))
+            push!(label,L"$\beta=$"*"$b")
+            n_ = findall(x->x.beta == b, ensInfo)
+            a2_aux = mean(value.(xydata["xdata"][:,1][n_]))
+            errorbar(value.(xydata["xdata"][n_,3]), value.(ydata[n_]), err.(ydata[n_]), fmt=fmt[k], capsize=2, color=color[k], mfc="none", label=label[k])
+            if ShowGHOST
+                uwerr.(xydata["ydata"][impr_set][key])
+                errorbar(value.(xydata["xdata"][n_,3]), value.(xydata["ydata"][impr_set][key][n_]), err.(xydata["ydata"][impr_set][key][n_]), fmt=fmt[k], capsize=2, color=color[k], mfc="none", alpha=0.1)
+            end
+            xxx = !RESC ? [fill(a2_aux,100) fill(value(phi2_ph), 100) Float64.(range(1.05, 1.35, length=100))] : [fill(a2_aux,100) fill(value(y_ph), 100) Float64.(range(0.4, 0.6, length=100))]
+            yyy = f_tot_isov[argPlot](xxx, myparam)
+            PyPlot.plot(xxx[:,3],value.(yyy),ls="--",color=color[k],lw=0.5)
+        end
+        xxx_ph = !RESC ? [fill(0.0,100) fill(value(phi2_ph), 100) Float64.(range(1.05, 1.35, length=100))] : [fill(0.0,100) fill(value(y_ph), 100) Float64.(range(0.4, 0.6, length=100))]
+        yyy_ph = f_tot_isov[argPlot](xxx_ph, myparam); uwerr.(yyy_ph)
+        
+        errorbar(value(K_ph), value(myres), err(myres), fmt="^", capsize=2, color="black",label="ph.")
+        push!(label,"ph.")
+        PyPlot.plot(xxx_ph[:,3],value.(yyy_ph),ls="--",color="gray",lw=0.5)
+        fill_between(xxx_ph[:,3], value.(yyy_ph)-err.(yyy_ph), value.(yyy_ph)+err.(yyy_ph), alpha=0.2, color="gray")
+        # PyPlot.title("Chiral and continuum extrapolation (Discr. $(key[end-1:end]); impr. set $impr_set)")
+        axvline(x=value(K_ph), ls="dashed", color="black", lw=0.2, alpha=0.7) 
+        if !RESC
+            xlabel(L"$\Phi_4$")
+        else
+            xlabel(L"$z$")
+        end
+        if diag != "LO" # we multiply the y axis by a factor 10
+            formatter(x, pos) = string(round(10 * x, digits=2))  # Round to 2 decimal places
+            ax = gca()
+            ax.yaxis.set_major_formatter(PyPlot.matplotlib.ticker.FuncFormatter(formatter))
+        end
+        diag_str = diag == "LO" ? "\\rm{LO}" : (diag == "NLOa&b" ? "\\rm{NLOa\\&b}" : "\\rm{NLO$(diag[end])}")
+        comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : "\\mathrm{$(comp[2]),$(comp[3])}"
+        Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q\\ \\rm{GeV})" : ""
+        fact_str = diag == "LO" ? "\\times10^{10}" : "\\times10^{11}"
+        if wind == "NW"
+            ylabel(latexstring("a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]$Q_str$fact_str"))
+        else
+            ylabel(latexstring("\\left(a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]\\right)^{\\rm{$wind}}$Q_str$fact_str"))
+        end
+        # ylim(-3.580,-3.425)
         legend(label,loc="best")
         tight_layout()
         display(gcf())

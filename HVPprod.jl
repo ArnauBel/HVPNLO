@@ -81,7 +81,7 @@ IMPR      = true
 RENORM    = true
 STD_DERIV = false
 
-OVERWRITE = false  # Allows to erase data and overwrite it with new data, use carefully !!
+OVERWRITE = true  # Allows to erase data and overwrite it with new data, use carefully !!
 
 IMPR_SET  = ["1","2"]  # ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
 
@@ -100,7 +100,17 @@ path_bdio_w =  path_bdio_dict["local"]
         for impr_set in IMPR_SET
             println("   - Impr Set: ", impr_set)
             println("        - G33 ll and lc correlator...")
-            g33_ll, g33_lc = corr33(path_HVP, ens, path_rw=path_rw, impr=IMPR, impr_set=impr_set, cons=true, frw_bcwd=true, std=STD_DERIV)
+
+            if ens.id ∉ ["C101","E300","J303"]
+                g33_ll, g33_lc = corr33(path_HVP, ens, path_rw=path_rw, impr=IMPR, impr_set=impr_set, cons=true, frw_bcwd=true, std=STD_DERIV)
+            else
+                g33_ll = corr33(path_HVP, ens, path_rw=path_rw, impr=IMPR, impr_set=impr_set, cons=false, frw_bcwd=true, std=STD_DERIV)
+                println("          (No LMA for 'lc' -> using ratio)")
+                # g33stoc_ll, g33stoc_lc = corr33(path_HVP, ens, path_rw=path_rw, impr=IMPR, impr_set=impr_set, cons=true, frw_bcwd=true, std=STD_DERIV, lma=false)
+                g33_lc_obs = g33_ll.obs .* (g33stoc_lc.obs./g33stoc_ll.obs)
+                
+                g33_lc = Corr(g33_lc_obs, ens.id, "G33lc")
+            end
 
             println("        - G88 connected ll and lc correlator...")        
             g88_ll_conn, g88_lc_conn = corr88_conn(path_HVP, ens, g33_ll, g33_lc=g33_lc, path_rw=path_rw, impr=IMPR, impr_set=impr_set, cons=true, frw_bcwd=true, std=STD_DERIV)
@@ -534,11 +544,11 @@ end # end timer
 ##==========================> READING TEST <==========================##
 
 diag     = "NLOa&b"
-ensid    = "H101"
+ensid    = "C101"
 impr_set = "2"
 
 STD_DERIV = false
-VREF      = false
+VREF      = true
 RESC      = false
 
 BLIND = false
@@ -560,27 +570,3 @@ corr = BDIOread_corr(path_bdio_r,ensid,impr_set,STD=STD_DERIV)
 fvc_hp  = BDIOread_FVCcorr(path_bdio_r,ensid,Vref=VREF)
 
 t_mll, fvc_mll  = TXTread_FVCcorr_GS(joinpath(julia_script_directory, "..", "HVPData", "FSE_MLL"),ensid,Vref=VREF)
-
-
-##
-
-function apply_rw(data::Array{Float64}, W::Vector{Matrix{Float64}}, cdidm::Vector{Int64}, rep_len::Vector{Int64},stadind::Bool=false)
-
-    chunk(arr, n::Vector{Int64}) = [arr[1+ sum(n[1:i-1]):sum(n[1:i])] for i in eachindex(n)]
-    idm = chunk(cdidm, rep_len)
-    rw1 = []
-    rw2 = []
-
-    rw1 = [W[k][1, idm[k]] for k in eachindex(idm)]
-    rw2 = [W[k][2, idm[k]] for k in eachindex(idm)]
-    rw3 = [W[k][3, idm[k]] for k in eachindex(idm)]
-
-    if !stadind
-        rw = vcat([rw1[k] .* rw2[k] .* rw3[k] for k in eachindex(idm)]...)
-    else
-        #  sthing, I don't really understand
-    end
-    data_r = data .* rw 
-
-    return (data_r, rw)
-end
