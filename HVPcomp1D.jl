@@ -43,17 +43,17 @@ ensList = [
     "A653","A654","B450","C101","C102",
     "D150","D200","D201","D251","D450",
     "D451","D452","E250","E300","F300",
-    "H101","H200","J303","J304","J306",
-    "J307","J500","J501","N101","N200",
-    "N202","N203","N302","N451","N452",
-    "S400"] # "H102","N300"
+    "H101","H102","H200","J303","J304",
+    "J306","J307","J500","J501","N101",
+    "N200","N202","N203","N300","N302",
+    "N451","N452","S400"]
 
 
 ensInfo = EnsInfo.(ensList)
 
 # We do not have charm or disconnected data for some of the ensembles
-ensNOcharm  = ["C102","D150","D201","D251","D451","F300","H200","J304","J306","J307","J501","N451","N452"]
-ensNOdisc   = ["F300","J306"]
+ensNOcharm = ["C102","D150","D201","D251","D451","F300","H200","J304","J306","J307","J501","N451","N452"]
+ensNOdisc  = ["F300","J306"]
 
 ensSPECdata = ["D200","E250"]  # J303
 
@@ -71,17 +71,17 @@ wpm = Dict{String, Vector{Float64}}()
 
 ##==========================> 1D HVP computation (+ BM) [LO, NLOa, NLOb] <==========================##
 
-diag = "NLOa&b"  # LO  NLOa  NLOb  NLOa&b
-wind = "LD"  # NW  SD  ID  LD  ILD
+diag = ""  # LO  NLOa  NLOb  NLOa&b
+wind = ""  # NW  SD  ID  LD  ILD
 
 IMPR_SET = ["1","2"] # ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
 
 STD_DERIV = false
 RESC      = false
 
-OVERWRITE = true  # Allows to erase data and overwrite it with new data, use carefully !!
+OVERWRITE = false  # Allows to erase data and overwrite it with new data, use carefully !!
 
-BLIND = true
+BLIND = false
 
 path_bdio = path_bdio_dict["local"]
 
@@ -101,7 +101,6 @@ if wind == "SD"
 
     corr33tl_ll = uwreal.(corr33tl_ll); corr33tl_lc = uwreal.(corr33tl_lc)
 end
-
 
 @time begin
     for ens in ensInfo
@@ -300,7 +299,7 @@ end
                             push!(lb, lb_)
                         end
 
-                        HVP[key], HVPsyst[key], PlatRec[key] = bounding_method(ub,lb,aens,PLAT=true,AVER=false,tcut0=tcut0)
+                        HVP[key], HVPsyst[key], PlatRec[key] = bounding_method(ub,lb,aens,PLAT=true,AVER=false,tcut0=tcut0,tstep=tstep)
                     end
                 end
 
@@ -563,13 +562,13 @@ end # end timer
 
 ##==========================> READING TEST <==========================##
 
-diag     = "NLOa&b"  #  "LO"  "NLOa"  "NLOb"  "NLOc"
-wind     = "ID"  #  "NW"  "SD"  "ID"  "LD"  "ILD"
-ensid    = "C101"
-impr_set = "2"
+diag     = ""  #  "LO"  "NLOa"  "NLOb"  "NLOc"
+wind     = ""  #  "NW"  "SD"  "ID"  "LD"  "ILD"
+ensid    = ""
+impr_set = ""
 
 STD   = false
-VREF  = true
+VREF  = false
 RESC  = false
 
 BLIND = false
@@ -590,9 +589,9 @@ end
 
 ##==> Result computation in the 'flavour basis'
 
-ensid    = "A653"
-impr_set = "1"
-discr    = "ll"
+ensid    = ""
+impr_set = ""
+discr    = ""
 
 HVP = BDIOread_HVPens(path_bdio,diag,wind,ensid,impr_set,info=false)
 
@@ -607,12 +606,12 @@ println("- amu(c) = $charm")
 
 ##
 
-diag     = "NLOa&b"  #  "LO"  "NLOa"  "NLOb"  "NLOc"
-wind     = "ID"  #  "NW"  "SD"  "ID"  "LD"  "ILD"
-impr_set = "2"
+diag     = ""  #  "LO"  "NLOa"  "NLOb"  "NLOc"
+wind     = ""  #  "NW"  "SD"  "ID"  "LD"  "ILD"
+impr_set = ""
 
 STD   = false
-VREF  = true
+VREF  = false
 RESC  = false
 
 BLIND = false
@@ -626,6 +625,7 @@ for ens in EnsInfo.(["C101","C102","D450","D451","D200","D201"])
 end
 
 ##
+
 ens = EnsInfo("D451")
 HVP = BDIOread_HVPens(path_bdio,diag,wind,ens.id,impr_set,info=false,resc=RESC,STD=STD,BLIND=BLIND)
 FVC = BDIOread_FVCens(path_bdio,diag,wind,ens.id,Vref=VREF,resc=RESC,BLIND=BLIND)

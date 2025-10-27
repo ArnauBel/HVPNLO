@@ -55,9 +55,11 @@ rcParams["axes.titlesize"] = 18
 
 # Charge factor
 
-factor = Dict(
+charge_factor = Dict(
     "g33" => 1., "g88" => 1/3., "gCCconn" => 4/9., "∆ls_amu" => 1/3., "∆lc_b" => 4/9.,
-    "g33s" => "", "g88s" => "(1/3)", "gCCconns" => "(4/9)", "∆ls_amus" => "(1/3)", "∆lc_bs" => "(4/9)"
+    "g33s" => "", "g88s" => "(1/3)", "gCCconns" => "(4/9)", "∆ls_amus" => "(1/3)", "∆lc_bs" => "(4/9)",
+    "g3333" => 1.,  "g3388" => 2/3., "g33CC" => 8/9., "g8888" => 1/9., "g88CC" => 8/27., "gCCCC" => 16/81., 
+    "g3333s" => "",  "g3388s" => "(2/3)", "g33CCs" => "(8/9)", "g8888s" => "(1/9)", "g88CCs" => "(8/27)", "gCCCCs" => "(16/81)",
 )
 
 @info("Ready")
@@ -73,16 +75,16 @@ FITdata = true
 # Set plot parameters
 
 diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = "ID"  #  NW  SD  SDsub  ID  LD  ILD
-comp = "g33"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+wind = "SDsub"  #  NW  SD  SDsub  ID  LD  ILD
+comp = "∆lc_b"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
 BLIND = false
 
 STD_DERIV  = false
+VREF       = false
 tl_IMPR    = false
-VREF       = true
 RESC       = false
 
 path_bdio = path_bdio_dict["local"]
@@ -134,7 +136,7 @@ if FITdata
         for FitCut in FITCUT
             println("      - Fit Cut $FitCut")
 
-            println("         - Reading X & Y data..")
+            println("         - Reading X & Y data...")
             ydata[FitCut] = Dict()
             xdata[FitCut], ydata[FitCut][impr_set] = BDIOread_XYdata(path_bdio,diag,wind,comp,INFO["FITCUTtoMODEL"][FitCut][2],FitCut,impr_set,resc=RESC,SimpleBase=INFO["FITCUTtoMODEL"][FitCut][1],MultFunc=MultFunc,StdDer=STD_DERIV,tlImpr=tl_IMPR,Vref=VREF,BLIND=BLIND,Q=Q)
 
@@ -237,7 +239,7 @@ OVERSAVE = false
 
 # mykeys = [""]
 
-wPen = 0.1
+wPen = 0.2
 
 # SHOWRES = false
 
@@ -286,9 +288,9 @@ end
 # ylim(top=-40/10)
 # ylim(top=-60/10)
 # ylim(bottom=27/10)
-diag_str = diag == "LO" ? "\\rm{LO}" : (diag == "NLOa&b" ? "\\rm{NLOa\\&b}" : "\\rm{NLO$(diag[end])}")
-comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : "\\mathrm{$(comp[2]),$(comp[3])}"
-Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q\\ \\rm{GeV})" : ""
+diag_str = diag == "NLOa&b" ? "\\rm{NLOa\\&b}" : diag
+comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : (diag != "NLOc" ? "\\mathrm{$(comp[2]),$(comp[3])}" : "\\mathrm{$(comp[2]),$(comp[3])-$(comp[4]),$(comp[5])}")
+Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q\\ \\mathrm{GeV})" : ""
 fact_str = diag == "LO" ? "\\times10^{10}" : "\\times10^{11}"
 if wind == "NW"
     ylabel(latexstring("a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]$Q_str$fact_str"))
@@ -303,7 +305,7 @@ for impr_set in IMPR_SET
         push!(handles,Line2D([], [], color=color_dict[impr_set]["$(key[end-1:end])"], linestyle="-", label="discr. $(key[end-1:end]); set $impr_set"))
     end
 end
-legend(handles=handles, loc="upper center")
+legend(handles=handles, loc="best")
 tight_layout()
 display(gcf())
 if SAVE
@@ -322,7 +324,7 @@ close()
 
 @info("Ensemble cut convergence plot")
 
-SAVE     = true
+SAVE     = false
 OVERSAVE = false
 
 sqrtt0_ph_TAR = nothing  # 0.1443  sqrtt0_ph_CLS  nothing
@@ -336,10 +338,11 @@ DictFITCUTtoSTR = Dict(
     "mass" => latexstring("m_\\pi<400"),
     "beta&mass" => latexstring("\\beta>3.34 \\& m_\\pi<400"))
 
-myFactor = factor[comp] * (diag == "LO" ? 1 : 10)
+myFactor = charge_factor[comp] * (diag == "LO" ? 1 : 10)
+
 
 myRES = myFactor * RES; uwerr(myRES)
-myERR = myFactor * sqrt(INFO["syst"]^2 + err(RES)^2)
+myERR = myFactor * sqrt(INFO["syst"]^2 + RES.err^2)
 
 fig, (ax1, ax2) = subplots(1, 2,
     gridspec_kw = Dict("width_ratios" => [6, 1], "wspace" => 0),
@@ -359,18 +362,18 @@ for (i,impr_set) in enumerate(IMPR_SET)
         for FitCut in FITCUT
             y += 1
 
-            res  = myFactor * MA[impr_set][FitCut]["res"][key]; uwerr(res)
+            res_ = myFactor * MA[impr_set][FitCut]["res"][key]; uwerr(res_)
             syst = myFactor * info[impr_set][FitCut]["syst"][key]
 
             if !isnothing(sqrtt0_ph_TAR)
-                der = mchist(res, "sqrtt0 [fm]")[1] / artificial_err
-                res_t0shift = res + value(sqrtt0_ph_TAR - sqrtt0_ph) * der; uwerr(res_t0shift)
+                der = mchist(res_, "sqrtt0 [fm]")[1] / artificial_err
+                res_t0shift = res_ + value(sqrtt0_ph_TAR - sqrtt0_ph) * der; uwerr(res_t0shift)
             else
-                res_t0shift = res
+                res_t0shift = res_
             end
 
-            ax1.errorbar(value(res), xerr=err(res), y, 0.0, fmt="o", mfc="none", color="black", ms=10, capsize=2, alpha=0.4)
-            ax1.errorbar(value(res), xerr=sqrt(err(res)^2+syst^2), y, 0.0, fmt="o", mfc="none", color="black", ms=10, capsize=2, alpha=0.4)
+            ax1.errorbar(value(res_), xerr=err(res_), y, 0.0, fmt="o", mfc="none", color="black", ms=10, capsize=2, alpha=0.4)
+            ax1.errorbar(value(res_), xerr=sqrt(err(res_)^2+syst^2), y, 0.0, fmt="o", mfc="none", color="black", ms=10, capsize=2, alpha=0.4)
             if !isnothing(sqrtt0_ph_TAR)
                 ax1.errorbar(value(res_t0shift), xerr=err(res_t0shift), y+0.1, 0.0, fmt="o", mfc="none", color="black", ms=10, capsize=2, alpha=0.4)
                 ax1.errorbar(value(res_t0shift), xerr=sqrt(err(res_t0shift)^2+syst^2), y+0.1, 0.0, fmt="o", mfc="none", color="black", ms=10, capsize=2, alpha=0.4)
@@ -397,18 +400,18 @@ for (i,impr_set) in enumerate(IMPR_SET)
         end
         y += 1
 
-        res  = myFactor * MA[impr_set]["average"]["res"][key]; uwerr(res)
+        res_ = myFactor * MA[impr_set]["average"]["res"][key]; uwerr(res_)
         syst = myFactor * info[impr_set]["average"]["syst"][key]
 
         if !isnothing(sqrtt0_ph_TAR)
-            der = mchist(res, "sqrtt0 [fm]")[1] / artificial_err
-            res_t0shift = res + value(sqrtt0_ph_TAR - sqrtt0_ph) * der; uwerr(res_t0shift)
+            der = mchist(res_, "sqrtt0 [fm]")[1] / artificial_err
+            res_t0shift = res_ + value(sqrtt0_ph_TAR - sqrtt0_ph) * der; uwerr(res_t0shift)
         else
-            res_t0shift = res
+            res_t0shift = res_
         end
 
-        ax1.errorbar(value(res), xerr=err(res), y, 0.0, fmt="o", mfc="none", color="green", ms=10, capsize=2, alpha=0.4)
-        ax1.errorbar(value(res), xerr=sqrt(err(res)^2+syst^2), y, 0.0, fmt="o", mfc="none", color="green", ms=10, capsize=2, alpha=0.4)
+        ax1.errorbar(value(res_), xerr=err(res_), y, 0.0, fmt="o", mfc="none", color="green", ms=10, capsize=2, alpha=0.4)
+        ax1.errorbar(value(res_), xerr=sqrt(err(res_)^2+syst^2), y, 0.0, fmt="o", mfc="none", color="green", ms=10, capsize=2, alpha=0.4)
         if !isnothing(sqrtt0_ph_TAR)
             ax1.errorbar(value(res_t0shift), xerr=err(res_t0shift), y+0.1, 0.0, fmt="o", mfc="none", color="green", ms=10, capsize=2, alpha=0.4)
             ax1.errorbar(value(res_t0shift), xerr=sqrt(err(res_t0shift)^2+syst^2), y+0.1, 0.0, fmt="o", mfc="none", color="green", ms=10, capsize=2, alpha=0.4)
@@ -426,14 +429,14 @@ end
 ax1.axvspan(value(myRES)-err(myRES), value(myRES)+err(myRES), color="limegreen", alpha=0.3)
 ax1.axvspan(value(myRES)-myERR, value(myRES)+myERR, color="limegreen", alpha=0.3, label="SD paper result")
 diag_str = diag == "LO" ? "\\rm{LO}" : (diag == "NLOa&b" ? "\\rm{NLO}_{\\rm{a}\\&\\rm{b}}" : "\\rm{NLO}_{\\rm{$(diag[end])}}")
-comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : "\\mathrm{$(comp[2]),$(comp[3])}"
+comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : (diag != "NLOc" ? "\\mathrm{$(comp[2]),$(comp[3])}" : "\\mathrm{$(comp[2]),$(comp[3])-$(comp[4]),$(comp[5])}")
 V_str    = VREF ? "(V_{\\rm{ref}})" : ""
-Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q\\ GeV)" : ""
+Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q\\ \\mathrm{GeV})" : ""
 fact_str = diag == "LO" ? "\\times10^{10}" : "\\times10^{11}"
 if wind == "NW"
-    ax1.set_xlabel(latexstring("$(factor[comp*"s"])a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]$Q_str$fact_str"))
+    ax1.set_xlabel(latexstring("$(charge_factor[comp*"s"])a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]$Q_str$fact_str"))
 else
-    ax1.set_xlabel(latexstring("$(factor[comp*"s"])\\left(a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]$(V_str)\\right)^{\\rm{$wind}}$Q_str$fact_str"))
+    ax1.set_xlabel(latexstring("$(charge_factor[comp*"s"])\\left(a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]$(V_str)\\right)^{\\rm{$wind}}$Q_str$fact_str"))
 end
 ax1.set_yticks(yTicksPos, yTicks, rotation = 30, fontsize=15)
 labels = ax1.get_yticklabels()
@@ -484,6 +487,10 @@ nBEST = 50
 
 Norm2DOF = false
 
+SAVE     = false
+OVERSAVE = false
+
+
 color_dict = Dict(
     ""     => Dict("cc" => "cyan"),
     "1"    => Dict("ll" => "blue",  "lc" => "red"  ),
@@ -498,7 +505,7 @@ alpha_dict = Dict(
 )
 
 
-myFactor = factor[comp] # * (diag == "LO" ? 1 : 10)
+myFactor = charge_factor[comp] # * (diag == "LO" ? 1 : 10)
 
 argBEST = sortperm(INFO["weight"],rev=true)[1:nBEST]
 sort!(argBEST)
@@ -532,9 +539,9 @@ end
 v = myFactor*RES.mean
 e = myFactor*RES.err; esyst = myFactor*sqrt(RES.err^2+INFO["syst"]^2)
 
-fig = figure(figsize=(15,10))
+fig = figure(figsize=(15,10), constrained_layout=true)
 
-subplots_adjust(hspace=0.1)
+# subplots_adjust(hspace=0.1)
 subplot(411)
 ax1 = gca()
 x = 1:nBEST
@@ -560,14 +567,14 @@ PyPlot.xticks([], [])
 # ax1.yaxis.get_offset_text().set_text(L"\times10^{-11}")
 # ax1.yaxis.offsetText.set_visible(true)
 # setp(ax1.get_xticklabels(),visible=false) # Disable x tick labels
-diag_str = diag == "LO" ? "\\rm{LO}" : (diag == "NLOa&b" ? "\\rm{NLO}_{\\rm{a}\\&\\rm{b}}" : "\\rm{NLO}_{\\rm{$(diag[end])}}")
-comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : "\\mathrm{$(comp[2]),$(comp[3])}"
+diag_str = diag == "NLOa&b" ? "NLOa\\&b" : diag
+comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : (diag != "NLOc" ? "\\mathrm{$(comp[2]),$(comp[3])}" : "\\mathrm{$(comp[2]),$(comp[3])-$(comp[4]),$(comp[5])}")
 Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q)" : ""
 # fact_str = diag == "LO" ? "\\times10^{10}" : "\\times10^{11}"
 if wind == "NW"
-    ylabel(latexstring("a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]$Q_str"))
+    ylabel(latexstring("$(charge_factor[comp*"s"])a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]$Q_str"))
 else
-    ylabel(latexstring("\\left(a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]\\right)^{\\rm{$wind}}$Q_str"))
+    ylabel(latexstring("$(charge_factor[comp*"s"])\\left(a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]\\right)^{\\rm{$wind}}$Q_str"))
 end
 # ylim([v-6*e,v+6*e])
 
@@ -603,13 +610,15 @@ for impr_set in IMPR_SET
         end
     end
 end
-PyPlot.xticks([], [])
 # setp(ax3.get_xticklabels(),visible=false) # Disable x tick labels
 !Norm2DOF ? ylabel(L"$\chi^2/\chi^2_{\mathrm{exp}}$") : ylabel(L"$\chi^2/\mathrm{d.o.f.}$")
 # ylim([0.0,2.0])
 
 if PVAL
+    PyPlot.xticks([], [])
+
     subplot(414)
+    ax4=gca()
 
     i = 1
     for impr_set in IMPR_SET
@@ -626,7 +635,7 @@ if PVAL
     ylim([0.0,1.0])
 end
 
-m = vcat([ vcat([vcat([m_[impr_set][key][FitCut] for FitCut in FITCUT]...) for key in mykeys]...) for impr_set in IMPR_SET]...)
+m = vcat([vcat([vcat([m_[impr_set][key][FitCut] for FitCut in FITCUT]...) for key in mykeys]...) for impr_set in IMPR_SET]...)
 m_str = []; x_str = []
 i = 0
 while i < length(m)
@@ -644,9 +653,14 @@ while i < length(m)
     end
 end
 PyPlot.xticks(x_str, m_str, rotation=70, ha="right")
-tight_layout()
-display(fig)
-close("all")
+# tight_layout()
+display(gcf())
+if SAVE
+    RESCstr = !RESC ? "" : "_resc"
+    p = create_path(path_plot,[diag,wind,"$(diag)_$(comp)MAPlot$(RESCstr).pdf"],OVERWRITE=OVERSAVE)
+    PyPlot.savefig(p)
+end
+close()
 
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
@@ -656,7 +670,7 @@ close("all")
 
 @info("Hit plot")
 
-SAVE     = true
+SAVE     = false
 OVERSAVE = false
 
 path_bdio = path_bdio_dict["local"]
@@ -674,14 +688,14 @@ fmt_dict = Dict(
     "beta&mass" => "x"
 )
 
-myFactor = factor[comp] * (diag == "LO" ? 1 : 10)
+myFactor = charge_factor[comp] * (diag == "LO" ? 1 : 10)
 
 RESTOT = []; WEIGHT = []
 for (i,impr_set) in enumerate(IMPR_SET)
     for (k,key) in enumerate(mykeys)
         for FitCut in FITCUT
             restot = myFactor .* MA[impr_set][FitCut]["res_tot"][key]; uwerr.(restot)
-            weight = info[impr_set][FitCut]["weight"][key]
+            weight = info[impr_set][FitCut]["weight"][key] # this is wrong !! Should take weight from FitCut combination
 
             # to make the plot go faster we only plot the best 1000 prediction
             # bitvec = weight .> maximum(weight)/100000
@@ -723,14 +737,14 @@ fill_betweenx([0.0,1.0], myFactor*(RES.mean-RES.err), myFactor*(RES.mean+RES.err
 fill_betweenx([0.0,1.0], myFactor*(RES.mean-sqrt(RES.err^2+INFO["syst"]^2)), myFactor*(RES.mean+sqrt(RES.err^2+INFO["syst"]^2)), color="gray", alpha=0.2)
 
 diag_str = diag == "LO" ? "\\rm{LO}" : (diag == "NLOa&b" ? "\\rm{NLO}_{\\rm{a}\\&\\rm{b}}" : "\\rm{NLO}_{\\rm{$(diag[end])}}")
-comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : "\\mathrm{$(comp[2]),$(comp[3])}"
+comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : (diag != "NLOc" ? "\\mathrm{$(comp[2]),$(comp[3])}" : "\\mathrm{$(comp[2]),$(comp[3])-$(comp[4]),$(comp[5])}")
 V_str    = VREF ? "(V_{\\rm{ref}})" : ""
-Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q\\ GeV)" : ""
+Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q\\ \\mathrm{GeV})" : ""
 fact_str = diag == "LO" ? "\\times10^{10}" : "\\times10^{11}"
 if wind == "NW"
-    xlabel(latexstring("$(factor[comp*"s"])a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]$Q_str$fact_str"))
+    xlabel(latexstring("$(charge_factor[comp*"s"])a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]$Q_str$fact_str"))
 else
-    xlabel(latexstring("$(factor[comp*"s"])\\left(a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]$(V_str)\\right)^{\\rm{$wind}}$Q_str$fact_str"))
+    xlabel(latexstring("$(charge_factor[comp*"s"])\\left(a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]$(V_str)\\right)^{\\rm{$wind}}$Q_str$fact_str"))
 end
 # legend()
 ylim(y_lim)
@@ -810,9 +824,9 @@ else
 end
 fill_between([0,10],VAL-UNC,VAL+UNC, color="gray", alpha=0.4)
 
-xlabel(latexstring("1/Q\\ [\\rm{GeV}^{-1}]"))
+xlabel(latexstring("1/Q\\ [\\mathrm{GeV}^{-1}]"))
 diag_str = diag == "NLOa&b" ? "\\rm{NLOa}\\&\\rm{b}" : diag
-comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : "\\mathrm{$comp}"
+comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : (diag != "NLOc" ? "\\mathrm{$(comp[2]),$(comp[3])}" : "\\mathrm{$(comp[2]),$(comp[3])-$(comp[4]),$(comp[5])}")
 fact_str = diag == "LO" ? "10" : "11"
 if comp == "g33"
     ylabel(latexstring("\\left[\\left(a_{\\mu}^{(\\rm{3,3})}[\\rm{$diag}]\\right)^{\\rm{SD}}_{\\rm{sub}}(Q^2)+\\omega_{\\rm{SD}}(0)b^{\\rm{(3,3)}}[\\rm{$diag}](Q^2)\\right]\\times 10^{$(fact_str)}"))
@@ -825,7 +839,7 @@ ax2 = gca()[:twiny]()
 ax2[:set_xlim](xmin, xmax)
 ax2[:set_xticks](union([0.0],1.0./QLIST))
 ax2[:set_xticklabels](union([latexstring("\\infty")], QLIST))
-ax2[:set_xlabel](latexstring("Q\\ [\\rm{GeV}]"))
+ax2[:set_xlabel](latexstring("Q\\ [\\mathrm{GeV}]"))
 
 ax2[:xaxis][:set_label_coords](0.5, 1.12)  # Adjust the second value to move the label upwards
 

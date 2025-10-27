@@ -59,7 +59,7 @@ ensList = ["A653","A654","B450","C101","C102","D150","D200","D201","D251","D450"
 
 # We do not have charm or disconnected data for some of the ensembles
 ensNOcharm = ["J501","N451","D150","D451","J304","C102","D251","D201","J306","J307","F300","H200","N452"]
-ensNOdisc  = ["J306","F300"]
+ensNOdisc  = ["F300","J306"]
 
 # Ensemble check
 # ensInfo, bad_ensInfo = ensCheck(EnsInfo.(ensList), ensNOcharm, ensNOdisc, path_HVP, path_rw_, path_ms, path_fvcPI, data_status=true)
@@ -81,7 +81,7 @@ IMPR      = true
 RENORM    = true
 STD_DERIV = false
 
-OVERWRITE = true  # Allows to erase data and overwrite it with new data, use carefully !!
+OVERWRITE = false  # Allows to erase data and overwrite it with new data, use carefully !!
 
 IMPR_SET  = ["1","2"]  # ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
 
@@ -474,9 +474,9 @@ end # end timer
 
 # using Distributions
 
-scale = "fPi"  # t0  fPi
+scale = ""  # t0  fPi
 
-OVERWRITE = true  # Allows to erase data and overwrite it with new data, use carefully !!
+OVERWRITE = false  # Allows to erase data and overwrite it with new data, use carefully !!
 
 path_bdio = path_bdio_dict["local"]
 
@@ -543,12 +543,12 @@ end # end timer
 
 ##==========================> READING TEST <==========================##
 
-diag     = "NLOa&b"
-ensid    = "C101"
-impr_set = "2"
+diag     = ""
+ensid    = ""
+impr_set = ""
 
 STD_DERIV = false
-VREF      = true
+VREF      = false
 RESC      = false
 
 BLIND = false

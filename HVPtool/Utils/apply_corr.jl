@@ -52,9 +52,8 @@ function apply_syst_FVC(fvc::Dict,diag::String,wind::String,ensid::String;factor
 end
 
 function apply_syst_FVC!(FVC::Dict,diag::String,wind::String,ensid::String;factor::Float64=0.15,IMPR_SET::Vector{String}=["1","2"])
-    fvckeys  = keys(FVC)
-
     if diag != "NLOc"
+        fvckeys  = keys(FVC)
         for key in fvckeys
             if typeof(FVC[key]) == uwreal
                 FVC[key] += uwreal([0.0,factor*FVC[key].mean],"FVC syst.  [$ensid-$diag,$wind,$key]")
@@ -64,8 +63,9 @@ function apply_syst_FVC!(FVC::Dict,diag::String,wind::String,ensid::String;facto
         end
     else
         for impr_set = IMPR_SET
+            fvckeys  = keys(FVC[impr_set])
             for key in fvckeys
-                FVC[impr_set][key] += uwreal([0.0,factor*fvc[impr_set][key].mean],"FVC syst.  [$ensid-$diag,$wind,$key]")
+                FVC[impr_set][key] += uwreal([0.0,factor*FVC[impr_set][key].mean],"FVC syst.  [$ensid-$diag,$wind,$key]")
             end
         end
     end
@@ -108,14 +108,17 @@ end
 
 function HVP_VolCorrect!(HVP::Dict,FVC::Dict,diag::String;IMPR_SET::Vector{String}=["1","2"])
     hvpkeys = keys(HVP[IMPR_SET[1]])
-    DISCR = ["ll","lc"]
+    DISCR = diag != "NLOc" ? ["ll","lc"] : ["llll","lclc"]
     if diag != "NLOc"
         COMP = ["g33"]
         "g88_ll" in hvpkeys ? push!(COMP,"g88") : nothing
         "∆ls_amu_ll" in hvpkeys ? push!(COMP,"∆ls_amu") : nothing
         "∆lc_b_ll" in hvpkeys ? push!(COMP,"∆lc_b") : nothing
     else
-        COMP = ["g3333","g8888","g3388","g33CC","g88CC"]
+        COMP = ["g3333"]
+        "g8888_llll" in hvpkeys ? push!(COMP,"g8888","g3388") : nothing
+        "g33CC_llll" in hvpkeys ? push!(COMP,"g33CC") : nothing
+        "g88CC_llll" in hvpkeys ? push!(COMP,"g88CC") : nothing
     end
 
     for impr_set in IMPR_SET
@@ -130,7 +133,7 @@ function HVP_VolCorrect!(HVP::Dict,FVC::Dict,diag::String;IMPR_SET::Vector{Strin
                         @warn("FVC could not be applied to comp $comp impr. set $impr_set")
                     end
                 else
-                    HVP[impr_set]["g$(comp)_$(discr)"] += FVC[impr_set]["FVC$(comp)_$(discr)"]
+                    HVP[impr_set]["$(comp)_$(discr)"] += FVC[impr_set]["FVC$(comp)_$(discr)"]
                 end
             end
         end

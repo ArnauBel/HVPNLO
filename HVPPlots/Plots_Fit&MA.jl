@@ -59,18 +59,18 @@ rcParams["axes.titlesize"] = 18
 # Set plot parameters
 
 diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = "ID"  #  NW  SD  SDsub  ID  LD  ILD
+wind = "LD"  #  NW  SD  SDsub  ID  LD  ILD
 comp = "g88"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
-model_var_list = Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]
+model_var_list = Function[a3,a2phi2,phi2sqr,phi2log]
 # model_var_list = Function[a3,a2y,ysqr,ylog,yinv,logy]
 MultFunc = nothing  # nothing  deltaphi
 
 readIMPR_SET = ["1","2"] # ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
 
-BLIND = false
+BLIND = true
 
 FitCUT = "None"  # "None"  "beta"  "mass"  "beta&mass"
 
@@ -107,12 +107,12 @@ DictComptoKey = Dict{String,Vector{String}}(
     "gCCdisc" => ["gCCdisc_cc"],
     "gC8disc" => ["gC8disc_cc"],
 
-    "g3333"    => ["g3333_ll","g3333_lc"],
-    "g8888"    => ["g8888_ll","g8888_lc"],
-    "gCCCC"    => ["gCCCC_ll","gCCCC_lc"],
-    "g3388"    => ["g3388_ll","g3388_lc"],
-    "g33CC"    => ["g33CC_ll","g33CC_lc"],
-    "g88CC"    => ["g88CC_ll","g88CC_lc"]
+    "g3333"    => ["g3333_llll","g3333_lclc"],
+    "g8888"    => ["g8888_llll","g8888_lclc"],
+    "gCCCC"    => ["gCCCC_lclc"],
+    "g3388"    => ["g3388_llll","g3388_lclc"],
+    "g33CC"    => ["g33CC_llll","g33CC_lclc"],
+    "g88CC"    => ["g88CC_llll","g88CC_lclc"]
 )
 
 mykeys = DictComptoKey[comp]
@@ -280,7 +280,7 @@ xlim(right=0.065)
 # ylim(bottom=26.5/10)
 # ylim([1.8/10,2.9/10])
 diag_str = diag == "LO" ? "\\rm{LO}" : (diag == "NLOa&b" ? "\\rm{NLO}_{\\rm{a}\\&\\rm{b}}" : "\\rm{NLO}_{\\rm{$(diag[end])}}")
-comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : "\\mathrm{$(comp[2]),$(comp[3])}"
+comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : (diag != "NLOc" ? "\\mathrm{$(comp[2]),$(comp[3])}" : "\\mathrm{$(comp[2]),$(comp[3])-$(comp[4]),$(comp[5])}")
 Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q\\ \\rm{GeV})" : ""
 fact_str = diag == "LO" ? "\\times10^{10}" : "\\times10^{11}"
 if wind == "NW"
@@ -301,7 +301,7 @@ close()
 
 ShowGHOST = true
 
-SAVE     = false
+SAVE     = true
 OVERSAVE = false
 
 ARGPLOT = 1  #  set to 1 for best plot
@@ -368,13 +368,13 @@ for (i,impr_set) in enumerate(IMPR_SET)
             xlabel(L"$y$")
         end
         if diag != "LO" # we multiply the y axis by a factor 10
-            formatter(x, pos) = string(round(10 * x, digits=2))  # Round to 2 decimal places
+            formatter(x, pos) = string(round(10 * x, sigdigits=2))  # Round to 2 decimal places
             ax = gca()
             ax.yaxis.set_major_formatter(PyPlot.matplotlib.ticker.FuncFormatter(formatter))
         end
         # ylim([3,12.5])
         diag_str = diag == "LO" ? "\\rm{LO}" : (diag == "NLOa&b" ? "\\rm{NLOa\\&b}" : "\\rm{NLO$(diag[end])}")
-        comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : "\\mathrm{$(comp[2]),$(comp[3])}"
+        comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : (diag != "NLOc" ? "\\mathrm{$(comp[2]),$(comp[3])}" : "\\mathrm{$(comp[2]),$(comp[3])-$(comp[4]),$(comp[5])}")
         Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q\\ \\rm{GeV})" : ""
         fact_str = diag == "LO" ? "\\times10^{10}" : "\\times10^{11}"
         if wind == "NW"
@@ -476,7 +476,7 @@ for (i,impr_set) in enumerate(IMPR_SET)
             ax.yaxis.set_major_formatter(PyPlot.matplotlib.ticker.FuncFormatter(formatter))
         end
         diag_str = diag == "LO" ? "\\rm{LO}" : (diag == "NLOa&b" ? "\\rm{NLOa\\&b}" : "\\rm{NLO$(diag[end])}")
-        comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : "\\mathrm{$(comp[2]),$(comp[3])}"
+        comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : (diag != "NLOc" ? "\\mathrm{$(comp[2]),$(comp[3])}" : "\\mathrm{$(comp[2]),$(comp[3])-$(comp[4]),$(comp[5])}")
         Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q\\ \\rm{GeV})" : ""
         fact_str = diag == "LO" ? "\\times10^{10}" : "\\times10^{11}"
         if wind == "NW"
@@ -557,7 +557,7 @@ if diag != "LO" # we multiply the y axis by a factor 10
 end
 PyPlot.title("Gaussian hit distribution; impr. sets [$(paste_str(IMPR_SET))]")
 diag_str = diag == "LO" ? "\\rm{LO}" : (diag == "NLOa&b" ? "\\rm{NLO}_{\\rm{a}\\&\\rm{b}}" : "\\rm{NLO}_{\\rm{$(diag[end])}}")
-comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : "\\mathrm{$(comp[2]),$(comp[3])}"
+comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : (diag != "NLOc" ? "\\mathrm{$(comp[2]),$(comp[3])}" : "\\mathrm{$(comp[2]),$(comp[3])-$(comp[4]),$(comp[5])}")
 Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q\\ GeV)" : ""
 fact_str = diag == "LO" ? "\\times10^{10}" : "\\times10^{11}"
 if wind == "NW"
@@ -657,7 +657,7 @@ if diag != "LO" # we multiply the y axis by a factor 10
     ax.yaxis.set_major_formatter(PyPlot.matplotlib.ticker.FuncFormatter(formatter))
 end
 diag_str = diag == "LO" ? "\\rm{LO}" : (diag == "NLOa&b" ? "\\rm{NLO}_{\\rm{a}\\&\\rm{b}}" : "\\rm{NLO}_{\\rm{$(diag[end])}}")
-comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : "\\mathrm{$(comp[2]),$(comp[3])}"
+comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : (diag != "NLOc" ? "\\mathrm{$(comp[2]),$(comp[3])}" : "\\mathrm{$(comp[2]),$(comp[3])-$(comp[4]),$(comp[5])}")
 Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q)" : ""
 fact_str = diag == "LO" ? "\\times10^{10}" : "\\times10^{11}"
 if wind == "NW"

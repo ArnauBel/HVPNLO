@@ -40,18 +40,18 @@ DictComptoKey = Dict{String,Vector{String}}(
     # "gCCconn"  => ["gCCconn_SU3_ll","gCCconn_SU3_lc"],
 
     "∆ls_amu" => ["∆ls_amu_ll","∆ls_amu_lc"],
-    "∆lc_b"   => ["∆lc_b_ll","∆lc_b_lc"],
+    "∆lc_b"   => ["∆lc_b_lc"],
 
     # only interested in the cc (conserved-conserved) discr. for the cc disc  & c8 disc
     "gCCdisc" => ["gCCdisc_cc"],
     "gC8disc" => ["gC8disc_cc"],
 
-    "g3333"    => ["g3333_ll","g3333_lc"],
-    "g8888"    => ["g8888_ll","g8888_lc"],
-    "gCCCC"    => ["gCCCC_ll","gCCCC_lc"],
-    "g3388"    => ["g3388_ll","g3388_lc"],
-    "g33CC"    => ["g33CC_ll","g33CC_lc"],
-    "g88CC"    => ["g88CC_ll","g88CC_lc"]
+    "g3333"    => ["g3333_llll","g3333_lclc"],
+    "g8888"    => ["g8888_llll","g8888_lclc"],
+    "gCCCC"    => ["gCCCC_lclc"],
+    "g3388"    => ["g3388_llll","g3388_lclc"],
+    "g33CC"    => ["g33CC_lclc"],
+    "g88CC"    => ["g88CC_lclc"]
 )
 
 @info("Ready")
@@ -64,34 +64,35 @@ DictComptoKey = Dict{String,Vector{String}}(
 
 ##==========================> Model Average <==========================##
 
-diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = "ID"  #  NW  SD  SDsub  ID  LD  ILD
-comp = "g88"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+diag = ""  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
+wind = ""  #  NW  SD  SDsub  ID  LD  ILD
+comp = ""  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
-model_var_list = Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]
+model_var_list = Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]  #  [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]  [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]  [a3,a2phi2,phi2sqr,phi2log,phi4]
 # model_var_list = Function[a3,a2y,ysqr,ylog,yinv,logy]
 MultFunc = nothing  #  nothing  deltaphi
 
 IMPR_SET = ["1","2"]  #  ["1"]  ["1old"]  ["2"]  ["1","2"]  ["1old","2"]  ["1","1old","2"]
 
-FITCUT = ["None","mass","beta","beta&mass"]  #  ["None","mass","beta","beta&mass"]
+FITCUT = ["None","beta","mass","beta&mass"]  #  ["None","beta","mass","beta&mass"]  ["None","beta"]
 
 BLIND = false
 
 STD_DERIV  = false
-tl_IMPR    = false
+tl_IMPR    = false 
 VREF       = false
 RESC       = false
 
 SimpleBase = false
 
-WRITE      = true
+WRITE      = false
 OVERWRITE  = false
 
 path_bdio_r = path_bdio_dict["local"]
 path_bdio_w = path_bdio_dict["local"]
+
 
 if comp != "g33" && VREF
     @error("Cannot project to Vref for chosen iso-spin")
@@ -152,7 +153,7 @@ for FitCut in FITCUT
             amu[key], syst[key] = model_average(res[impr_set][key], weight[key]); uwerr.(amu[key])
 
             digits = comp in ["cc disc","c8 disc"] ? 7 : 3
-            println("      ⟹ amu[$diag($wind)|$comp:$impr_set:$(key[end-1:end])] = $(round(value(amu[key][1]),digits=digits))($(round(err(amu[key][1]),digits=digits)))($(round(syst[key],digits=digits)))")
+            println("      ⟹ amu[$diag($wind)|$comp:$impr_set:$(key[end-1:end])] = $(print_uwreal(amu[key][1],syst[key]))")
         end
 
         if WRITE
@@ -204,9 +205,9 @@ end # end FitCut loop
 
 ##==========================> ENSEMBLE CUT COMBINATION <==========================##
 
-diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = "ID"  #  NW  SD  SDsub  ID  LD  ILD
-comp = "g88"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+diag = ""  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
+wind = ""  #  NW  SD  SDsub  ID  LD  ILD
+comp = ""  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
@@ -223,19 +224,19 @@ tl_IMPR    = false
 VREF       = false
 RESC       = false
 
-WRITE      = true
+WRITE      = false
 OVERWRITE  = false
 
 path_bdio_r = path_bdio_dict["local"]
 path_bdio_w = path_bdio_dict["local"]
 
 
-# SD:
+# SDsub :
 # FITCUTtoMODEL = Dict{String,Any}(
-#     "None"      => [false,Function[a3,a4,a2phi2,phi2sqr,phi2log]],
-#     "beta"      => [false,Function[a3,a4,a2phi2,phi2sqr,phi2log]],
-#     "mass"      => [false,Function[a3,a4,a2phi2,phi2sqr,phi2log]],
-#     "beta&mass" => [false,Function[a3,a4,a2phi2,phi2sqr,phi2log]],
+#     "None"      => [false,Function[a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]],
+#     "beta"      => [false,Function[a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]],
+#     "mass"      => [false,Function[a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]],
+#     "beta&mass" => [false,Function[a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]],
 # )
 # FITCUTtoMODEL = Dict{String,Any}(
 #     "None"      => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
@@ -243,45 +244,20 @@ path_bdio_w = path_bdio_dict["local"]
 # )
 # FITCUTtoMODEL = Dict{String,Any}(
 #     "None"      => [true,Function[a3,a4,a2phi2,phi2sqr,phi2log,phi4]],
-#     "beta"      => [true,Function[a3,a2phi2,phi2sqr,phi2log,phi4]],
+#     "beta"      => [true,Function[a3,a4,a2phi2,phi2sqr,phi2log,phi4]],
 #     "mass"      => [true,Function[a3,a4,a2phi2,phi2sqr,phi2log,phi4]],
-#     "beta&mass" => [true,Function[a3,a2phi2,phi2sqr,phi2log,phi4]],
 # )
 # FITCUTtoMODEL = Dict{String,Any}(
-#     "None"      => [false,Function[a3,a4,a2phi2,phi2sqr,phi2log]],
-#     "beta"      => [false,Function[a3,a4,a2phi2,phi2sqr,phi2log]],
+#     "None"      => [false,Function[a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]],
+#     "beta"      => [false,Function[a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]],
 # )
 
-# ID:
+# SD :
 # FITCUTtoMODEL = Dict{String,Any}(
-#     "None"      => [false,Function[a3,a2phi2,phi2sqr,phi2log,phi2inv,logphi2]],
-#     "beta"      => [false,Function[a3,a2phi2,phi2sqr,phi2log,phi2inv,logphi2]],
-#     "mass"      => [false,Function[a3,a2phi2,phi2sqr,phi2log,phi2inv,logphi2]],
-#     "beta&mass" => [false,Function[a3,a2phi2,phi2sqr,phi2log,phi2inv,logphi2]],
-# )
-FITCUTtoMODEL = Dict{String,Any}(
-    "None"      => [false,Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]],
-    "beta"      => [false,Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]],
-    "mass"      => [false,Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]],
-    "beta&mass" => [false,Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]],
-)
-# FITCUTtoMODEL = Dict{String,Any}(
-#     "None"      => [false,Function[a3,a2y,ysqr,ylog,yinv,logy]],
-#     "beta"      => [false,Function[a3,a2y,ysqr,ylog,yinv,logy]],
-#     "mass"      => [false,Function[a3,a2y,ysqr,ylog,yinv,logy]],
-#     "beta&mass" => [false,Function[a3,a2y,ysqr,ylog,yinv,logy]],
-# )
-# FITCUTtoMODEL = Dict{String,Any}(
-#     "None"      => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
-#     "beta"      => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
-#     "mass"      => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
-#     "beta&mass" => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
-# )
-# FITCUTtoMODEL = Dict{String,Any}(
-#     "None"      => [false,Function[a3,a2y,ysqr,ylog]],
-#     "beta"      => [false,Function[a3,a2y,ysqr,ylog]],
-#     "mass"      => [false,Function[a3,a2y,ysqr,ylog]],
-#     "beta&mass" => [false,Function[a3,a2y,ysqr,ylog]],
+#     "None"      => [false,Function[a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]],
+#     "beta"      => [false,Function[a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]],
+#     "mass"      => [false,Function[a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]],
+#     "beta&mass" => [false,Function[a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]],
 # )
 # FITCUTtoMODEL = Dict{String,Any}(
 #     "None"      => [true,Function[a3,a2phi2,phi2sqr,phi2log,phi4]],
@@ -290,30 +266,37 @@ FITCUTtoMODEL = Dict{String,Any}(
 #     "beta&mass" => [true,Function[a3,a2phi2,phi2sqr,phi2log,phi4]],
 # )
 
-# LD
+# NW, ID & LD :
 # FITCUTtoMODEL = Dict{String,Any}(
-#     "None"      => [false,Function[a3,a2phi2,phi2sqr,phi2log,phi2inv,logphi2]],
-#     "beta"      => [false,Function[a3,a2phi2,phi2sqr,phi2log,phi2inv,logphi2]],
-#     "mass"      => [false,Function[a3,a2phi2,phi2sqr,phi2log,phi2inv,logphi2]],
-#     "beta&mass" => [false,Function[a3,a2phi2,phi2sqr,phi2log,phi2inv,logphi2]],
+#     "None"      => [false,Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]],
+#     "beta"      => [false,Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]],
+#     "mass"      => [false,Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]],
+#     "beta&mass" => [false,Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]],
 # )
 # FITCUTtoMODEL = Dict{String,Any}(
-#     "None"      => [false,Function[a2y,ysqr,ylog,yinv,logy]],
-#     "beta"      => [false,Function[a2y,ysqr,ylog,yinv,logy]],
-#     "mass"      => [false,Function[a2y,ysqr,ylog,yinv,logy]],
-#     "beta&mass" => [false,Function[a2y,ysqr,ylog,yinv,logy]],
-# )
-# FITCUTtoMODEL = Dict{String,Any}(
-#     "None"      => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
-#     "beta"      => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
-#     "mass"      => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
-#     "beta&mass" => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
+#     "None"      => [false,Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]],
+#     "beta"      => [false,Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]],
+#     "mass"      => [false,Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]],
+#     "beta&mass" => [false,Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]],
 # )
 # FITCUTtoMODEL = Dict{String,Any}(
 #     "None"      => [true,Function[a3,a2phi2,phi2sqr,phi2log,phi4]],
 #     "beta"      => [true,Function[a3,a2phi2,phi2sqr,phi2log,phi4]],
 #     "mass"      => [true,Function[a3,a2phi2,phi2sqr,phi2log,phi4]],
 #     "beta&mass" => [true,Function[a3,a2phi2,phi2sqr,phi2log,phi4]],
+# )
+# ----
+# FITCUTtoMODEL = Dict{String,Any}(
+#     "None"      => [false,Function[a3,a2y,a2z,a3y,ysqr,ylog,yinv,logy]],
+#     "beta"      => [false,Function[a3,a2y,a2z,a3y,ysqr,ylog,yinv,logy]],
+#     "mass"      => [false,Function[a3,a2y,a2z,a3y,ysqr,ylog,yinv,logy]],
+#     "beta&mass" => [false,Function[a3,a2y,a2z,a3y,ysqr,ylog,yinv,logy]],
+# )
+# FITCUTtoMODEL = Dict{String,Any}(
+#     "None"      => [false,Function[a3,a2y,a2z,a3y,ysqr,ylog]],
+#     "beta"      => [false,Function[a3,a2y,a2z,a3y,ysqr,ylog]],
+#     "mass"      => [false,Function[a3,a2y,a2z,a3y,ysqr,ylog]],
+#     "beta&mass" => [false,Function[a3,a2y,a2z,a3y,ysqr,ylog]],
 # )
 
 
@@ -327,9 +310,11 @@ mykeys = DictComptoKey[comp]
 # mykeys = discr == "all" ? DictComptoKey[comp] : DictComptoKey[comp][discr .== ["ll","lc"]]
 
 
-factor = Dict(
+charge_factor = Dict(
     "g33" => 1., "g88" => 1/3., "gCCconn" => 4/9., "∆ls_amu" => 1/3., "∆lc_b" => 4/9.,
-    "g33s" => "", "g88s" => "(1/3)", "gCCconns" => "(4/9)", "∆ls_amus" => "(1/3)", "∆lc_bs" => "(4/9)"
+    "g33s" => "", "g88s" => "(1/3)", "gCCconns" => "(4/9)", "∆ls_amus" => "(1/3)", "∆lc_bs" => "(4/9)",
+    "g3333" => 1.,  "g3388" => 2/3., "g33CC" => 8/9., "g8888" => 1/9., "g88CC" => 8/27., "gCCCC" => 16/81., 
+    "g3333s" => "",  "g3388s" => "(2/3)", "g33CCs" => "(8/9)", "g8888s" => "(1/9)", "g88CCs" => "(8/27)", "gCCCCs" => "(16/81)",
 )
 
 if comp != "g33" && VREF
@@ -413,8 +398,7 @@ for impr_set in IMPR_SET
         #     amu[impr_set][key][1] = amu[impr_set][key][1] + value(MD_ph - MD_ph_prime) * der_mDs; uwerr(amu[impr_set][key][1])
         # end
 
-        digits = comp in ["gCCdisc","gC8disc"] ? 7 : 5
-        println("     ⟹ $(factor[comp*"s"]) amu[$diag($wind)|$comp:$impr_set:$(key[end-1:end])] = $(round(value((factor[comp])*amu[impr_set][key][1]),digits=digits))($(round((factor[comp])*err(amu[impr_set][key][1]),digits=digits)))($((factor[comp])*round(syst[impr_set][key],digits=digits)))")
+        println("     ⟹ $(charge_factor[comp*"s"]) amu[$diag($wind)|$comp:$impr_set:$(key[end-1:end])] = $(print_uwreal(charge_factor[comp]*amu[impr_set][key][1],charge_factor[comp]*syst[impr_set][key]))")
     end
 
 
@@ -432,8 +416,8 @@ AMU, SYST = model_average(RES_TOT, WEIGHT); uwerr.(AMU)
 #     AMU[1] = AMU[1] + value(MD_ph - MD_ph_prime) * der_mDs; uwerr(AMU[1])
 # end
 
-dig = comp in ["gCCdisc","gC8disc"] ? 7 : 5
-println("     ⟹ $(factor[comp*"s"]) amu[$diag($wind)|$comp] = $(round((factor[comp])*value(AMU[1]),digits=dig))($(round((factor[comp])*err(AMU[1]),digits=dig)))($(round((factor[comp])*SYST,digits=dig)))[$(round((factor[comp])*sqrt(err(AMU[1])^2+SYST^2),digits=dig))]")
+println("     ⟹ $(charge_factor[comp*"s"]) amu[$diag($wind)|$comp] = $(print_uwreal(charge_factor[comp]*AMU[1],charge_factor[comp]*SYST))")
+
 
 if WRITE
     println("- Writing BDIO & JLD2...")
@@ -515,38 +499,39 @@ end
 
 ##==========================> READING TEST <==========================##
 
-diag = "NLOa"  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = "ID"  # NW  SD  ID  LD  ILD
-comp = "g33"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+diag = ""  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
+wind = ""  # NW  SD  ID  LD  ILD
+comp = ""  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
 BLIND = false
 
-model_var_list = Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi4]
+model_var_list = Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]
 MultFunc = nothing # nothing  deltaphi
 
-impr_set = "2"
+impr_set = ""
 
-FitCut = "beta&mass"  # "None"  "beta"  "mass"  "beta&mass"
+FitCut = "None"  # "None"  "beta"  "mass"  "beta&mass"
 
 STD_DERIV  = false
 tl_IMPR    = false
-VREF       = true
+VREF       = false
 RESC       = false
 
-SimpleBase = true
+SimpleBase = false
 
 amu, info = BDIOread_MA(path_bdio_w,diag,wind,comp,model_var_list,FitCut,impr_set,resc=RESC,SimpleBase=SimpleBase,MultFunc=MultFunc,StdDer=STD_DERIV,tlImpr=tl_IMPR,Vref=VREF,BLIND=BLIND,Q=Q)
 res = amu["res"]["gCCconn_SU3_lc"]
 syst = info["syst"]["gCCconn_SU3_lc"]
-uwerr(res); 10 .* [value(res),err(res),syst]
+
+print_uwreal(res*10,syst*10)
 
 ##--- Full MA
 
-diag = "NLOa&b"  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = "ID"  # NW  SD  SDsub  ID  LD  ILD
-comp = "g33"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+diag = ""  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
+wind = ""  # NW  SD  SDsub  ID  LD  ILD
+comp = ""  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
@@ -554,14 +539,14 @@ BLIND = false
 
 STD_DERIV  = false
 tl_IMPR    = false
-VREF       = true
+VREF       = false
 RESC       = false
 
 path_bdio_r = path_bdio_dict["local"]
 
 AMU, INFO = BDIOread_MAtot(path_bdio_r,diag,wind,comp,resc=RESC,StdDer=STD_DERIV,tlImpr=tl_IMPR,Vref=VREF,BLIND=BLIND,Q=Q)
 
-uwerr(AMU); [AMU.mean,AMU.err,INFO["syst"]].*10
+print_uwreal(AMU*10,INFO["syst"]*10)
 
 # get_t0err([AMU],sqrtt0_ph_Regensburg)[1]
 
@@ -569,14 +554,11 @@ uwerr(AMU); [AMU.mean,AMU.err,INFO["syst"]].*10
 
 ##
 
-impr_set = "2"
+impr_set = ""
 
 AMU_set, INFO_set = BDIOread_MAtot(path_bdio_r,diag,wind,comp,read="impr",impr_set=impr_set,StdDer=STD_DERIV,tlImpr=tl_IMPR,BLIND=BLIND,Q=Q)
 
-uwerr(AMU_set); [AMU_set,INFO_set["syst"]]
-AMU_set["res"]
-INFO_set["syst"]
-
+print_uwreal(AMU_set["res"]*10,INFO_set["syst"]*10)
 
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
@@ -588,26 +570,24 @@ INFO_set["syst"]
 
 # include("HVPtools/Reader.jl")
 
-diag = "NLOa&b"  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = "ID"  # NW  SD  SDsub  ID  LD  ILD
-comp = "g33"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+diag = ""  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
+wind = ""  # NW  SD  SDsub  ID  LD  ILD
+comp = ""  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
-impr_set = "1"
+impr_set = ""
 
 Q = 5.0  # virtuality for SDsub
 
 BLIND = false
 
 model_var_list = [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]
-# model_var_list = [a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi4]
-# model_var_list = [a3,a2y,ysqr,ylog,yinv,logy]
 MultFunc = nothing  #  nothing  deltaphi
 
 FitCut = "None"  # "None"  "beta"  "mass"  "beta&mass"
 
 STD_DERIV  = false
 tl_IMPR    = false
-VREF       = true
+VREF       = false
 RESC       = false
 
 SimpleBase = false

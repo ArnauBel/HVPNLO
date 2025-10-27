@@ -24,18 +24,18 @@ DictComptoKey = Dict{String,Vector{String}}(
     # "gCCconn"  => ["gCCconn_SU3_ll","gCCconn_SU3_lc"],
 
     "∆ls_amu" => ["∆ls_amu_ll","∆ls_amu_lc"],
-    "∆lc_b"   => ["∆lc_b_ll","∆lc_b_lc"],
+    "∆lc_b"   => ["∆lc_b_lc"],
 
     # only interested in the cc (conserved-conserved) discr. for the cc disc  & c8 disc
     "gCCdisc" => ["gCCdisc_cc"],
     "gC8disc" => ["gC8disc_cc"],
 
-    "g3333"    => ["g3333_ll","g3333_lc"],
-    "g8888"    => ["g8888_ll","g8888_lc"],
-    "gCCCC"    => ["gCCCC_ll","gCCCC_lc"],
-    "g3388"    => ["g3388_ll","g3388_lc"],
-    "g33CC"    => ["g33CC_ll","g33CC_lc"],
-    "g88CC"    => ["g88CC_ll","g88CC_lc"]
+    "g3333"    => ["g3333_llll","g3333_lclc"],
+    "g8888"    => ["g8888_llll","g8888_lclc"],
+    "gCCCC"    => ["gCCCC_lclc"],
+    "g3388"    => ["g3388_llll","g3388_lclc"],
+    "g33CC"    => ["g33CC_llll","g33CC_lclc"],
+    "g88CC"    => ["g88CC_llll","g88CC_lclc"]
 )
 
 function paste_str(str_vec::Vector{String})::String

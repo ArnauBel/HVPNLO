@@ -55,9 +55,17 @@ corr_bound(t::Vector{Int64}, tcut::Int64, corr::Corr, Eeff::Union{uwreal,Float64
 # end
 
 function bounding_method(ub::Vector{uwreal},lb::Vector{uwreal},aEns::uwreal;PLAT::Bool=false,AVER::Bool=false,tcut0::Union{Int64,Nothing}=nothing,tstep::Union{Int64,Nothing}=nothing)
+    if isnothing(tcut0)
+        tcut0 = 1
+    end
+    if isnothing(tstep)
+        tstep = 1
+    end
     averb = (ub.+lb)./2; uwerr.(averb)
-    x0   = findfirst(abs.(value.(ub).-value.(lb)) .< err.(averb))
-    xend = (4*tstep*aEns.mean < 0.25) ? Int64(x0 + round(0.25/(tstep*aEns.mean),RoundUp)) : Int64(x0 + round(4/tstep,RoundUp))
+    x0    = findfirst(abs.(value.(ub).-value.(lb)) .< err.(averb))
+    # println("x0   = $(x0)")
+    xend  = (4*tstep*aEns.mean < 0.25) ? Int64(x0 + round(0.25/(tstep*aEns.mean),RoundUp)) : Int64(x0 + round(4/tstep,RoundUp))
+    # println("xend = $(xend)")
     if xend > length(averb)
         xend = length(averb)
         @warn(" - BM converging too slow! t=tmax (T/2) was reached. Average will be produced with shorter plateau.")

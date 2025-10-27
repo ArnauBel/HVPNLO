@@ -37,7 +37,14 @@ path_coef = joinpath(julia_script_directory, "..", "KernelCoeff")
 # H102, N101, C101, S400, N203, N200, D200, N302
 
 # All considered ensembles are:
-ensList = ["A653","A654","B450","C101","C102","D150","D200","D201","D251","D450","D451","D452","E250","E300","F300","H101","H200","J303","J304","J306","J307","J500","J501","N101","N200","N202","N203","N302","N451","N452","S400"] # "H102","N300"
+ensList = [
+    "A653","A654","B450","C101","C102",
+    "D150","D200","D201","D251","D450",
+    "D451","D452","E250","E300","F300",
+    "H101","H102","H200","J303","J304",
+    "J306","J307","J500","J501","N101",
+    "N200","N202","N203","N300","N302",
+    "N451","N452","S400"]
 
 ensInfo = EnsInfo.(ensList)
 
@@ -56,14 +63,14 @@ ensNOdisc   = ["F300","J306"]
 
 ##==========================> 1D HVP computation [LO, NLOa, NLOb] <==========================##
 
-diag = "NLOa&b"  # LO  NLOa  NLOb  NLOa&b
+diag = ""  # LO  NLOa  NLOb  NLOa&b
 
 IMPR_SET = ["1","2"] # ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
 
 STD_DERIV = false
 RESC      = false
 
-OVERWRITE = true  # Allows to erase data and overwrite it with new data, use carefully !!
+OVERWRITE = false  # Allows to erase data and overwrite it with new data, use carefully !!
 
 path_bdio = path_bdio_dict["local"]
 
@@ -81,7 +88,7 @@ corr33tl_v3s03_ll, corr33tl_v3s03_lc = read_tree_level_v3sig03(path_tl, cons=tru
 corr33tl_ll = uwreal.(corr33tl_ll); corr33tl_lc = uwreal.(corr33tl_lc)
 
 @time begin
-    for ens in EnsInfo.(["E300","J303"])
+    for ens in ensInfo
 
         @info("Computing for ensemble $(ens.id)")
         ens.id ∈ ensNOcharm ? @info("  > NO CHARM DATA FOR $(ens.id)") : nothing
@@ -376,11 +383,11 @@ end
         FVCPi = (alpha/pi)^exp_diag * sum(fvcPi .* TMRw) * 1e10
         FVCK  = (alpha/pi)^exp_diag * sum(fvcK  .* TMRw) * 1e10
 
-        FVC∆ls_amu = ens.kappa_l == ens.kappa_s ? (uwreal([0.0,0.0],"")) : ((-1.0) * (alpha/pi)^exp_diag * sum(((1/3.).*fvcK .+ fvcPi) .* TMRw) * 1e10)
+        FVC∆ls_amu = ens.kappa_l == ens.kappa_s ? (uwreal([0.0,0.0],"")) : ((-1.0) * (alpha/pi)^exp_diag * sum((-(1/6.).*fvcK .+ fvcPi) .* TMRw) * 1e10)
 
         dataFVC =  Dict{String, Array{uwreal}}(
             "FVCPi" => [FVCPi], 
-            "FVCK"  => [FVCK],
+            "FVCK"  => [FVCK/2],
             "FVC∆ls_amu" => [FVC∆ls_amu], 
         )
 
@@ -404,12 +411,12 @@ end
             if ens.kappa_l == ens.kappa_s
                 FVC33_ = (3/2)*FVCPisub_
                 FVC88_ = (3/2)*FVCPisub_
-                FVC∆lc_b_  = (3)*FVCPib_
-                # FVC∆lc_bß_ = (3)*FVCKbß_
+                FVC∆lc_b_  = -(3)*FVCPib_ # this minus sign was not there before. !!??
+                # FVC∆lc_bß_ = -(3)*FVCKbß_ # this minus sign was not there before. !!??
             else
-                FVC33_ = FVCPisub_ + FVCKsub_
+                FVC33_ = FVCPisub_ + FVCKsub_/2
                 FVC88_ = 2/3 * FVCKsub_
-                FVC∆lc_b_  = (-2)*(FVCPib_ + FVCKb_) # there's a factor 2
+                FVC∆lc_b_  = (-2)*(FVCPib_ + FVCKb_/2) # there's a factor 2
                 # FVC∆lc_bß_ = (-2)*(FVCPibß_ + FVCKbß_) # there's a factor 2
             end
                         
@@ -422,9 +429,9 @@ end
 
         dataFVCQ =  Dict{String, Array{uwreal}}(
             "FVCPisub" => FVCPisub, 
-            "FVCKsub"  => FVCKsub,
+            "FVCKsub"  => FVCKsub/2,
             "FVCPib"   => FVCPib, 
-            "FVCKb"    => FVCKb,
+            "FVCKb"    => FVCKb/2,
             "FVCg33"   => FVC33, 
             "FVCg88"   => FVC88,
             "FVC∆lc_b" => FVC∆lc_b
@@ -458,10 +465,10 @@ end # end timer
 
 ##==========================> READING TEST <==========================##
 
-diag  = "NLOb"
-ensid = "E250"
+diag  = ""
+ensid = ""
 
-impr_set = "1"
+impr_set = ""
 
 HVP, info = BDIOread_HVPens(path_bdio,diag,"SDsub",ensid,impr_set,info=true)
 
