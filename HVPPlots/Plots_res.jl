@@ -75,15 +75,15 @@ FITdata = true
 # Set plot parameters
 
 diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = "SDsub"  #  NW  SD  SDsub  ID  LD  ILD
-comp = "∆lc_b"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+wind = "LD"  #  NW  SD  SDsub  ID  LD  ILD
+comp = "g33"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
-BLIND = false
+BLIND = true
 
 STD_DERIV  = false
-VREF       = false
+VREF       = true
 tl_IMPR    = false
 RESC       = false
 
@@ -190,7 +190,9 @@ end
 
 # IMPR_SET = readIMPR_SET  #  readIMPR_SET  ["1"]  ["2"]  ["1","2"]  ["1old","2"]  ["1","1old","2"]
 
-npoints = 30
+# nFits   = 100
+npoints = 50
+Wdump   = 1e5
 
 println("   - Computing 'x' and 'y' plot points")
 
@@ -200,32 +202,49 @@ for FitCut in FITCUT
     xarr[FitCut] = [Float64.(range(1e-5, 1.5*maximum(value.(xydata[FitCut]["xdata"][:,1])), length=npoints)) fill(value(phi2_ph), npoints) fill(value(phi4_ph), npoints)]; yarr = Dict()
 end
 yproj = Dict(); yproj_syst = Dict()
-yarr = Dict()
-warg = Dict()
+yarr  = Dict()
+weig  = Dict()
 for (j,impr_set) in enumerate(IMPR_SET)
 
-    warg[impr_set]  = Dict()
+    weig[impr_set]  = Dict()
     yarr[impr_set]  = Dict()
     yproj[impr_set] = Dict(); yproj_syst[impr_set] = Dict()
     for (k,key) in enumerate(mykeys)
         yarr[impr_set][key] = Dict()
-        warg[impr_set][key] = Dict()
+        weig[impr_set][key] = Dict()
 
-        valid_indices = Dict()
+        # valid_indices = Dict()
+        # valid_indices = filter(i -> vcat([label_tot_isov[FitCut] for FitCut in FITCUT]...)[i][1] ∉ ["baseResc","baseSimpResc"], eachindex(info[impr_set]["average"]["weight"][key]))
+
+        # warg_average = sortperm(info[impr_set]["average"]["weight"][key],rev=true)
+        # warg_average = warg_average[[warg in valid_indices for warg in warg_average]]
+
+        Wcut = maximum(info[impr_set]["average"]["weight"][key])/Wdump
+        
+        i = 0
         for FitCut in FITCUT
             yarr[impr_set][key][FitCut] = Vector{Vector{uwreal}}()
+            weig[impr_set][key][FitCut] = Vector{Float64}()
+
             println("- Impr. set = $impr_set; Comp = $key; Fit cut = $FitCut")
             println("   - [Computing bands...]")
 
-            valid_indices[FitCut] = filter(i -> label_tot_isov[FitCut][i][1] ∉ ["baseResc","baseSimpResc"], eachindex(info[impr_set][FitCut]["weight"][key]))
+            valid_indices = filter(i -> label_tot_isov[FitCut][i][1] ∉ ["baseResc","baseSimpResc"], eachindex(info[impr_set][FitCut]["weight"][key]))
 
-            warg[impr_set][key][FitCut] = sortperm(info[impr_set][FitCut]["weight"][key][valid_indices[FitCut]]; rev=true) .|> i -> valid_indices[FitCut][i]
-            warg[impr_set][key][FitCut] = warg[impr_set][key][FitCut][info[impr_set][FitCut]["weight"][key][warg[impr_set][key][FitCut]] .> info[impr_set][FitCut]["weight"][key][warg[impr_set][key][FitCut][1]]/10]
+            # warg[impr_set][key][FitCut] = sortperm(info[impr_set][FitCut]["weight"][key][valid_indices[FitCut]]; rev=true) .|> i -> valid_indices[FitCut][i]
+            # warg[impr_set][key][FitCut] = warg[impr_set][key][FitCut][info[impr_set][FitCut]["weight"][key][warg[impr_set][key][FitCut]] .> info[impr_set][FitCut]["weight"][key][warg[impr_set][key][FitCut][1]]/100]
+            
+            len = length(info[impr_set][FitCut]["weight"][key])
+            W = info[impr_set]["average"]["weight"][key][(i+1):(i+len)][valid_indices]
 
-            for i in ProgressBar(warg[impr_set][key][FitCut])
-                my = f_tot_isov[FitCut][i](xarr[FitCut], param[impr_set][FitCut][key][i]); uwerr.(my)
-                push!(yarr[impr_set][key][FitCut], my)
+            for (i,ind) in ProgressBar(enumerate(valid_indices))
+                if W[i] > Wcut
+                    my = f_tot_isov[FitCut][ind](xarr[FitCut], param[impr_set][FitCut][key][ind]); uwerr.(my)
+                    push!(yarr[impr_set][key][FitCut], my)
+                    push!(weig[impr_set][key][FitCut], W[i])
+                end
             end
+            i += len
         end
     end
 end
@@ -239,7 +258,7 @@ OVERSAVE = false
 
 # mykeys = [""]
 
-wPen = 0.2
+wPen = 2.0
 
 # SHOWRES = false
 
@@ -257,12 +276,13 @@ ls_dict = Dict(
 )
 
 fig = figure(figsize=(10,7.5))
+
 for (j,impr_set) in enumerate(IMPR_SET)
     for (k,key) in enumerate(mykeys)
         for (f,FitCut) in enumerate(FITCUT)
             for i=1:length(yarr[impr_set][key][FitCut])
                 # fill_between(xarr[FitCut][:,1], value.(yarr[impr_set][key][FitCut][i]).-err.(yarr[impr_set][key][FitCut][i]), value.(yarr[impr_set][key][FitCut][i]).+err.(yarr[impr_set][key][FitCut][i]), alpha=(!a2RESCAL[FitCut] ? 1 : 2)*info[impr_set][FitCut]["weight"][key][warg[impr_set][key][FitCut][i]]*wPen, color=color_dict[impr_set]["$(key[end-1:end])"])
-                PyPlot.plot(xarr[FitCut][:,1], value.(yarr[impr_set][key][FitCut][i]), alpha=3*(!a2RESCAL[FitCut] ? 1 : 2)*info[impr_set][FitCut]["weight"][key][warg[impr_set][key][FitCut][i]]*wPen, linestyle = ls_dict[FitCut], color=color_dict[impr_set]["$(key[end-1:end])"])
+                PyPlot.plot(xarr[FitCut][:,1], value.(yarr[impr_set][key][FitCut][i]), alpha=(weig[impr_set][key][FitCut][i])^(2/3)*wPen, linestyle = ls_dict[FitCut], color=color_dict[impr_set]["$(key[end-1:end])"])
             end
         end
     end
@@ -283,11 +303,6 @@ if diag != "LO" # we multiply the y axis by a factor 10
     ax = gca()
     ax.yaxis.set_major_formatter(PyPlot.matplotlib.ticker.FuncFormatter(formatter))
 end
-# xlim(right=0.065)
-# ylim(top=-32/10)
-# ylim(top=-40/10)
-# ylim(top=-60/10)
-# ylim(bottom=27/10)
 diag_str = diag == "NLOa&b" ? "\\rm{NLOa\\&b}" : diag
 comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : (diag != "NLOc" ? "\\mathrm{$(comp[2]),$(comp[3])}" : "\\mathrm{$(comp[2]),$(comp[3])-$(comp[4]),$(comp[5])}")
 Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q\\ \\mathrm{GeV})" : ""
@@ -307,6 +322,8 @@ for impr_set in IMPR_SET
 end
 legend(handles=handles, loc="best")
 tight_layout()
+xlim(-0.001,0.06)
+ylim(-4.8,-4.2)
 display(gcf())
 if SAVE
     RESCstr = !RESC ? "" : "_resc"
@@ -483,7 +500,7 @@ close()
 
 @info("Model average plot")
 
-nBEST = 50
+nBEST = 40
 
 Norm2DOF = false
 
@@ -645,13 +662,18 @@ while i < length(m)
         str *= ","*s
     end
     push!(m_str, str)
-    if m[i][2:end] == m[i+1][2:end]
-        push!(x_str, i+0.5)
-        i += 1
+    if i < length(m)
+        if m[i][2:end] == m[i+1][2:end]
+            push!(x_str, i+0.5)
+            i += 1
+        else
+            push!(x_str, i)
+        end
     else
         push!(x_str, i)
     end
 end
+
 PyPlot.xticks(x_str, m_str, rotation=70, ha="right")
 # tight_layout()
 display(gcf())
@@ -690,12 +712,21 @@ fmt_dict = Dict(
 
 myFactor = charge_factor[comp] * (diag == "LO" ? 1 : 10)
 
+fig = figure(figsize=(10,7.5))
+
 RESTOT = []; WEIGHT = []
 for (i,impr_set) in enumerate(IMPR_SET)
     for (k,key) in enumerate(mykeys)
-        for FitCut in FITCUT
+        i = 0
+        for (j,FitCut) in enumerate(FITCUT)
             restot = myFactor .* MA[impr_set][FitCut]["res_tot"][key]; uwerr.(restot)
-            weight = info[impr_set][FitCut]["weight"][key] # this is wrong !! Should take weight from FitCut combination
+            # weight = weig[impr_set][key][FitCut] # this is wrong !! Should take weight from FitCut combination
+
+            # println(length(restot))
+            # println(length(weight))
+
+            len = length(info[impr_set][FitCut]["weight"][key])
+            my_weig = info[impr_set]["average"]["weight"][key][(i+1):(i+len)]
 
             # to make the plot go faster we only plot the best 1000 prediction
             # bitvec = weight .> maximum(weight)/100000
@@ -705,15 +736,23 @@ for (i,impr_set) in enumerate(IMPR_SET)
             color = color_dict[impr_set][key[end-1:end]]
             fmt   = fmt_dict[FitCut]
 
-            errorbar(value.(restot), xerr=err.(restot), weight, 0.0, fmt=fmt, color=color, ms=5, capsize=1, alpha=0.2, label="impr. set $impr_set; discr. $(key[end-1:end])")
+            if j==1
+                errorbar(value.(restot), xerr=err.(restot), my_weig, 0.0, fmt=fmt, color=color, ms=5, capsize=1, alpha=0.2, label="impr. set $impr_set; discr. $(key[end-1:end])")
+            else
+                errorbar(value.(restot), xerr=err.(restot), my_weig, 0.0, fmt=fmt, color=color, ms=5, capsize=1, alpha=0.2)
+            end
             push!(RESTOT,restot)
-            push!(WEIGHT,weight)
+            push!(WEIGHT,my_weig)
+
+            i += len
         end
     end
 end
 
 x_lim = xlim()
 y_lim = ylim()
+
+SYST = INFO["syst"]
 
 RESTOT = vcat(RESTOT...)
 WEIGHT = vcat(WEIGHT...)
@@ -734,7 +773,7 @@ fill_between(x, y, 0.0, color="orange", alpha=0.2)
 PyPlot.plot(x, y, color="orange", ls="--", alpha=0.5)
 
 fill_betweenx([0.0,1.0], myFactor*(RES.mean-RES.err), myFactor*(RES.mean+RES.err), color="gray", alpha=0.2)
-fill_betweenx([0.0,1.0], myFactor*(RES.mean-sqrt(RES.err^2+INFO["syst"]^2)), myFactor*(RES.mean+sqrt(RES.err^2+INFO["syst"]^2)), color="gray", alpha=0.2)
+fill_betweenx([0.0,1.0], myFactor*(RES.mean-sqrt(RES.err^2+SYST^2)), myFactor*(RES.mean+sqrt(RES.err^2+SYST^2)), color="gray", alpha=0.2)
 
 diag_str = diag == "LO" ? "\\rm{LO}" : (diag == "NLOa&b" ? "\\rm{NLO}_{\\rm{a}\\&\\rm{b}}" : "\\rm{NLO}_{\\rm{$(diag[end])}}")
 comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : (diag != "NLOc" ? "\\mathrm{$(comp[2]),$(comp[3])}" : "\\mathrm{$(comp[2]),$(comp[3])-$(comp[4]),$(comp[5])}")
@@ -746,7 +785,8 @@ if wind == "NW"
 else
     xlabel(latexstring("$(charge_factor[comp*"s"])\\left(a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]$(V_str)\\right)^{\\rm{$wind}}$Q_str$fact_str"))
 end
-# legend()
+legend()
+xlim(10*[RES.mean-6*sqrt(RES.err^2+SYST^2),RES.mean+6*sqrt(RES.err^2+SYST^2)])
 ylim(y_lim)
 ylabel(latexstring("w"))
 display(gcf())
@@ -761,13 +801,14 @@ close()
 
 @info("SD (aµ + b) stability plot")
 
-diag = "NLOb"
+diag = "NLOa"
 comp = "g33"  #  g33  gCCconn
 
 StdDer = false
 tlImpr = true
+VREF   = true
 
-QRES  = "best"  # "average"  "best"
+QRES  = "best"  # "average"  "best"  5.0
 QLIST = Qlist  #  [5.0]  [5.0,8.0]  Qlist
 
 path_bdio = path_bdio_dict["local"]
@@ -781,22 +822,32 @@ end
 
 b33Pert = TXTread_bQ(path_bPert,diag); uwerr.(b33Pert)
 
-amu0, info0 = BDIOread_MAtot(path_bdio,diag,"SD",comp,StdDer=StdDer,tlImpr=tlImpr)
+amu0, info0 = BDIOread_MAtot(path_bdio,diag,"SD",comp,StdDer=StdDer,tlImpr=tlImpr,Vref=VREF)
+
+    if VREF
+        FVC_ChPT = JDL2read_FVC_ChPT(path_FVCcont,diag,"SD")
+        amu0 += FVC_ChPT
+    end
 
 RES  = [amu0]
 SYST = [info0["syst"]]
 for Q in QLIST
-    amu, amuInfo = BDIOread_MAtot(path_bdio,diag,"SDsub",comp,StdDer=StdDer,tlImpr=tlImpr,Q=Q)
+    amu, amuInfo = BDIOread_MAtot(path_bdio,diag,"SDsub",comp,StdDer=StdDer,tlImpr=tlImpr,Vref=VREF,Q=Q)
     if comp == "g33"
         bq = value(b33Pert[Q .== Qlist][1])
-        syst = sqrt(amuInfo["syst"]^2 + Window("SD")(0)^2 * err(b33Pert[Q .== Qlist][1])^2)
+        syst = sqrt(amuInfo["syst"]^2 + Window("SD")(0)^2 * b33Pert[Q .== Qlist][1].err^2)
     elseif comp == "gCCconn"
         ∆lc, ∆lcInfo = BDIOread_MAtot(path_bdio,diag,"SDsub","∆lc_b",StdDer=StdDer,Q=Q)
         bq = 2*value(b33Pert[Q .== Qlist][1]) + ∆lc
-        syst = sqrt(amuInfo["syst"]^2 + Window("SD")(0)^2 * (4*err(b33Pert[Q .== Qlist][1])^2 + ∆lcInfo["syst"]^2))
+        syst = sqrt(amuInfo["syst"]^2 + Window("SD")(0)^2 * (4*b33Pert[Q .== Qlist][1].err^2 + ∆lcInfo["syst"]^2))
     end
-    push!(RES ,amu + Window("SD")(0) * bq)
-    push!(SYST,syst)
+    res = amu + Window("SD")(0) * bq
+    if VREF
+        FVC_ChPT = JDL2read_FVC_ChPT(path_FVCcont,diag,"SDsub",Q=Q)
+        res += FVC_ChPT
+    end
+    push!(RES , res)
+    push!(SYST, syst)
 end
 
 RES  .*= factor; uwerr.(RES)
@@ -947,3 +998,35 @@ PyPlot.yticks([1,2,3,4,5,6,7], ["(no a2phi4) t0","t0","(w. D201, no a2phi4) t0",
 tight_layout()
 display(gcf())
 close()
+
+##
+
+
+valid_indices[FitCut] = filter(i -> label_tot_isov[FitCut][i][1] ∉ ["baseResc","baseSimpResc"], eachindex(info[impr_set][FitCut]["weight"][key]))
+
+warg[impr_set][key][FitCut] = sortperm(info[impr_set][FitCut]["weight"][key][valid_indices[FitCut]]; rev=true) .|> i -> valid_indices[FitCut][i]
+warg[impr_set][key][FitCut] = warg[impr_set][key][FitCut][info[impr_set][FitCut]["weight"][key][warg[impr_set][key][FitCut]] .> info[impr_set][FitCut]["weight"][key][warg[impr_set][key][FitCut][1]]/100]
+
+##
+
+nFit = 20
+sortperm(INFO["weight"],rev=true)
+
+
+valid_indices = filter(i -> vcat([label_tot_isov[FitCut] for FitCut in FITCUT]...)[i][1] ∉ ["baseResc","baseSimpResc"], eachindex(info[impr_set]["average"]["weight"][key]))
+
+warg_average = sortperm(info[impr_set]["average"]["weight"][key],rev=true)
+warg_average = warg_average[[warg in valid_indices for warg in warg_average]]
+
+info[impr_set]["average"]["weight"][key]
+info[impr_set]["beta"]["weight"][key]
+info[impr_set]["beta&mass"]["weight"][key]
+
+i = 0
+cut_tuplearg = Dict()
+for FitCut in FITCUT
+    len = length(info[impr_set][FitCut]["weight"][key])
+    cut_tuplearg[FitCut] = (i+1):(i+len)
+    i += len
+end
+cut_tuplearg[FitCut]

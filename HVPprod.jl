@@ -50,16 +50,16 @@ path_fvcKref  = joinpath(path_hvp_dict["local"], "FSE_HP", "ref", "JKMK")
 # "A653","A654","B450","C101","C102","D150","D200","D201","D251","D450","D451","D452","E250","E300","F300","H101","H102","H200","J303","J304","J306","J307","J500","J501","N101","N200","N202","N203","N300","N302","N451","N452","S400"
 
 # Problematic ensembles: 
-# "H105" ("N00","H102")
+# "H105"
 
-ensList = ["A653","A654","B450","C101","C102","D150","D200","D201","D251","D450","D451","D452","E250","E300","F300","H101","H102","H200","J303","J304","J306","J307","J500","J501","N101","N200","N202","N203","N300","N302","N451","N452","S400"]
+ensList = ["A653","A654","B450","C101","C102","D150","D200","D201","D251","D450","D451","D452","E250","E300","F300","H101","H102","H200","H650","J303","J304","J306","J307","J500","J501","N101","N200","N202","N203","N300","N302","N451","N452","S400"]
 
 # Updated ensembles
 # "D251","F300","J306","J307"
 
 # We do not have charm or disconnected data for some of the ensembles
-ensNOcharm = ["J501","N451","D150","D451","J304","C102","D251","D201","J306","J307","F300","H200","N452"]
-ensNOdisc  = ["F300","J306"]
+ensNOcharm = ["C102","D150","D201","D251","D451","F300","H200","H650","J304","J306","J307","J501","N451","N452"]
+ensNOdisc  = ["F300","H650","J306"]
 
 # Ensemble check
 # ensInfo, bad_ensInfo = ensCheck(EnsInfo.(ensList), ensNOcharm, ensNOdisc, path_HVP, path_rw_, path_ms, path_fvcPI, data_status=true)
@@ -81,9 +81,9 @@ IMPR      = true
 RENORM    = true
 STD_DERIV = false
 
-OVERWRITE = false  # Allows to erase data and overwrite it with new data, use carefully !!
-
 IMPR_SET  = ["1","2"]  # ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
+
+OVERWRITE = false
 
 path_bdio_w =  path_bdio_dict["local"]
 
@@ -99,34 +99,34 @@ path_bdio_w =  path_bdio_dict["local"]
 
         for impr_set in IMPR_SET
             println("   - Impr Set: ", impr_set)
-            println("        - G33 ll and lc correlator...")
+            println("      - G33 ll and lc correlator...")
 
             if ens.id ∉ ["C101","E300","J303"]
                 g33_ll, g33_lc = corr33(path_HVP, ens, path_rw=path_rw, impr=IMPR, impr_set=impr_set, cons=true, frw_bcwd=true, std=STD_DERIV)
             else
                 g33_ll = corr33(path_HVP, ens, path_rw=path_rw, impr=IMPR, impr_set=impr_set, cons=false, frw_bcwd=true, std=STD_DERIV)
-                println("          (No LMA for 'lc' -> using ratio)")
-                # g33stoc_ll, g33stoc_lc = corr33(path_HVP, ens, path_rw=path_rw, impr=IMPR, impr_set=impr_set, cons=true, frw_bcwd=true, std=STD_DERIV, lma=false)
+                println("        (No LMA for 'lc' -> using ratio)")
+                g33stoc_ll, g33stoc_lc = corr33(path_HVP, ens, path_rw=path_rw, impr=IMPR, impr_set=impr_set, cons=true, frw_bcwd=true, std=STD_DERIV, lma=false)
                 g33_lc_obs = g33_ll.obs .* (g33stoc_lc.obs./g33stoc_ll.obs)
                 
                 g33_lc = Corr(g33_lc_obs, ens.id, "G33lc")
             end
 
-            println("        - G88 connected ll and lc correlator...")        
+            println("      - G88 connected ll and lc correlator...")        
             g88_ll_conn, g88_lc_conn = corr88_conn(path_HVP, ens, g33_ll, g33_lc=g33_lc, path_rw=path_rw, impr=IMPR, impr_set=impr_set, cons=true, frw_bcwd=true, std=STD_DERIV)
             
-            println("        - G08 connected ll and lc correlator...")
+            println("      - G08 connected ll and lc correlator...")
             g08_ll_conn, g08_lc_conn = corr08_conn(g33_ll, g88_ll_conn, g33_lc=g33_lc, g88_lc=g88_lc_conn)
 
             if ens.id ∉ ensNOcharm
-                println("        - Gcc connected ll and lc correlator...")
+                println("      - Gcc connected ll and lc correlator...")
                 gcc_ll_conn, gcc_lc_conn = corrC_conn(path_HVP, ens, path_rw=path_rw, impr=IMPR, impr_set=impr_set, cons=true, frw_bcwd=true, std=STD_DERIV, plus=false)
                 gcc_ll_conn_p, gcc_lc_conn_p = corrC_conn(path_HVP, ens, path_rw=path_rw, impr=IMPR, impr_set=impr_set, cons=true, frw_bcwd=true, std=STD_DERIV, plus=true)
 
             end
 
             if ens.kappa_l != ens.kappa_s && ens.id ∉ ensNOdisc
-                println("        - G88, Gcc, G08, Gc8 disconnected...")
+                println("      - G88, Gcc, G08, Gc8 disconnected...")
                 g88_ll_disc, g88_lc_disc, g88_cc_disc = corrDisconnected(path_HVP, ens, "88", path_rw=path_rw, impr=IMPR, impr_set=impr_set, std=STD_DERIV)
                 g08_ll_disc, g08_lc_disc, g08_cc_disc = corrDisconnected(path_HVP, ens, "08", path_rw=path_rw, impr=IMPR, impr_set=impr_set, std=STD_DERIV)
                 g80_ll_disc, g80_lc_disc, g80_cc_disc = corrDisconnected(path_HVP, ens, "80", path_rw=path_rw, impr=IMPR, impr_set=impr_set, std=STD_DERIV)
@@ -137,7 +137,7 @@ path_bdio_w =  path_bdio_dict["local"]
             end
 
             if RENORM
-                println("        - Renormalization...")
+                println("      - Renormalization...")
 
                 Z3 = get_Z3(ens, impr_set=impr_set)
                 renormalize!(g33_ll, Z3^2)
@@ -175,7 +175,7 @@ path_bdio_w =  path_bdio_dict["local"]
                 end
             end
             
-            println("        - Writing BDIO...")
+            println("      - Writing BDIO...")
 
             data_corr = Dict{String, Array{uwreal}}()
 
@@ -325,7 +325,7 @@ end # end timer
 
 OVERWRITE  = false
 
-PLOT = false
+PLOT = true
 
 path_bdio_w = path_bdio_dict["local"]
 
@@ -342,12 +342,12 @@ path_bdio_w = path_bdio_dict["local"]
             try
                 t0 = get_t0(path_ms, ens, path_rw = path_rw, pl = PLOT, wpm = wpmm)
             catch
-                println("   (loading uwerr with label = $(ens.id))")
+                println("     (loading uwerr with label = $(ens.id))")
                 _ = BDIOread_corr(path_bdio_w,ens.id,"1",STD=false)
                 t0 = get_t0(path_ms, ens, path_rw = path_rw, pl = PLOT)
             end
         end
-
+        
         data_t0 = Dict{String,Array{uwreal}}("t0" => [t0])
 
         println("   - Writing BDIO...")
@@ -367,10 +367,10 @@ end # end timer
 
 ##==========================> LO & NLO TMR computation <==========================##
 
-scale = "t0su3"  # t0  t0su3  fPi  fPiph
+scale = ""  # t0  t0su3  fPi  fPiph
 
 COMPTMRc  = false
-OVERWRITE = true
+OVERWRITE = false
 
 path_bdio_w = path_bdio_dict["local"]
 

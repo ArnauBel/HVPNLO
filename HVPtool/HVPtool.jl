@@ -8,7 +8,7 @@ export fPi_ph_PDGFLAG
 export sqrtt0_ph, fPi_ph, fK_ph, MD_ph, mpi_ph, mK_ph
 export phi2_ph, phi4_ph, y_ph, z_ph
 export b_values, t0sym, fPiph, asym, a2_rescaling
-export Zvc_l, E0_ens, meson_ens # m_ens
+export Zvc_l, E0_ens, meson_ens, m_ens
 
 include("Const/Const.jl")
 

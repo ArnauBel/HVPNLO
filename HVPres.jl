@@ -48,9 +48,9 @@ charge_factor = Dict(
 ##==========================> INDIVIDUAL RESULTS <==========================##
 
 
-diag = "NLOa&b"  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = "SDsub"  # NW  SD  SDsub  ID  LD  ILD
-comp = "∆lc_b"  # g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+diag = "NLOc"  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
+wind = "NW"  # NW  SD  SDsub  ID  LD  ILD
+comp = "g3333"  # g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 IMPR = "all"  # "all"  "1"  "1old"  "2"
 
@@ -125,7 +125,7 @@ tl_IMPR33 = true
 VREF33    = true
 RESC      = false
 
-path_bdio = path_bdio_dict["local"]
+path_bdio = path_bdio_dict["clust"]
 
 amu33sub, info33sub = BDIOread_MAtot(path_bdio,diag,"SDsub","g33",resc=RESC,StdDer=STD_DERIV,tlImpr=tl_IMPR33,Vref=VREF33,Q=Q33)
 b33Pert = TXTread_bQ(path_bPert,diag)[Qlist .== Q33][1]; uwerr(b33Pert)
@@ -184,7 +184,7 @@ println(" => amu($diag;SD) = $(print_uwreal(factor*amuSD,factor*sysSD_vec,total=
 
 ##==========================> ID & LD RESULTS <==========================##
 
-diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOa&b
+diag = "NLOa"  #  LO  NLOa  NLOb  NLOa&b
 wind = "LD"  #  ID  LD  ILD
 
 STD_DERIV  = false
@@ -193,7 +193,7 @@ RESC       = false
 
 BLIND = true
 
-path_bdio = path_bdio_dict["local"]
+path_bdio = path_bdio_dict["clust"]
 
 amu33, info33 = BDIOread_MAtot(path_bdio,diag,wind,"g33",StdDer=STD_DERIV,BLIND=BLIND,Vref=VREF33)
 amu33syst  = info33["syst"]
@@ -201,9 +201,9 @@ amu33t0err = get_t0err([amu33],sqrtt0_ph_Madrid)[1]
 
 if VREF33
     FVC_ChPT = JDL2read_FVC_ChPT(path_FVCcont,diag,wind)
-    amufvc = 0.1*FVC_ChPT
+    amufvc = abs(0.1*FVC_ChPT)
     if !BLIND
-        amu33 += 1.5*FVC_ChPT; uwerr(amu33)
+        amu33 += FVC_ChPT; uwerr(amu33)
     end
     # amu33 += 1.5*FVC_ChPT; uwerr(amu33)
 end
@@ -254,7 +254,7 @@ println(" => amu($diag;$wind) = $(print_uwreal(factor*amu,factor*sys_vec,total=t
 
 ##==========================> COMP RESULTS <==========================##
 
-diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOa&b
+diag = "NLOb"  #  LO  NLOa  NLOb  NLOa&b
 comp = "gCCconn"  #  g33  g88  gCCconn
 
 Q33 = 5.0
@@ -444,7 +444,7 @@ println("amu($diag) = $(print_uwreal(AMU,[AMUSYST,AMUt0],total=true))")
 
 ##==========================> FULL DIAG <==========================##
 
-diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOa&b
+diag = "NLOa"  #  LO  NLOa  NLOb  NLOa&b
 
 Q33 = 5.0
 QCC = 5.0
@@ -454,7 +454,7 @@ tl_IMPR    = true
 VREF       = true
 RESC       = false
 
-BLIND_LD  = Any[true,1.5]
+BLIND_LD  = Any[true,1.0]  #  Any[true,1.5]  Any[false,1.0]
 
 # For the SD window
 
@@ -576,7 +576,7 @@ else
     systSD = [amusyst["SD"],amut0err["SD"],amufvc["SD"]]
     systID = [amusyst["ID"],amut0err["ID"],amufvc["ID"]]
     systLD = [amusyst["LD"],amut0err["LD"],amufvc["LD"]]/BLIND_LD_factor
-    syst   = [AMUSYST,AMUT0ERR,AMUFCV]
+    syst   = [AMUSYST,AMUT0ERR,AMUFVC]
 end
 
 println(" Window decomposition:")

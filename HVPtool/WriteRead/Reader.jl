@@ -13,6 +13,10 @@ function BDIOread_TMR(pBDIO::String,ensid::String,diag::String;beta::Bool=false,
     SETstr *= beta ? (resc ? "ph" : "su3") : ""
     BLINstr = BLIND ? "Blind" : ""
 
+    if diag ∉ ["LO","NLO","NLOa","NLOb","NLOa&b","NLOc","1D","NLO_1D","all"]
+        error("diag not recognised, please choose between \n - LO, NLO, NLOa, NLOb, NLOa&b, NLOc, 1D, NLO_1D, all")
+    end
+
     if diag == "LO"
         p = joinpath(pBDIO,"Corr&Kernel&t0",ensid,"$(ensid)_$(BLINstr)TMR$(SETstr)_LO")
         TMRDict = BDIOread_simple(p)
@@ -35,6 +39,10 @@ function BDIOread_TMR(pBDIO::String,ensid::String,diag::String;beta::Bool=false,
         TMRLO  = BDIOread_simple(pLO)
         TMRNLOab = BDIOread_general(pNLOab)
         TMR = merge(TMRLO,TMRNLOab)
+    elseif diag == "NLO_1D"
+        pNLOab = joinpath(pBDIO,"Corr&Kernel&t0",ensid,"$(ensid)_$(BLINstr)TMR$(SETstr)_NLOab")
+        TMRNLOab = BDIOread_general(pNLOab)
+        TMR = TMRNLOab
     elseif diag == "all"
         pLO  = joinpath(pBDIO,"Corr&Kernel&t0",ensid,"$(ensid)_$(BLINstr)TMR$(SETstr)_LO")
         pNLOab = joinpath(pBDIO,"Corr&Kernel&t0",ensid,"$(ensid)_$(BLINstr)TMR$(SETstr)_NLOab")

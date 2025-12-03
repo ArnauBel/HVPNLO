@@ -56,13 +56,13 @@ path_bdio = joinpath(julia_script_directory, "..", "ObsBDIO")
 
 # Ens with problems: H105
 
-ensList = ["A653","A654","B450","C101","C102","D150","D200","D201","D251","D450","D451","D452","E250","E300","F300","H101","H102","H200","J303","J304","J306","J307","J500","J501","N101","N200","N202","N203","N300","N302","N451","N452","S400"]
+ensList = ["A653","A654","B450","C101","C102","D150","D200","D201","D251","D450","D451","D452","E250","E300","F300","H101","H102","H200","H650","J303","J304","J306","J307","J500","J501","N101","N200","N202","N203","N300","N302","N451","N452","S400"]
 
 # bc = obc
 # ensList = ["C101","C102","D200","D201","E300","F300","H101","H102","H200","J303","J304","J306","J307","J500","J501","N101","N200","N202","N203","N300","N302","S400"]
 
 # bc = pbc
-# ensList = ["A653","A654","B450","D150","D251","D450","D451","D452","E250","N451","N452"]
+# ensList = ["A653","A654","B450","D150","D251","D450","D451","D452","E250","H650","N451","N452"]
 
 ensInfo = EnsInfo.(ensList)
 
@@ -85,6 +85,7 @@ wpmm["J500"]     = [5.0, -2.0, -1.0, -1.0]
 wpmm["E300"]     = [5.0, -2.0, -1.0, -1.0]
 wpmm["A654"]     = [5.0, -2.0, -1.0, -1.0]
 wpmm["E300"]     = [5.0, -2.0, -1.0, -1.0]
+wpmm["H650"]     = [5.0, -2.0, -1.0, -1.0]
 
 # Finite volume corrrections
 
@@ -126,7 +127,7 @@ end
 # NLO
 function ∆Mπ_NLO(ens::EnsInfo;N2::Int64=40)
     mπ = meson_ens[ens.id]["mPi"].mean
-    mη = E0_ens[ens.id]["mRho"].mean
+    mη = m_ens[ens.id]["mRho"].mean
     fπ = meson_ens[ens.id]["fPi"].mean
     L  = ens.L
     Nf = 2
@@ -202,7 +203,7 @@ end
 function RFK_NLO(ens::EnsInfo;N2::Int64=40)
     mπ = meson_ens[ens.id]["mPi"].mean
     mK = meson_ens[ens.id]["mK"].mean
-    mη = E0_ens[ens.id]["mRho"].mean
+    mη = m_ens[ens.id]["mRho"].mean
     fπ = meson_ens[ens.id]["fPi"].mean
     L  = ens.L
     # Nf = 2
@@ -229,7 +230,7 @@ RFK_NLO(ensid::String) = RFK_NLO(EnsInfo(ensid))
 
 ##==========================> Data reading and testing <==========================##
 
-ens = "H200"
+ens = ""
 
 ens = EnsInfo(ens)
 
@@ -305,6 +306,7 @@ mPi_fitinfo = Dict{String,Dict{String,Any}}(
     "A653" => Dict{String,Any}("2state" => true , "plat" => [0.40,0.50], "mdof" => 4),
     # "A654" => Dict{String,Any}("2state" => true , "plat" => [0.30,0.40], "mdof" => 4),
     "A654" => Dict{String,Any}("2state" => false, "plat" => [0.50,0.60], "mdof" => 4),
+    "H650" => Dict{String,Any}("2state" => false, "plat" => [0.40,0.50], "mdof" => 4),
     "D150" => Dict{String,Any}("2state" => false, "plat" => [0.25,0.40], "mdof" => 4),
     "B450" => Dict{String,Any}("2state" => true , "plat" => [0.30,0.40], "mdof" => 4),
     "N452" => Dict{String,Any}("2state" => false, "plat" => [0.40,0.70], "mdof" => 4),
@@ -343,6 +345,7 @@ mPi_fitinfo = Dict{String,Dict{String,Any}}(
 
 mK_fitinfo = Dict{String,Dict{String,Any}}(
     "A654" => Dict{String,Any}("2state" => false, "plat" => [0.60,0.80], "mdof" => 4),
+    "H650" => Dict{String,Any}("2state" => false , "plat" => [0.30,0.70], "mdof" => 4),
     "D150" => Dict{String,Any}("2state" => false, "plat" => [0.50,0.60], "mdof" => 4),
     "N452" => Dict{String,Any}("2state" => false, "plat" => [0.50,0.60], "mdof" => 4),
     "N451" => Dict{String,Any}("2state" => false, "plat" => [0.40,0.50], "mdof" => 4),
@@ -750,6 +753,7 @@ ensid = ""
 fPi_fitinfo = Dict{String,Dict{String,Any}}(
     "A653" => Dict{String,Any}("MPCAC_plat" => [4,42]  ),
     "A654" => Dict{String,Any}("MPCAC_plat" => [4,42]  ),
+    "H650" => Dict{String,Any}("MPCAC_plat" => [4,90]  ),
     "D150" => Dict{String,Any}("MPCAC_plat" => [4,122]),
     "B450" => Dict{String,Any}("MPCAC_plat" => [9,53]  ),
     "N452" => Dict{String,Any}("MPCAC_plat" => [10,115]),
@@ -790,6 +794,7 @@ fPi_fitinfo = Dict{String,Dict{String,Any}}(
 
 fK_fitinfo = Dict{String,Dict{String,Any}}(
     "A654" => Dict{String,Any}("MPCAC_plat" => [4,42]  ),
+    "H650" => Dict{String,Any}("MPCAC_plat" => [4,90]  ),
     "D150" => Dict{String,Any}("MPCAC_plat" => [10,116]),
     "N452" => Dict{String,Any}("MPCAC_plat" => [10,115]),
     "N451" => Dict{String,Any}("MPCAC_plat" => [8,118] ),
@@ -817,12 +822,11 @@ fK_fitinfo = Dict{String,Dict{String,Any}}(
     "J501" => Dict{String,Any}("MPCAC_plat" => [20,170], "2state" => false, "plf" => 1.00, "plat" => [0.50,1.00], "mdof" => 4),  
 )
 
+AIC       = true  # always
 
 PVAL      = false
 
-AIC       = true  # always
-
-PLOT      = [false,true]
+PLOT      = [true,true]
 WRITE     = false
 OVERWRITE = false
 
@@ -1121,3 +1125,19 @@ for ens in ensInfo
 
     println("ens $(ens.id) => mPi fvc/err = $(round(∆Mπ_NLO(ens)/mDict["mPi"].err,digits=2)); fPi fvc/err = $(round(∆Fπ_NLO(ens)/fDict["fPi"].err,digits=2))")
 end
+
+## rough interpolation (usefull to approximate for new ensembles)
+
+y1 = m_ens["A653"]["mK"]
+y2 = m_ens["A654"]["mK"]
+
+x1 = 0.1365716
+x2 = 0.136750
+x  = 0.136850
+                   
+par, _ = lin_fit([x1,x2],[y1,y2],wpm=wpmm,lineprint=false)
+y = y_lin_fit(par,x)
+
+
+
+

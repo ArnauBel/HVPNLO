@@ -59,24 +59,24 @@ rcParams["axes.titlesize"] = 18
 # Set plot parameters
 
 diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = "LD"  #  NW  SD  SDsub  ID  LD  ILD
-comp = "g88"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+wind = "SDsub"  #  NW  SD  SDsub  ID  LD  ILD
+comp = "g33"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
-model_var_list = Function[a3,a2phi2,phi2sqr,phi2log]
+model_var_list = Function[a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]
 # model_var_list = Function[a3,a2y,ysqr,ylog,yinv,logy]
 MultFunc = nothing  # nothing  deltaphi
 
 readIMPR_SET = ["1","2"] # ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
 
-BLIND = true
+BLIND = false
 
 FitCUT = "None"  # "None"  "beta"  "mass"  "beta&mass"
 
 STD_DERIV  = false
-tl_IMPR    = false
-VREF       = false
+tl_IMPR    = true
+VREF       = true
 RESC       = false
 
 SimpleBase = false
@@ -301,7 +301,7 @@ close()
 
 ShowGHOST = true
 
-SAVE     = true
+SAVE     = false
 OVERSAVE = false
 
 ARGPLOT = 1  #  set to 1 for best plot
@@ -349,19 +349,19 @@ for (i,impr_set) in enumerate(IMPR_SET)
                 uwerr.(xydata["ydata"][impr_set][key])
                 errorbar(value.(xydata["xdata"][n_,2]), value.(xydata["ydata"][impr_set][key][n_]), err.(xydata["ydata"][impr_set][key][n_]), fmt=fmt[k], capsize=2, color=color[k], mfc="none", alpha=0.1)
             end
-            xxx = !RESC ? [fill(a2_aux,100) Float64.(range(0.04, 0.8, length=100)) fill(value(phi4_ph), 100)] : [fill(a2_aux,100) Float64.(range(0.02, 0.4, length=100)) fill(value(z_ph), 100)]
+            xxx = !RESC ? [fill(a2_aux,100) Float64.(range(0.04, 0.8, length=100)) fill(phi4_ph.mean, 100)] : [fill(a2_aux,100) Float64.(range(0.02, 0.4, length=100)) fill(z_ph.mean, 100)]
             yyy = f_tot_isov[argPlot](xxx, myparam)
             PyPlot.plot(xxx[:,2],value.(yyy),ls="--",color=color[k],lw=0.5)
         end
-        xxx_ph = !RESC ? [fill(0.0,100) Float64.(range(0.04, 0.8, length=100)) fill(value(phi4_ph), 100)] : [fill(0.0,100) Float64.(range(0.02, 0.4, length=100)) fill(value(z_ph), 100)]
+        xxx_ph = !RESC ? [fill(0.0,100) Float64.(range(0.04, 0.8, length=100)) fill(phi4_ph.mean, 100)] : [fill(0.0,100) Float64.(range(0.02, 0.4, length=100)) fill(z_ph.mean, 100)]
         yyy_ph = f_tot_isov[argPlot](xxx_ph, myparam); uwerr.(yyy_ph)
         
-        errorbar(value(Pi_ph), value(myres), err(myres), fmt="^", capsize=2, color="black",label="ph.")
+        errorbar(Pi_ph.mean, myres.mean, myres.err, fmt="^", capsize=2, color="black",label="ph.")
         push!(label,"ph.")
         PyPlot.plot(xxx_ph[:,2],value.(yyy_ph),ls="--",color="gray",lw=0.5)
         fill_between(xxx_ph[:,2], value.(yyy_ph)-err.(yyy_ph), value.(yyy_ph)+err.(yyy_ph), alpha=0.2, color="gray")
         # PyPlot.title("Chiral and continuum extrapolation (Discr. $(key[end-1:end]); impr. set $impr_set)")
-        axvline(x=value(Pi_ph), ls="dashed", color="black", lw=0.2, alpha=0.7) 
+        axvline(x=Pi_ph.mean, ls="dashed", color="black", lw=0.2, alpha=0.7) 
         if !RESC
             xlabel(L"$\Phi_2$")
         else
@@ -373,14 +373,14 @@ for (i,impr_set) in enumerate(IMPR_SET)
             ax.yaxis.set_major_formatter(PyPlot.matplotlib.ticker.FuncFormatter(formatter))
         end
         # ylim([3,12.5])
-        diag_str = diag == "LO" ? "\\rm{LO}" : (diag == "NLOa&b" ? "\\rm{NLOa\\&b}" : "\\rm{NLO$(diag[end])}")
+        diag_str = diag == "LO" ? "\\mathrm{LO}" : (diag == "NLOa&b" ? "\\mathrm{NLOa\\&b}" : "\\mathrm{NLO$(diag[end])}")
         comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : (diag != "NLOc" ? "\\mathrm{$(comp[2]),$(comp[3])}" : "\\mathrm{$(comp[2]),$(comp[3])-$(comp[4]),$(comp[5])}")
-        Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q\\ \\rm{GeV})" : ""
+        Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q\\ \\mathrm{GeV})" : ""
         fact_str = diag == "LO" ? "\\times10^{10}" : "\\times10^{11}"
         if wind == "NW"
-            ylabel(latexstring("a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]$Q_str$fact_str"))
+            ylabel(latexstring("a_{\\mu}^{$comp_str}[\\mathrm{$(diag_str)}]$Q_str$fact_str"))
         else
-            ylabel(latexstring("\\left(a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]\\right)^{\\rm{$wind}}$Q_str$fact_str"))
+            ylabel(latexstring("\\left(a_{\\mu}^{$comp_str}[\\mathrm{$(diag_str)}]\\right)^{\\mathrm{$wind}}$Q_str$fact_str"))
         end
         # xlim(left=0.04)
         legend(label,loc="best")
@@ -403,7 +403,7 @@ end
 
 ShowGHOST = false
 
-SAVE     = false
+SAVE     = true
 OVERSAVE = false
 
 ARGPLOT = 1  #  set to 1 for best plot

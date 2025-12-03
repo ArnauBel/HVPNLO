@@ -64,31 +64,31 @@ DictComptoKey = Dict{String,Vector{String}}(
 
 ##==========================> Model Average <==========================##
 
-diag = ""  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = ""  #  NW  SD  SDsub  ID  LD  ILD
-comp = ""  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
+wind = "LD"  #  NW  SD  SDsub  ID  LD  ILD
+comp = "g33"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
-model_var_list = Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]  #  [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]  [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]  [a3,a2phi2,phi2sqr,phi2log,phi4]
+model_var_list = Function[a3,a2phi2,phi2sqr,phi2log,phi2inv,logphi2]  #  [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]  [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]  [a3,a2phi2,phi2sqr,phi2log,phi4]
 # model_var_list = Function[a3,a2y,ysqr,ylog,yinv,logy]
 MultFunc = nothing  #  nothing  deltaphi
 
 IMPR_SET = ["1","2"]  #  ["1"]  ["1old"]  ["2"]  ["1","2"]  ["1old","2"]  ["1","1old","2"]
 
-FITCUT = ["None","beta","mass","beta&mass"]  #  ["None","beta","mass","beta&mass"]  ["None","beta"]
+FITCUT = ["None","mass"]  #  ["None","beta","mass","beta&mass"]  ["None","beta"]
 
-BLIND = false
+BLIND = true
 
 STD_DERIV  = false
 tl_IMPR    = false 
-VREF       = false
+VREF       = true
 RESC       = false
 
 SimpleBase = false
 
-WRITE      = false
-OVERWRITE  = false
+WRITE      = true
+OVERWRITE  = true
 
 path_bdio_r = path_bdio_dict["local"]
 path_bdio_w = path_bdio_dict["local"]
@@ -154,6 +154,7 @@ for FitCut in FITCUT
 
             digits = comp in ["cc disc","c8 disc"] ? 7 : 3
             println("      ⟹ amu[$diag($wind)|$comp:$impr_set:$(key[end-1:end])] = $(print_uwreal(amu[key][1],syst[key]))")
+            # println("      ⟹ amu[$diag($wind)|$comp:$impr_set:$(key[end-1:end])] = $([amu[key][1].mean,amu[key][1].err,syst[key]])))")
         end
 
         if WRITE
@@ -205,13 +206,13 @@ end # end FitCut loop
 
 ##==========================> ENSEMBLE CUT COMBINATION <==========================##
 
-diag = ""  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = ""  #  NW  SD  SDsub  ID  LD  ILD
-comp = ""  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
+wind = "LD"  #  NW  SD  SDsub  ID  LD  ILD
+comp = "g33"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
-BLIND = false
+BLIND = true
 
 discr = "all"  #  all  ll  lc
 
@@ -221,11 +222,11 @@ IMPR_SET = ["1","2"]  #  ["1"]  ["1old"]  ["2"]  ["1","2"]  ["1old","2"]  ["1","
 
 STD_DERIV  = false
 tl_IMPR    = false
-VREF       = false
+VREF       = true
 RESC       = false
 
-WRITE      = false
-OVERWRITE  = false
+WRITE      = true
+OVERWRITE  = true
 
 path_bdio_r = path_bdio_dict["local"]
 path_bdio_w = path_bdio_dict["local"]
@@ -267,12 +268,12 @@ path_bdio_w = path_bdio_dict["local"]
 # )
 
 # NW, ID & LD :
-# FITCUTtoMODEL = Dict{String,Any}(
-#     "None"      => [false,Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]],
-#     "beta"      => [false,Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]],
-#     "mass"      => [false,Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]],
-#     "beta&mass" => [false,Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]],
-# )
+FITCUTtoMODEL = Dict{String,Any}(
+    "None"      => [false,Function[a3,a2phi2,phi2sqr,phi2log,phi2inv,logphi2]],
+    "beta"      => [false,Function[a3,a2phi2,phi2sqr,phi2log,phi2inv,logphi2]],
+    "mass"      => [false,Function[a3,a2phi2,phi2sqr,phi2log,phi2inv,logphi2]],
+    "beta&mass" => [false,Function[a3,a2phi2,phi2sqr,phi2log,phi2inv,logphi2]],
+)
 # FITCUTtoMODEL = Dict{String,Any}(
 #     "None"      => [false,Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]],
 #     "beta"      => [false,Function[a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]],
@@ -399,6 +400,7 @@ for impr_set in IMPR_SET
         # end
 
         println("     ⟹ $(charge_factor[comp*"s"]) amu[$diag($wind)|$comp:$impr_set:$(key[end-1:end])] = $(print_uwreal(charge_factor[comp]*amu[impr_set][key][1],charge_factor[comp]*syst[impr_set][key]))")
+        # println("     ⟹ $(charge_factor[comp*"s"]) amu[$diag($wind)|$comp:$impr_set:$(key[end-1:end])] = $(charge_factor[comp]*[amu[impr_set][key][1].mean,amu[impr_set][key][1].err,syst[impr_set][key]]))")
     end
 
 
@@ -417,6 +419,7 @@ AMU, SYST = model_average(RES_TOT, WEIGHT); uwerr.(AMU)
 # end
 
 println("     ⟹ $(charge_factor[comp*"s"]) amu[$diag($wind)|$comp] = $(print_uwreal(charge_factor[comp]*AMU[1],charge_factor[comp]*SYST))")
+# println("     ⟹ $(charge_factor[comp*"s"]) amu[$diag($wind)|$comp] = $(charge_factor[comp]*[AMU[1].mean,AMU[1].err,SYST]))")
 
 
 if WRITE
@@ -529,24 +532,25 @@ print_uwreal(res*10,syst*10)
 
 ##--- Full MA
 
-diag = ""  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = ""  # NW  SD  SDsub  ID  LD  ILD
-comp = ""  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+diag = "NLOa&b"  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
+wind = "LD"  # NW  SD  SDsub  ID  LD  ILD
+comp = "g33"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
-BLIND = false
+BLIND = true
 
 STD_DERIV  = false
 tl_IMPR    = false
-VREF       = false
+VREF       = true
 RESC       = false
 
 path_bdio_r = path_bdio_dict["local"]
 
 AMU, INFO = BDIOread_MAtot(path_bdio_r,diag,wind,comp,resc=RESC,StdDer=STD_DERIV,tlImpr=tl_IMPR,Vref=VREF,BLIND=BLIND,Q=Q)
 
-print_uwreal(AMU*10,INFO["syst"]*10)
+# print_uwreal(AMU*10,INFO["syst"]*10)
+ uwerr(AMU); [AMU.mean,AMU.err,INFO["syst"]]
 
 # get_t0err([AMU],sqrtt0_ph_Regensburg)[1]
 
@@ -570,24 +574,24 @@ print_uwreal(AMU_set["res"]*10,INFO_set["syst"]*10)
 
 # include("HVPtools/Reader.jl")
 
-diag = ""  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = ""  # NW  SD  SDsub  ID  LD  ILD
-comp = ""  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+diag = "NLOa&b"  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
+wind = "LD"  # NW  SD  SDsub  ID  LD  ILD
+comp = "g33"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
-impr_set = ""
+impr_set = "1"
 
 Q = 5.0  # virtuality for SDsub
 
-BLIND = false
+BLIND = true
 
-model_var_list = [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]
+model_var_list = [a3,a2phi2,phi2sqr,phi2log,phi2inv,logphi2]
 MultFunc = nothing  #  nothing  deltaphi
 
-FitCut = "None"  # "None"  "beta"  "mass"  "beta&mass"
+FitCut = "beta"  # "None"  "beta"  "mass"  "beta&mass"
 
 STD_DERIV  = false
 tl_IMPR    = false
-VREF       = false
+VREF       = true
 RESC       = false
 
 SimpleBase = false

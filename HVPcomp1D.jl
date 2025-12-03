@@ -43,21 +43,22 @@ ensList = [
     "A653","A654","B450","C101","C102",
     "D150","D200","D201","D251","D450",
     "D451","D452","E250","E300","F300",
-    "H101","H102","H200","J303","J304",
-    "J306","J307","J500","J501","N101",
-    "N200","N202","N203","N300","N302",
-    "N451","N452","S400"]
+    "H101","H102","H200","H650","J303",
+    "J304","J306","J307","J500","J501",
+    "N101","N200","N202","N203","N300",
+    "N302","N451","N452","S400"
+    ]
 
 
 ensInfo = EnsInfo.(ensList)
 
 # We do not have charm or disconnected data for some of the ensembles
-ensNOcharm = ["C102","D150","D201","D251","D451","F300","H200","J304","J306","J307","J501","N451","N452"]
-ensNOdisc  = ["F300","J306"]
+ensNOcharm = ["C102","D150","D201","D251","D451","F300","H200","H650","J304","J306","J307","J501","N451","N452"]
+ensNOdisc  = ["F300","H650","J306"]
 
 ensSPECdata = ["D200","E250"]  # J303
 
-# ensTAILfit  = ["A653","A654","B450"]
+ensTAILfit  = ["A653","A654","B450"]
 
 wpm = Dict{String, Vector{Float64}}()
 
@@ -86,7 +87,7 @@ BLIND = false
 path_bdio = path_bdio_dict["local"]
 
 
-BM = wind in ["NW","LD","ILD"]
+BM = wind in ["NW","LD","ILD","LD2"]
 
 
 @info("STARTING HVP COMPUTATION [diag. $diag; wind. $wind; resc. $RESC]")
@@ -198,9 +199,12 @@ end
 
                 tcut0 = 10
                 tstep = 1
-                tEeffFix = 1.2  # in  fm; point where the eff energy of the lower bound is fixed 
+                tEeffFix = 1.5  # 1.2  1.5  # fm 
 
-                uwerr(E0_ens[ens.id]["E0"]); E0 = E0_ens[ens.id]["E0"].mean + E0_ens[ens.id]["E0"].err
+                # uwerr(E0_ens[ens.id]["E0"]); E0 = E0_ens[ens.id]["E0"].mean + E0_ens[ens.id]["E0"].err
+                mpi  = m_ens[ens.id]["mPi"] 
+                mrho = m_ens[ens.id]["mRho"]
+                E2pi = 2*sqrt(mpi^2 + (2π/ens.L)^2)
 
                 for key in light_keys
                     
@@ -231,46 +235,52 @@ end
                         HVP[key]     = (alpha/pi)^exp_diag * (sum(int[1:trec-1])+sum(intRec)) * 1e10
                         HVPsyst[key] = 0.0
                         PlatRec[key] = [value(aens) * trec]
-                    # elseif ens.id in ensTAILfit && key[1:3] == "g33"
-                    #     println("         - $key (Rec w. cosh fit...)")
+
+                    elseif ens.id in ensTAILfit && key[1:3] == "g33"
+                        println("         - $key (Rec w. cosh fit...)")
                         
-                    #     @. exp_model(x0,p)   = p[2] * exp(-p[1] * x0)
-                    #     @. cosh_model(x0,p)  = p[2] * (exp(-p[1] * x0) + exp(-p[1] * (T-x0)))
+                        @. exp_model(x0,p)   = p[2] * exp(-p[1] * x0)
+                        @. cosh_model(x0,p)  = p[2] * (exp(-p[1] * x0) + exp(-p[1] * (T-x0)))
 
-                    #     p0_tuple = p0_smallpbc_dict["$(ens.id)_set$(impr_set)_$(key)"]
-                    #     fit_vec = []
-                    #     for p0 in p0_tuple
-                    #         data = obs[t][p0:end] 
-                    #         fit  = fit_routine(cosh_model,collect(p0:sym_points).-1, data, 2, pval=true, info=false, lineprint=false)
-                    #         push!(fit_vec,fit)
-                    #     end
+                        p0_tuple = p0_smallpbc_dict["$(ens.id)_set$(impr_set)_$(key)"]
+                        fit_vec = []
+                        for p0 in p0_tuple
+                            data = obs[t][p0:end] 
+                            fit  = fit_routine(cosh_model,collect(p0:sym_points).-1, data, 2, pval=true, info=false, lineprint=false)
+                            push!(fit_vec,fit)
+                        end
                         
-                    #     w = get_w_from_fitres(vcat(fit_vec...), AIC=true)
+                        w = get_w_from_fitres(vcat(fit_vec...), AIC=true)
 
-                    #     param = getfield.(vcat(fit_vec...),:param)
-                    #     p1_vec = [par[1] for par in param]
-                    #     p2_vec = [par[2] for par in param]
+                        param = getfield.(vcat(fit_vec...),:param)
+                        p1_vec = [par[1] for par in param]
+                        p2_vec = [par[2] for par in param]
 
-                    #     p1_res, p1_sys = model_average(p1_vec, w)
-                    #     p2_res, p2_sys = model_average(p2_vec, w)
+                        p1_res, p1_sys = model_average(p1_vec, w)
+                        p2_res, p2_sys = model_average(p2_vec, w)
 
-                    #     p1 = p1_res[1] + uwreal([0.0,p1_sys],"p1 fit $(ens.id)"); uwerr(p1)
-                    #     p2 = p2_res[1] + uwreal([0.0,p2_sys],"p2 fit $(ens.id)"); uwerr(p2)
+                        p1 = p1_res[1] + uwreal([0.0,p1_sys],"p1 fit $(ens.id)"); uwerr(p1)
+                        p2 = p2_res[1] + uwreal([0.0,p2_sys],"p2 fit $(ens.id)"); uwerr(p2)
 
-                    #     trec = p0_tuple[1] + (argmax(w)-1)
+                        trec = p0_tuple[1] + (argmax(w)-1)
 
-                    #     obsRec = exp_model(t[trec:end].-1,[p1,p2])
+                        obsRec = exp_model(tBM[trec:end].-1,[p1,p2])
 
-                    #     intRec = obsRec .* TMRw[trec:end]
+                        intRec = obsRec .* TMRw[trec:end]
 
-                    #     HVP[key]     = (alpha/pi)^exp_diag * (sum(int[1:trec-1])+sum(intRec)) * 1e10
-                    #     HVPsyst[key] = 0.0
-                    #     PlatRec[key] = [value(aens) * trec]
+                        HVP[key]     = (alpha/pi)^exp_diag * (sum(int[1:trec-1])+sum(intRec)) * 1e10
+                        HVPsyst[key] = 0.0
+                        PlatRec[key] = [value(aens) * trec]
                     else
                         println("         - $key (BM...)")
 
                         for tcut in tcut0:tstep:t[end-1]  # compute the upper and lower corr bounds 
 
+                            if key[1:3] == "g33"
+                                E0 = mrho < E2pi ? mrho : E2pi
+                            elseif key[1:3] == "g88"
+                                E0 = mrho
+                            end
                             if aens*tcut < tEeffFix  # we fix the eff energy at some point
                                 Eeff_=Eeff(tcut, obs)
                             end
@@ -299,7 +309,7 @@ end
                             push!(lb, lb_)
                         end
 
-                        HVP[key], HVPsyst[key], PlatRec[key] = bounding_method(ub,lb,aens,PLAT=true,AVER=false,tcut0=tcut0,tstep=tstep)
+                        HVP[key], HVPsyst[key], PlatRec[key] = bounding_method(ub,lb,aens,PLAT=true,AVER=false,tcut0=tcut0,tstep=tstep,correlations=true)
                     end
                 end
 
@@ -483,7 +493,7 @@ end
         println("   - Reading fvc (HP)...")
         fvc_hp = BDIOread_FVCcorr(path_bdio,ens,Vref=VREF)
 
-        if ens.id != "A653"
+        if ens.id ∉ ["A653","H650"]
             println("   - Reading fvc (MLL)...")
             t_mll, fvc_mll = TXTread_FVCcorr_GS(pFVC_MLL,ens,Vref=VREF)
         end
@@ -497,12 +507,12 @@ end
         Tover2 = Int64(HVPobs.Data.get_T(ens.id)/2+1)
 
         fvcPi_hp = vcat(TMRw[1],-fvc_hp["FVCPi6"])[t]
-        fvcPi = ens.id != "A653" ? vcat(fvcPi_hp[1:Int64(t_mll[1])],-fvc_mll...)[t] : fvcPi_hp
+        fvcPi = ens.id  ∉ ["A653","H650"] ? vcat(fvcPi_hp[1:Int64(t_mll[1])],-fvc_mll...)[t] : fvcPi_hp
         
         fvcK  = vcat(TMRw[1],-fvc_hp["FVCK6" ])[t]
 
         # fvcPi_hp = vcat(-fvc_hp["FVCPi6"][1:Tover2])
-        # fvcPi = ens.id != "A653" ? vcat(fvcPi_hp[1:Int64(t_mll[1])],-fvc_mll...)[1:Tover2] : fvcPi_hp
+        # fvcPi = ens.id  ∉ ["A653","H650"] ? vcat(fvcPi_hp[1:Int64(t_mll[1])],-fvc_mll...)[1:Tover2] : fvcPi_hp
         
         # fvcK  = vcat(-fvc_hp["FVCK6" ][1:Tover2])
 
@@ -562,7 +572,7 @@ end # end timer
 
 ##==========================> READING TEST <==========================##
 
-diag     = ""  #  "LO"  "NLOa"  "NLOb"  "NLOc"
+diag     = ""  #  "LO"  "NLOa"  "NLOb"  "NLOa&b"  "NLOc"
 wind     = ""  #  "NW"  "SD"  "ID"  "LD"  "ILD"
 ensid    = ""
 impr_set = ""
@@ -579,13 +589,6 @@ path_bdio = path_bdio_dict["local"]
 HVP, info = BDIOread_HVPens(path_bdio,diag,wind,ensid,impr_set,info=true,resc=RESC,STD=STD,BLIND=BLIND)
 
 FVC = BDIOread_FVCens(path_bdio,diag,wind,ensid,Vref=VREF,resc=RESC,BLIND=BLIND)
-
-##
-
-for ens in ensInfo
-    HVP, info = BDIOread_HVPens(path_bdio,diag,wind,ens.id,impr_set,info=true,resc=RESC,STD=STD,BLIND=BLIND)
-    println("$(ens.id): $(print_uwreal(HVP["g33_ll"])) - $(print_uwreal(HVP["g33_lc"]))")
-end
 
 ##==> Result computation in the 'flavour basis'
 
@@ -623,13 +626,3 @@ for ens in EnsInfo.(["C101","C102","D450","D451","D200","D201"])
 
     println("$(ens.id) -> $(print_uwreal((HVP["g33_ll"]+FVC["FVCg33"])*10))")
 end
-
-##
-
-ens = EnsInfo("D451")
-HVP = BDIOread_HVPens(path_bdio,diag,wind,ens.id,impr_set,info=false,resc=RESC,STD=STD,BLIND=BLIND)
-FVC = BDIOread_FVCens(path_bdio,diag,wind,ens.id,Vref=VREF,resc=RESC,BLIND=BLIND)
-
-a2 = (HVP["g33_ll"]+FVC["FVCg33"])*10
-
-print_uwreal(abs(a1-a2))
