@@ -182,7 +182,7 @@ function BDIOread_dim0(path::String; extra::Bool=false)
 end
 
 include("Reader.jl")
-export BDIOread_t0, BDIOread_TMR, BDIOread_corr, BDIOread_FVCcorr
+export BDIOread_t0, BDIOread_t0_SU3sym, BDIOread_TMR, BDIOread_corr, BDIOread_FVCcorr
 export BDIOread_HVPens, BDIOread_FVCens
 export BDIOread_XYdata, JDL2read_FitRes
 export JDL2read_ModelInfo, BDIOread_res, BDIOread_MA, BDIOread_MAtot

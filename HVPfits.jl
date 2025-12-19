@@ -83,11 +83,11 @@ DictComptoKey = Dict{String,Vector{String}}(
 ##==========================> Fits [LO, NLOa&b, NLOa, NLOb, NLOc] <==========================##
 
 diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOc  NLOa&b
-wind = "LD"  #  NW  SD  SDsub  ID  LD  ILD
+wind = "ID"  #  NW  SD  SDsub  ID  LD  ILD
 
 readIMPR_SET = ["1","2"] #  ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
 
-BLIND = true
+BLIND = false
 
 STD_DERIV  = false
 tl_IMPR    = false
@@ -116,7 +116,6 @@ for ens in ensInfo
     HVP[ens.id] = Dict()
     for impr_set in readIMPR_SET
         HVP[ens.id][impr_set], info = BDIOread_HVPens(path_bdio_r,diag,wind,ens,impr_set,info=true,resc=RESC,STD=STD_DERIV,BLIND=BLIND)
-    
         apply_syst_HVP!(HVP[ens.id][impr_set],info["HVPsyst"],diag,wind,ens.id)
     end
 
@@ -143,45 +142,50 @@ end
 
 ##==========================> Data ready to fit
 
-comp = "g33"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+comp = "g33"  #  g33  g88  gCCconn  strange gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
-model_var_list = Function[a3,a2phi2,phi2sqr,phi2log,phi2inv,logphi2]  #  [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]  [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]  [a3,a2phi2,phi2sqr,phi2log,phi4]
-# model_var_list = Function[a3,a2y,ysqr,ylog,yinv,logy]  #  [a3,a4,a2y,a2z,a3y,ysqr,ylog]  [a3,a2y,ysqr,ylog]
+model_var_list = Function[a3,a4,a2phi2,a2phi4,phi2sqr,phi2log]  #  [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]  [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]  [a3,a2phi2,phi2sqr,phi2log,phi4]
+# model_var_list = Function[a3,a2y,ysqr,ylog]  #  [a3,a4,a2y,a2z,a3y,ysqr,ylog]  [a3,a2y,ysqr,ylog]
 
 MultFunc = nothing  #  nothing  deltaphi
 
-IMPR_SET = [readIMPR_SET[2]]  #  readIMPR_SET  ["1"]  ["2"]  ["1","2"]  ["1old","2"]  ["1","1old","2"]
+IMPR_SET = readIMPR_SET  #  readIMPR_SET  ["1"]  ["2"]  ["1","2"]  ["1old","2"]  ["1","1old","2"]
 
-FITCUT = [["None","beta","mass","beta&mass"][1]]  #  ["None","beta","mass","beta&mass"]  ["None","beta"]
+FITCUT = ["None","beta","mass","beta&mass"]  #  ["None","beta","mass","beta&mass","beta_ext"]  ["None","beta","mass","beta&mass"]  ["None","beta"]
 
 SimpleBase = false
-a2RESC     = false
+a2RESC     = true
 
-FitINFO    = true
+FitINFO    = false
 
 PVAL       = false
 
-WRITE      = false
-OVERWRITE  = false
+WRITE      = true
+OVERWRITE  = true
 
 mdof = 4  # minimum number of d.o.f. allowed
 
-mykeys = [DictComptoKey[comp][1]]  #  [DictComptoKey[comp][1]]
+mykeys = DictComptoKey[comp]  #  [DictComptoKey[comp][1]]
 
 path_bdio_w = path_bdio_dict["local"]
 
 # Following the LD paper, when it comes to the iso-vector analysis, the 'untrusted' ensembles are: H105, H200, N300,  N302, S400
-ensExcl = ["H105","H200","N300","N302","S400","A654"] # Good for 33 & 88; ?B450 seems quite bad, not sure why  (D201 problems)
-# ensExcl = ["H105","H200","N300","N302","S400"] # Good for 33 & 88; ?B450 seems quite bad, not sure why  (D201 problems)
-# ensExcl = ["H105","H200","S400"] # Good for ∆lc(b); the same as 33 but B450 seems to work now?
-# ensExcl = ["H105","H200"] # handy for charmed contributions
+ensExcl = ["H105","H200","A654","N300","N302","S400"] # 33 (D201 problems for SD & ID)
+# ensExcl = ["H105","H200","N300","N302","S400"] # 88, ∆ls(aµ)
+# ensExcl = ["H105","H200","S400"] # CC, ∆lc(b) (S400 could be included in CC?)
 
 
 if comp != "g33" && VREF
     error("Cannot project to Vref for chosen iso-spin")
 end
+
+# if comp == "strange"
+#     for ens in ensInfo
+
+#     end
+# end
 
 for FitCut in FITCUT
 
@@ -194,8 +198,10 @@ for FitCut in FITCUT
     # if wind in ["LD","ILD"]
     #     nmPi_max = [nmPi_max,1]
     # end
+
+    # following SD, ID, LD papers :
     na_max   = 2
-    nmPi_max = 2
+    nmPi_max = wind in ["NW","ILD","LD","LD1","LD2"] ? 2 : 1
     nmK_max  = 1
 
 
@@ -214,6 +220,10 @@ for FitCut in FITCUT
     elseif FitCut == "beta&mass"
         argExcl1 = getfield.(ensInfo,:beta) .== 3.34
         argExcl2 = [meson_ens[ensid]["mPi"] * (hbarc * sqrt(t0[ensid])/sqrtt0_ph) * 1e3 for ensid in getfield.(ensInfo,:id)] .> 400
+        argExcl = argExcl1 .| argExcl2
+    elseif FitCut == "beta_ext"
+        argExcl1 = getfield.(ensInfo,:beta) .== 3.34
+        argExcl2 = getfield.(ensInfo,:beta) .== 3.4
         argExcl = argExcl1 .| argExcl2
     else
         error("Fit Cut $FitCut was not recognised")
@@ -402,18 +412,18 @@ end # end FitCut loop
 
 ##==========================> READING TEST <==========================##
 
-diag = ""  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = ""  # NW  SD  SDsub  ID  LD  ILD
-comp = ""  # g33  g88  ∆ls_amu  ∆lc_b  gCCconn  gCCdisc  gC8disc
+diag = "NLOa&b"  # LO  NLOa  NLOb  NLOc  NLOa&b
+wind = "SDsub"  # NW  SD  SDsub  ID  LD  ILD
+comp = "∆ls_amu"  # g33  g88  ∆ls_amu  ∆lc_b  gCCconn  gCCdisc  gC8disc
 
 BLIND = false
 
-impr_set = ""
+impr_set = "1"
 
 Q = 5.0  # virtuality for SDsub
 
-model_var_list = [a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]
-MultFunc = nothing  # nothing  deltaphi
+model_var_list = [a3,a2phi2,phi2sqr,phi2log]
+MultFunc = deltaphi  # nothing  deltaphi
 
 FitCut = "None"  # "None"  "beta"  "mass"  "beta&mass"
 
@@ -436,85 +446,10 @@ res, par = BDIOread_res(path_bdio,diag,wind,comp,model_var_list,FitCut,impr_set;
 
 ##
 
+# impr_set = ""
+
 # println("Ens\t HVP\t\t FVC")
 # println("-------------------------------------")
 # for key in sort!(collect(keys(FVC)))
-#     println("$key \t $(print_uwreal(HVP[key]["2"]["g33_ll"])) \t $(print_uwreal(FVC[key]["FVCg33"]))")
+#     println("$key \t $(print_uwreal(HVP[key][impr_set]["g33_ll"])) \t $(print_uwreal(FVC[key]["FVCg33"]))")
 # end
-
-##
-
-# Ens      HVP             FVC
-# -------------------------------------
-# A653     -2.101(14)      0.0930(43)
-# A654     -2.590(27)      -0.0444(13)
-# B450     -2.127(26)      0.0924(21)
-# C101     -3.526(45)      0.02443(72)
-# C102     -3.521(45)      0.02640(99)
-# D150     -4.409(41)      -0.0673(26)
-# D200     -3.653(32)      -0.01236(48)
-# D201     -3.645(25)      -0.01214(42)
-# D251     -3.004(11)      0.0816(13)
-# D450     -3.509(13)      0.0604(10)
-# D451     -3.543(19)      0.05981(91)
-# D452     -4.130(24)      -0.0501(13)
-# E250     -4.468(18)      -0.01832(24)
-# E300     -3.894(29)      -0.005668(62)
-# F300     -4.422(31)      0.002739(53)
-# H101     -2.180(17)      0.1348(37)
-# H102     -2.526(27)      0.0633(24)
-# H200     -2.169(33)      0.01038(38)
-# H650     -3.152(85)      -0.0305(24)
-# J303     -3.138(34)      -0.01498(34)
-# J304     -3.131(24)      -0.00871(20)
-# J306     -2.616(29)      0.0858(25)
-# J307     -2.168(23)      0.1497(52)
-# J500     -2.204(30)      0.0978(30)
-# J501     -2.632(33)      -0.00848(22)
-# N101     -3.029(35)      0.0799(23)
-# N200     -3.026(34)      0.01296(35)
-# N202     -2.221(30)      0.1393(29)
-# N203     -2.622(28)      0.0841(17)
-# N300     -2.094(51)      0.0751(32)
-# N302     -2.484(40)      -0.01336(37)
-# N451     -2.979(22)      0.0656(14)
-# N452     -2.548(44)      0.1142(29)
-# S400     -2.565(29)      0.00469(13)
-
-
-# Ens      HVP             FVC
-# -------------------------------------
-# A653     -2.101(17)      0.093(10)
-# A654     -2.590(27)      -0.0444(46)
-# B450     -2.127(28)      0.0924(95)
-# C101     -3.526(45)      0.0244(25)
-# C102     -3.521(45)      0.0264(28)
-# D150     -4.409(41)      -0.0673(72)
-# D200     -3.653(32)      -0.0124(13)
-# D201     -3.645(25)      -0.0121(13)
-# D251     -3.004(14)      0.0816(83)
-# D450     -3.509(14)      0.0604(61)
-# D451     -3.543(19)      0.0598(61)
-# D452     -4.130(24)      -0.0501(52)
-# E250     -4.468(18)      -0.0183(18)
-# E300     -3.894(29)      -0.00567(57)
-# F300     -4.422(31)      0.00274(28)
-# H101     -2.180(21)      0.135(14)
-# H102     -2.526(27)      0.0633(68)
-# H200     -2.169(34)      0.0104(11)
-# H650     -3.152(85)      -0.0305(39)
-# J303     -3.138(34)      -0.0150(15)
-# J304     -3.131(24)      -0.00871(89)
-# J306     -2.616(30)      0.0858(89)
-# J307     -2.168(27)      0.150(16)
-# J500     -2.204(31)      0.098(10)
-# J501     -2.632(33)      -0.00848(87)
-# N101     -3.029(36)      0.0799(83)
-# N200     -3.026(34)      0.0130(13)
-# N202     -2.221(33)      0.139(14)
-# N203     -2.622(29)      0.0841(86)
-# N300     -2.094(52)      0.0751(82)
-# N302     -2.484(40)      -0.0134(14)
-# N451     -2.979(23)      0.0656(67)
-# N452     -2.548(45)      0.114(12)
-# S400     -2.565(29)      0.00469(49)

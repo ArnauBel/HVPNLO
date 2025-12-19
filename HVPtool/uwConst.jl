@@ -36,31 +36,31 @@ const b_values = [3.34, 3.40, 3.46, 3.55, 3.70, 3.85]
 
 #2211.03744
 const t0_ = [
-    uwreal([2.204,0.005], "t0sym/a2"),
-    uwreal([2.872,0.010], "t0sym/a2"),
-    uwreal([3.682,0.012], "t0sym/a2"),
-    uwreal([5.162,0.016], "t0sym/a2"),
-    uwreal([8.613,0.025], "t0sym/a2"),
-    uwreal([14.011,0.039], "t0sym/a2")]
+    uwreal([2.204,0.005], "t0sym/a2 b=3.34"),
+    uwreal([2.872,0.010], "t0sym/a2 b=3.40"),
+    uwreal([3.682,0.012], "t0sym/a2 b=3.46"),
+    uwreal([5.162,0.016], "t0sym/a2 b=3.55"),
+    uwreal([8.613,0.025], "t0sym/a2 b=3.70"),
+    uwreal([14.011,0.039],"t0sym/a2 b=3.85")]
 const a_ = sqrtt0_ph ./ sqrt.(t0_)
 
 # no Bruno data for beta = 3.34, 3.85 => values provided by Simon (Antoine)
 const t0_Bruno = [
-    uwreal([2.1715,0.0073], "t0sym/a2"),
-    uwreal([2.860,0.011], "t0sym/a2"),
-    uwreal([3.659,0.016], "t0sym/a2"),
-    uwreal([5.164,0.018], "t0sym/a2"),
-    uwreal([8.595,0.025], "t0sym/a2"),
-    uwreal([13.99,0.067], "t0sym/a2")]
+    uwreal([2.1715,0.0073], "t0sym/a2 b=3.34"),
+    uwreal([2.860,0.011],   "t0sym/a2 b=3.40"),
+    uwreal([3.659,0.016],   "t0sym/a2 b=3.46"),
+    uwreal([5.164,0.018],   "t0sym/a2 b=3.55"),
+    uwreal([8.595,0.025],   "t0sym/a2 b=3.70"),
+    uwreal([13.99,0.067],   "t0sym/a2 b=3.85")]
 const a_Bruno = sqrtt0_ph_Bruno ./ sqrt.(t0_Bruno)
 
 const fPi_ = [
-    uwreal([0.05894,0.00032], "afPiph")
-    uwreal([0.05271,0.00023], "afPiph")
-    uwreal([0.04741,0.00017], "afPiph")
-    uwreal([0.04075,0.00013], "afPiph")
-    uwreal([0.032035,0.000090], "afPiph")
-    uwreal([0.025374,0.000069], "afPiph")
+    uwreal([0.05894,0.00032],   "afPiph b=3.34")
+    uwreal([0.05271,0.00023],   "afPiph b=3.40")
+    uwreal([0.04741,0.00017],   "afPiph b=3.46")
+    uwreal([0.04075,0.00013],   "afPiph b=3.55")
+    uwreal([0.032035,0.000090], "afPiph b=3.70")
+    uwreal([0.025374,0.000069], "afPiph b=3.85")
 ]
 
 function t0sym(beta::Float64; Bruno::Bool=false)
@@ -87,12 +87,12 @@ function fPiph(beta::Float64)
 end
 
 const alpha_s_beta = [
-    uwreal([0.29472,0.00019], "BLO scal"),
-    uwreal([0.27571,0.00018], "BLO scal"),
-    uwreal([0.26072,0.00017], "BLO scal"),
-    uwreal([0.24279,0.00014], "BLO scal"),
-    uwreal([0.22000,0.00010], "BLO scal"),
-    uwreal([0.202337,0.000081], "BLO scal")
+    uwreal([0.29472,0.00019],   "BLO scal b=3.34"),
+    uwreal([0.27571,0.00018],   "BLO scal b=3.40"),
+    uwreal([0.26072,0.00017],   "BLO scal b=3.46"),
+    uwreal([0.24279,0.00014],   "BLO scal b=3.55"),
+    uwreal([0.22000,0.00010],   "BLO scal b=3.70"),
+    uwreal([0.202337,0.000081], "BLO scal b=3.85")
 ]
 
 function a2_rescaling(beta::Float64,Gamma::Float64=0.395;ERR::Bool=false)
@@ -143,8 +143,8 @@ const m_ens = Dict(
     # rho masses taken fron Dalibor (available also at 2203.08676v2)
     "A653" => Dict("mPi" => uwreal([0.21193,0.00091], "mPi"), "mK" => uwreal([0.21193,0.00091], "mK"), "mRho" => uwreal([0.4240, 0.0088], "mRho")), 
     "A654" => Dict("mPi" => uwreal([0.16647,0.00121], "mPi"), "mK" => uwreal([0.22712,0.00089], "mK"), "mRho" => uwreal([0.3988, 0.0019], "mRho")), 
-    # H650 is new, computed by myself (mRho interpolated from A654 and A653)
-    "H650" => Dict("mPi" => uwreal([0.12704,0.00212], "mPi"), "mK" => uwreal([0.23098,0.00083], "mK"), "mRho" => uwreal([0.3846, 0.0200], "mRho")), 
+    # H650 is new, computed by myself (mRho=uwreal([0.3846, 0.0200], "mRho") from interpolation from A654 and A653)
+    "H650" => Dict("mPi" => uwreal([0.12721,0.00177], "mPi"), "mK" => uwreal([0.23098,0.00083], "mK"), "mRho" => uwreal([10.0,0.0], "mRho")), 
     
     "H101" => Dict("mPi" => uwreal([0.18217,0.00062], "mPi"), "mK" => uwreal([0.18217,0.00062], "mK"), "mRho" => uwreal([0.3709,0.0018], "mRho")),
     "H102" => Dict("mPi" => uwreal([0.15395,0.00071], "mPi"), "mK" => uwreal([0.19144,0.00057], "mK"), "mRho" => uwreal([0.3559,0.0036], "mRho")),
@@ -189,7 +189,7 @@ const meson_ens = Dict(
     "A653" => Dict("mPi" => uwreal([0.21184,0.00105], "mPi"), "mK" => uwreal([0.21184,0.00105], "mK"), "fPi" => uwreal([0.07144,0.00025], "fPi")),
     "A654" => Dict("mPi" => uwreal([0.16633,0.00131], "mPi"), "mK" => uwreal([0.22727,0.00112], "mK"), "fPi" => uwreal([0.06725,0.00025], "fPi")),
     # H650 is new, computed by myself
-    "H650" => Dict("mPi" => uwreal([0.12704,0.00212], "mPi"), "mK" => uwreal([0.23098,0.00083], "mK"), "fPi" => uwreal([0.06396,0.00058], "fPi")),
+    "H650" => Dict("mPi" => uwreal([0.12721,0.00177], "mPi"), "mK" => uwreal([0.23098,0.00083], "mK"), "fPi" => uwreal([0.06396,0.00058], "fPi")),
     
     "H101" => Dict("mPi" => uwreal([0.18250,0.00071], "mPi"), "mK" => uwreal([0.18250,0.00071], "mK"), "fPi" => uwreal([0.06364,0.00030], "fPi")),
     "H102" => Dict("mPi" => uwreal([0.15383,0.00080], "mPi"), "mK" => uwreal([0.19135,0.00071], "mK"), "fPi" => uwreal([0.06044,0.00031], "fPi")),

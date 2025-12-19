@@ -54,7 +54,7 @@ ensInfo = EnsInfo.(ensList)
 
 # We do not have charm or disconnected data for some of the ensembles
 ensNOcharm = ["C102","D150","D201","D251","D451","F300","H200","H650","J304","J306","J307","J501","N451","N452"]
-ensNOdisc  = ["F300","H650","J306"]
+ensNOdisc  = ["F300","J306"]
 
 ensSPECdata = ["D200","E250"]  # J303
 
@@ -80,9 +80,10 @@ IMPR_SET = ["1","2"] # ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
 STD_DERIV = false
 RESC      = false
 
+BLIND = false
+
 OVERWRITE = false  # Allows to erase data and overwrite it with new data, use carefully !!
 
-BLIND = false
 
 path_bdio = path_bdio_dict["local"]
 
@@ -125,10 +126,12 @@ end
         t = collect(1:sym_points); tBM = collect(1:length(TMR))
         if !RESC
             println("   - Reading t0...")
-            t0 = BDIOread_t0(path_bdio,ens)
+            t0     = BDIOread_t0(path_bdio,ens)
+            # t0_sym = BDIOread_t0_SU3sym(path_bdio,ens)
+            t0_sym = t0sym(ens.beta)
             aens = sqrtt0_ph / sqrt(t0); tfm = aens.*(collect(1:length(TMR)).-1)
             if (ens.id ∉ ensNOcharm) || (ens.id ∉ ensNOdisc && ens.kappa_l != ens.kappa_s)
-                a_ß = sqrtt0_ph / sqrt(t0sym(ens.beta)); tfm_ß = a_ß.*(collect(1:length(TMRbeta)).-1)
+                a_ß = sqrtt0_ph / sqrt(t0_sym); tfm_ß = a_ß.*(collect(1:length(TMRbeta)).-1)
             end
         else
             println("   - Reading fPi...")
@@ -155,10 +158,12 @@ end
             println("      - Reading corr...")
             corr = BDIOread_corr(path_bdio,ens,impr_set,STD=STD_DERIV)
 
-            if ens.kappa_l == ens.kappa_s || ens.id ∈ ensNOdisc
-                println("      - SU(3) flavour sym point or no disc. data available")
-
+            if ens.kappa_l == ens.kappa_s
+                println("      - SU(3) flavour sym points")
                 light_keys = ["g33_ll","g33_lc"]
+            elseif ens.id ∈ ensNOdisc
+                println("      - No disc. data available")
+                light_keys = ["g33_ll","g33_lc","g88conn_ll","g88conn_lc"]
             else
                 corr["g88_ll"] = corr["g88conn_ll"] .+ corr["g88disc_ll"] .+ (2).*corr["g08conn_ll"] .+ corr["g08disc_ll"] .+ corr["g80disc_ll"]
                 corr["g88_lc"] = corr["g88conn_lc"] .+ corr["g88disc_lc"] .+ corr["g08conn_lc"] .+ corr["g08disc_lc"]
@@ -308,8 +313,9 @@ end
                             push!(ub, ub_)
                             push!(lb, lb_)
                         end
-
-                        HVP[key], HVPsyst[key], PlatRec[key] = bounding_method(ub,lb,aens,PLAT=true,AVER=false,tcut0=tcut0,tstep=tstep,correlations=true)
+                        
+                        CORR = (ens.id ∉ ["A654","A653"])
+                        HVP[key], HVPsyst[key], PlatRec[key] = bounding_method(ub,lb,aens,PLAT=true,AVER=false,tcut0=tcut0,tstep=tstep,correlations=CORR)
                     end
                 end
 
@@ -317,11 +323,23 @@ end
                     HVP["g88conn_ll"] = HVP["g88_ll"] = HVP["g33_ll"]
                     HVP["g88conn_lc"] = HVP["g88_lc"] = HVP["g33_lc"]
 
+                    HVP["gSS_ll"] = 2*HVP["g33_ll"]
+                    HVP["gSS_lc"] = 2*HVP["g33_lc"]
+
                     HVPsyst["g88conn_ll"] = HVPsyst["g88_ll"] = HVPsyst["g33_ll"]
                     HVPsyst["g88conn_lc"] = HVPsyst["g88_lc"] = HVPsyst["g33_lc"]
 
+                    HVPsyst["gSS_ll"] = 2*HVPsyst["g33_ll"]
+                    HVPsyst["gSS_lc"] = 2*HVPsyst["g33_lc"]
+
                     PlatRec["g88conn_ll"] = PlatRec["g88_ll"] = PlatRec["g33_ll"]
                     PlatRec["g88conn_lc"] = PlatRec["g88_lc"] = PlatRec["g33_lc"]
+                else
+                    HVP["gSS_ll"] = 3*HVP["g88conn_ll"] - HVP["g33_ll"]
+                    HVP["gSS_lc"] = 3*HVP["g88conn_lc"] - HVP["g33_lc"]
+                    
+                    HVPsyst["gSS_ll"] = sqrt(9*HVPsyst["g88conn_ll"]^2 + HVPsyst["g33_ll"]^2)
+                    HVPsyst["gSS_lc"] = sqrt(9*HVPsyst["g88conn_lc"]^2 + HVPsyst["g33_lc"]^2)
                 end
             else
                 for key in light_keys
@@ -338,6 +356,12 @@ end
                 if ens.kappa_l == ens.kappa_s
                     HVP["g88conn_ll"] = HVP["g88_ll"] = HVP["g33_ll"]
                     HVP["g88conn_lc"] = HVP["g88_lc"] = HVP["g33_lc"]
+
+                    HVP["gSS_ll"] = 2*HVP["g88conn_ll"]
+                    HVP["gSS_lc"] = 2*HVP["g88conn_lc"]
+                else
+                    HVP["gSS_ll"] = 3*HVP["g88conn_ll"] - HVP["g33_ll"]
+                    HVP["gSS_lc"] = 3*HVP["g88conn_lc"] - HVP["g33_lc"]
                 end
             end
 
@@ -366,21 +390,21 @@ end
 
                 # kappaC_tar = uwreal([kcd_in[ens.id]["kappaC"],kcd_in[ens.id]["kappaC_err"]], "kappaC target")   # extract KappaC from tables
                 kappaC = [kcd_in[ens.id]["kappaC_sim"],kcd_in[ens.id]["kappaC_sim_plus"]]
-                
-                DkappaC = abs(kappaC[1]-kappaC[2])
-                DkappaC_tar = minimum([abs(value(kappaC_tar)-kappaC[1]),abs(value(kappaC_tar)-kappaC[2])])
 
                 for key in ["gCCconn_ll","gCCconn_lc","gCCconn_SU3_ll","gCCconn_SU3_lc"]
                     obs  = [HVP["$(key)_sim"],HVP["$(key)_sim+"]]
                     
-                    par, _ = lin_fit(kappaC,obs,wpm=wpm,lineprint=false)
+                    par, _  = lin_fit(kappaC,obs,wpm=wpm,lineprint=false)
                     obs_tar = y_lin_fit(par,kappaC_tar)
 
                     if kappaC[1] <= value(kappaC_tar) <= kappaC[2]
                         HVP[key] = obs_tar
                         HVPsyst[key] = 0.0
                     else
-                        HVP[key] = obs_tar # + 1.5 * (abs(DkappaC_tar) / DkappaC)^2 * uwreal([0.0,err(obs_tar)],"kappaC syst")
+                        HVP[key] = obs_tar
+
+                        DkappaC = abs(kappaC[1]-kappaC[2])
+                        DkappaC_tar = minimum([abs(value(kappaC_tar)-kappaC[1]),abs(value(kappaC_tar)-kappaC[2])])
                         uwerr(obs_tar); HVPsyst[key] = 1.5 * (abs(DkappaC_tar) / DkappaC)^2 * err(obs_tar)
                     end
                 end
@@ -528,20 +552,25 @@ end
             FVC33_hp = (3/2) * FVCPi_hp
             FVC33 = (3/2) * FVCPi
             FVC88 = (3/2) * FVCPi
+            # FVC88conn = (3/2) * FVCPi
+            FVCSS = 3 * FVCPi
         else
-            FVC33_hp = FVCPi_hp + FVCK/2
-            FVC33 = FVCPi + FVCK/2
-            FVC88 = 2/3 * FVCK
+            FVC33_hp = FVCPi_hp + (FVCK/2)
+            FVC33 = FVCPi + (FVCK/2)
+            FVC88 = 2/3 * (FVCK/2)
+            # FVC88conn = 1/3 * FVCPi + (FVCK/2)
+            FVCSS = FVCK # 2*(FVCK/2)
         end
 
 
         FVC =  Dict{String, uwreal}(
-            "FVCPi_hp" => FVCPi_hp, 
-            "FVCPi" => FVCPi, 
-            "FVCK"  => FVCK/2,
+            "FVCPi_hp" => FVCPi_hp,  # corr to 33
+            "FVCPi" => FVCPi,        # corr to 33
+            "FVCK"  => (FVCK/2),     # corr to 33
             "FVCg33_hp" => FVC33_hp, 
             "FVCg33" => FVC33, 
-            "FVCg88" => FVC88
+            "FVCg88" => FVC88,
+            "FVCgSS" => FVCSS
         )
 
         println("   - Writing BDIO...")
@@ -569,7 +598,6 @@ end # end timer
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
 
-
 ##==========================> READING TEST <==========================##
 
 diag     = ""  #  "LO"  "NLOa"  "NLOb"  "NLOa&b"  "NLOc"
@@ -579,13 +607,12 @@ impr_set = ""
 
 STD   = false
 VREF  = false
-RESC  = false
+RESC  = true
 
 BLIND = false
 
 path_bdio = path_bdio_dict["local"]
 
-# ensid = "D200"; HVP, info = BDIOread_HVPens(path_bdio,diag,wind,ensid,impr_set,info=true,resc=RESC,STD=STD,BLIND=BLIND); println("$(ensid) -> $(print_uwreal(HVP["g33_ll"]*10))")
 HVP, info = BDIOread_HVPens(path_bdio,diag,wind,ensid,impr_set,info=true,resc=RESC,STD=STD,BLIND=BLIND)
 
 FVC = BDIOread_FVCens(path_bdio,diag,wind,ensid,Vref=VREF,resc=RESC,BLIND=BLIND)

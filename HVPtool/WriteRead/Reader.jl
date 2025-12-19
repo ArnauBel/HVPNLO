@@ -8,6 +8,21 @@ function BDIOread_t0(pBDIO::String,ensid::String)
 end
 BDIOread_t0(pBDIO::String,ens::EnsInfo) = BDIOread_t0(pBDIO,ens.id)
 
+function BDIOread_t0_SU3sym(pBDIO::String,beta::Float64)
+    beta_to_ens = Dict(
+        3.34 => "A653",
+        3.4  => "H101",
+        3.46 => "B450",
+        3.55 => "N202",
+        3.7  => "J307",
+        3.85 => "J500",
+    )
+    t0 = BDIOread_t0(pBDIO,beta_to_ens[beta])
+    return t0
+end
+BDIOread_t0_SU3sym(pBDIO::String,ens::EnsInfo)  = BDIOread_t0_SU3sym(pBDIO,ens.beta)
+BDIOread_t0_SU3sym(pBDIO::String,ensid::String) = BDIOread_t0_SU3sym(pBDIO,EnsInfo(ensid))
+
 function BDIOread_TMR(pBDIO::String,ensid::String,diag::String;beta::Bool=false,resc::Bool=false,BLIND::Bool=false)
     SETstr  = resc ? "fPi" : "t0"
     SETstr *= beta ? (resc ? "ph" : "su3") : ""

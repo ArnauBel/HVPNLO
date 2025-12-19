@@ -45,7 +45,7 @@ include("WriteRead/WriteRead.jl")
 
 using .WriteRead
 export paste_str, func_str, create_path
-export BDIOread_t0, BDIOread_TMR, BDIOread_corr, BDIOread_FVCcorr
+export BDIOread_t0, BDIOread_t0_SU3sym, BDIOread_TMR, BDIOread_corr, BDIOread_FVCcorr
 export BDIOread_HVPens, BDIOread_FVCens
 export BDIOread_res, BDIOread_XYdata, JDL2read_FitRes, JDL2read_ModelInfo
 export BDIOread_MA, BDIOread_MAtot

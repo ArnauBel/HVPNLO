@@ -54,12 +54,9 @@ path_fvcKref  = joinpath(path_hvp_dict["local"], "FSE_HP", "ref", "JKMK")
 
 ensList = ["A653","A654","B450","C101","C102","D150","D200","D201","D251","D450","D451","D452","E250","E300","F300","H101","H102","H200","H650","J303","J304","J306","J307","J500","J501","N101","N200","N202","N203","N300","N302","N451","N452","S400"]
 
-# Updated ensembles
-# "D251","F300","J306","J307"
-
 # We do not have charm or disconnected data for some of the ensembles
 ensNOcharm = ["C102","D150","D201","D251","D451","F300","H200","H650","J304","J306","J307","J501","N451","N452"]
-ensNOdisc  = ["F300","H650","J306"]
+ensNOdisc  = ["F300","J306"]
 
 # Ensemble check
 # ensInfo, bad_ensInfo = ensCheck(EnsInfo.(ensList), ensNOcharm, ensNOdisc, path_HVP, path_rw_, path_ms, path_fvcPI, data_status=true)
@@ -83,12 +80,12 @@ STD_DERIV = false
 
 IMPR_SET  = ["1","2"]  # ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
 
-OVERWRITE = false
+OVERWRITE = true
 
 path_bdio_w =  path_bdio_dict["local"]
 
 @time begin
-    for ens in ensInfo
+    for ens in EnsInfo.(["H650","E300"])
 
         @info("Reading corr ensemble: $(ens.id)")
         ens.id ∈ ensNOcharm ? @info("  > NO CHARM DATA FOR $(ens.id)") : nothing
@@ -367,21 +364,22 @@ end # end timer
 
 ##==========================> LO & NLO TMR computation <==========================##
 
-scale = ""  # t0  t0su3  fPi  fPiph
+scale = "t0su3"  # t0  t0su3  fPi  fPiph
 
 COMPTMRc  = false
-OVERWRITE = false
+OVERWRITE = true
 
 path_bdio_w = path_bdio_dict["local"]
 
 @time begin
     for ens in ensInfo
         @info("Computing TMRs for ensemble: $(ens.id)\n With scale: $scale")
-
+        
         if scale == "t0"
             t0 = BDIOread_t0(path_bdio_w,ens.id)
             factor = hbarc * sqrt(t0)/sqrtt0_ph
         elseif scale  == "t0su3"
+            # t0 = BDIOread_t0_SU3sym(path_bdio_w,ens.beta)
             t0 = t0sym(ens.beta)
             factor = hbarc * sqrt(t0)/sqrtt0_ph
         elseif scale == "fPi"
@@ -403,6 +401,7 @@ path_bdio_w = path_bdio_dict["local"]
         TMRa = factor^2 .* Tildef4a(t_hat,path_coef)
         println("   - TMR for diagram 'NLOb'...")
         TMRb = factor^2 .* Tildef4b(t_hat,path_coef)
+        COMPTMRc = ens.id ∉ ensNOcharm
         if  COMPTMRc
             println("   - TMR for diagram 'NLOc'...")
             TMRc = factor^4 .* Tildef4c(t_hat,path_coef)
@@ -556,6 +555,7 @@ BLIND = false
 path_bdio_r = path_bdio_dict["local"]
 
 t0  = BDIOread_t0(path_bdio_r,ensid)
+t0s = BDIOread_t0_SU3sym(path_bdio_r,ensid)
 
 fPi = BDIOread_fPS(path_bdio_r,ensid)["fPi"]
 

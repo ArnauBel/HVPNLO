@@ -59,18 +59,18 @@ rcParams["axes.titlesize"] = 18
 # Set plot parameters
 
 diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = "SDsub"  #  NW  SD  SDsub  ID  LD  ILD
+wind = "LD"  #  NW  SD  SDsub  ID  LD  ILD
 comp = "g33"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
-model_var_list = Function[a3,a4,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]
+model_var_list = Function[a3,a2phi2,phi2sqr,phi2log,logphi2,phi2inv]
 # model_var_list = Function[a3,a2y,ysqr,ylog,yinv,logy]
 MultFunc = nothing  # nothing  deltaphi
 
 readIMPR_SET = ["1","2"] # ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
 
-BLIND = false
+BLIND = true
 
 FitCUT = "None"  # "None"  "beta"  "mass"  "beta&mass"
 
@@ -299,7 +299,7 @@ close()
 
 @info("Pion chiral projection plot")
 
-ShowGHOST = true
+ShowGHOST = false
 
 SAVE     = false
 OVERSAVE = false

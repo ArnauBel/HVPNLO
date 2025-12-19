@@ -52,7 +52,7 @@ ensInfo = EnsInfo.(ensList)
 
 # We do not have charm or disconnected data for some of the ensembles
 ensNOcharm = ["C102","D150","D201","D251","D451","F300","H200","H650","J304","J306","J307","J501","N451","N452"]
-ensNOdisc  = ["F300","H650","J306"]
+ensNOdisc  = ["F300","J306"]
 
 @info("Ready")
 
@@ -104,8 +104,10 @@ corr33tl_ll = uwreal.(corr33tl_ll); corr33tl_lc = uwreal.(corr33tl_lc)
             aens = sqrtt0_ph / sqrt(t0); tfm = aens.*(t.-1)
             factor = hbarc * sqrt(t0) / sqrtt0_ph  
             if (ens.id ∉ ensNOcharm) || (ens.id ∉ ensNOdisc && ens.kappa_l != ens.kappa_s)
-                a_ß = sqrtt0_ph / sqrt(t0sym(ens.beta)); tfm_ß = a_ß.*(t.-1)
-                factor_ß = hbarc * sqrt(t0sym(ens.beta)) / sqrtt0_ph
+                # t0_sym = BDIOread_t0_SU3sym(path_bdio,ens)
+                t0_sym = t0sym(ens.beta)
+                a_ß = sqrtt0_ph / sqrt(t0_sym); tfm_ß = a_ß.*(t.-1)
+                factor_ß = hbarc * sqrt(t0_sym) / sqrtt0_ph
             end
         else
             println("   - Reading fPi...")
@@ -226,9 +228,6 @@ corr33tl_ll = uwreal.(corr33tl_ll); corr33tl_lc = uwreal.(corr33tl_lc)
                 println("         - Interpolating charm contribution...")
 
                 kappaC = [kcd_in[ens.id]["kappaC_sim"],kcd_in[ens.id]["kappaC_sim_plus"]]
-                
-                DkappaC = abs(kappaC[1]-kappaC[2])
-                DkappaC_tar = minimum([abs(value(kappaC_tar)-kappaC[1]),abs(value(kappaC_tar)-kappaC[2])])
 
                 for key in ["gCCconn_ll","gCCconn_lc","gCCconn_SU3_ll","gCCconn_SU3_lc","∆lc_b_ll","∆lc_b_lc"]
                     HVPQ[key] = []
@@ -236,14 +235,17 @@ corr33tl_ll = uwreal.(corr33tl_ll); corr33tl_lc = uwreal.(corr33tl_lc)
                     for i=1:length(Qlist)
                         obs  = [HVPQ["$(key)_sim"][i],HVPQ["$(key)_sim+"][i]]
                     
-                        par, _ = lin_fit(kappaC,obs,lineprint=false)
+                        par, _  = lin_fit(kappaC,obs,lineprint=false)
                         obs_tar = y_lin_fit(par,kappaC_tar)
 
                         if kappaC[1] <= value(kappaC_tar) <= kappaC[2]
                             push!(HVPQ[key], obs_tar)
                             push!(HVPsyst[key], 0.0)
                         else
-                            push!(HVPQ[key], obs_tar)  # + 1.5 * (abs(DkappaC_tar) / DkappaC)^2 * uwreal([0.0,err(obs_tar)],"kappaC syst")
+                            push!(HVPQ[key], obs_tar)
+
+                            DkappaC = abs(kappaC[1]-kappaC[2])
+                            DkappaC_tar = minimum([abs(value(kappaC_tar)-kappaC[1]),abs(value(kappaC_tar)-kappaC[2])])
                             uwerr(obs_tar); push!(HVPsyst[key], 1.5 * (abs(DkappaC_tar) / DkappaC)^2 * err(obs_tar))
                         end
                     end
@@ -251,16 +253,21 @@ corr33tl_ll = uwreal.(corr33tl_ll); corr33tl_lc = uwreal.(corr33tl_lc)
             end
 
             if (ens.id ∉ ensNOdisc && ens.kappa_l != ens.kappa_s)
-                println("      - Computing ∆ls(amu)...")
+                println("      - Computing ∆ls(amu) & ∆ls(amu)conn...")
                 for discr in ["ll","lc"]
-                    key = "∆ls_amu_$discr"
-                    println("         - $key")
-                    obs = corr["g88_$discr"][t] .- corr["g33_$discr"][t]
+                    key_∆     = "∆ls_amu_$discr"
+                    key_∆conn = "∆ls_amuconn_$discr"
+                    println("         - $key_∆, $key_∆conn")
+                    obs_∆     = corr["g88_$discr"][t] .- corr["g33_$discr"][t]
+                    obs_∆conn = corr["g88conn_$discr"][t] .- corr["g33_$discr"][t]
 
-                    int = obs .* TMRw
-                    amu = (alpha/pi)^exp_diag * sum(int) * 1e10
+                    int_∆     = obs_∆ .* TMRw
+                    int_∆conn = obs_∆conn .* TMRw
+                    amu_∆     = (alpha/pi)^exp_diag * sum(int_∆) * 1e10
+                    amu_∆conn = (alpha/pi)^exp_diag * sum(int_∆conn) * 1e10
 
-                    HVP[key] = [amu]
+                    HVP[key_∆]     = [amu_∆]
+                    HVP[key_∆conn] = [amu_∆conn]
                 end
                 println("      - Computing gCdisc...")
                 for (k,key) in enumerate(["gCCdisc_cc","gC8disc_cc"])
@@ -311,10 +318,10 @@ end # end timer
 
 diag = ""  # LO  NLOa  NLOb  NLOa&b
 
-OVERWRITE = false  # Allows to erase data and overwrite it with new data, use carefully !!
-
 RESC = false
 VREF = false
+
+OVERWRITE = false  # Allows to erase data and overwrite it with new data, use carefully !!
 
 path_bdio = path_bdio_dict["local"]
 
@@ -338,8 +345,10 @@ end
             aens = sqrtt0_ph / sqrt(t0); tfm = aens.*(t.-1)
             factor = hbarc * sqrt(t0) / sqrtt0_ph  
             # if (ens.id ∉ ensNOcharm) || (ens.id ∉ ensNOdisc && ens.kappa_l != ens.kappa_s)
-            #     a_ß = sqrtt0_ph / sqrt(t0sym(ens.beta)); tfm_ß = a_ß.*(t.-1)
-            #     factor_ß = hbarc * sqrt(t0sym(ens.beta)) / sqrtt0_ph
+            #     # t0_sym = BDIOread_t0_SU3sym(path_bdio,ens)
+            #     t0_sym = t0sym(ens.beta)
+            #     a_ß = sqrtt0_ph / sqrt(t0_sym); tfm_ß = a_ß.*(t.-1)
+            #     factor_ß = hbarc * sqrt(t0_sym) / sqrtt0_ph
             # end
         else
             println("   - Reading fPi...")
@@ -385,12 +394,14 @@ end
         FVCPi = (alpha/pi)^exp_diag * sum(fvcPi .* TMRw) * 1e10
         FVCK  = (alpha/pi)^exp_diag * sum(fvcK  .* TMRw) * 1e10
 
-        FVC∆ls_amu = ens.kappa_l == ens.kappa_s ? (uwreal([0.0,0.0],"")) : ((-1.0) * (alpha/pi)^exp_diag * sum((-(1/6.).*fvcK .+ fvcPi) .* TMRw) * 1e10)
+        FVC∆ls_amu     = ens.kappa_l == ens.kappa_s ? uwreal(0.0) : (alpha/pi)^exp_diag * sum(((-1/3*(fvcK/2) .- fvcPi) .* TMRw) * 1e10)
+        FVC∆ls_amuconn = ens.kappa_l == ens.kappa_s ? uwreal(0.0) : (alpha/pi)^exp_diag * sum(((-2/3*fvcPi) .* TMRw) * 1e10)
 
         dataFVC =  Dict{String, Array{uwreal}}(
             "FVCPi" => [FVCPi], 
             "FVCK"  => [FVCK/2],
-            "FVC∆ls_amu" => [FVC∆ls_amu], 
+            "FVC∆ls_amu"     => [FVC∆ls_amu], 
+            "FVC∆ls_amuconn" => [FVC∆ls_amuconn], 
         )
 
         println("   - Computing (TMRsub(Q) x FVC)...")
@@ -416,9 +427,9 @@ end
                 FVC∆lc_b_  = -(3)*FVCPib_ # this minus sign was not there before. !!??
                 # FVC∆lc_bß_ = -(3)*FVCKbß_ # this minus sign was not there before. !!??
             else
-                FVC33_ = FVCPisub_ + FVCKsub_/2
-                FVC88_ = 2/3 * FVCKsub_
-                FVC∆lc_b_  = (-2)*(FVCPib_ + FVCKb_/2) # there's a factor 2
+                FVC33_ = FVCPisub_ + (FVCKsub_/2)
+                FVC88_ = 2/3 * (FVCKsub_/2)
+                FVC∆lc_b_  = (-2)*(FVCPib_ + (FVCKb_/2)) # there's a factor 2
                 # FVC∆lc_bß_ = (-2)*(FVCPibß_ + FVCKbß_) # there's a factor 2
             end
                         
@@ -467,11 +478,18 @@ end # end timer
 
 ##==========================> READING TEST <==========================##
 
-diag  = ""
-ensid = ""
-
+diag     = ""  #  "LO"  "NLOa"  "NLOb"  "NLOa&b"  "NLOc"
+ensid    = ""
 impr_set = ""
 
-HVP, info = BDIOread_HVPens(path_bdio,diag,"SDsub",ensid,impr_set,info=true)
+STD   = false
+VREF  = false
+RESC  = false
 
-FVC = BDIOread_FVCens(path_bdio,diag,"SDsub",ensid)
+BLIND = false
+
+path_bdio = path_bdio_dict["local"]
+
+HVP, info = BDIOread_HVPens(path_bdio,diag,"SDsub",ensid,impr_set,info=true,resc=RESC,STD=STD,BLIND=BLIND)
+
+FVC = BDIOread_FVCens(path_bdio,diag,"SDsub",ensid,Vref=VREF,resc=RESC,BLIND=BLIND)

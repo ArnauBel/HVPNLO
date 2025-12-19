@@ -64,7 +64,7 @@ rcParams["axes.titlesize"] = 18
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
 
-BL_factor = 1.43
+BL_factor = 1.45
 
 BLIND_LD  = Any[true,BL_factor]
 
@@ -72,12 +72,12 @@ path_bdio = path_bdio_dict["local"]
 
 
 Q33 = 5.0
-QCC = 5.0
+QCC = 4.0
 
-STD_DERIV  = false
-tl_IMPR    = true
-VREF       = true
-RESC       = false
+STD_DERIV = false
+tl_IMPR   = true
+VREF      = true
+RESC      = false
 
 
 amu      = Dict()
@@ -152,14 +152,14 @@ for diag in ["NLOa","NLOb","NLOa&b"]
     amu[diag]["SD"]["CC"] = amuCCsub + Window("SD")(0) * (2*b33Pert.mean + ∆lc_b); uwerr(amu[diag]["SD"]["CC"])
     der_mDs = mchist(amu[diag]["SD"]["CC"], "MD_ph [GeV]")[1] / artificial_err
     amu[diag]["SD"]["CC"]    += value(MD_ph - MD_ph_prime) * der_mDs
-    amusyst[diag]["SD"]["CC"] = sqrt(infoCCsub["syst"]^2 + Window("SD")(0)^2 * (2*err(b33Pert)^2 + info∆lc_b["syst"]^2))
+    amusyst[diag]["SD"]["CC"] = sqrt(infoCCsub["syst"]^2 + Window("SD")(0)^2 * (4*b33Pert.err^2 + info∆lc_b["syst"]^2))
 
     AMU[diag]["SD"]      = amu[diag]["SD"]["33"] + (1/3) * amu[diag]["SD"]["88"] + (4/9) * amu[diag]["SD"]["CC"] + (1/9) * amu_bb[diag]
     AMUSYST[diag]["SD"]  = sqrt(amusyst[diag]["SD"]["33"]^2 + 1/9 * amusyst[diag]["SD"]["88"]^2 + 16/81 * amusyst[diag]["SD"]["CC"]^2)
     AMUt0ERR[diag]["SD"] = get_t0err([AMU[diag]["SD"]],sqrtt0_ph_Madrid)[1]
     AMUERR[diag]["SD"]   = !VREF ? sqrt(AMU[diag]["SD"].err^2 + AMUSYST[diag]["SD"]^2 + AMUt0ERR[diag]["SD"]^2) : sqrt(AMU[diag]["SD"].err^2 + AMUSYST[diag]["SD"]^2 + AMUt0ERR[diag]["SD"]^2 + AMUFVC[diag]["SD"]^2)
 
-    # Add botttom effects on it (only considered to affedt the SD piece)
+    # Add botttom effects on it (only considered to affect the SD piece)
     amu[diag]["SD"]["BB"] = AMU[diag]["BB"] = uwreal(amu_bb[diag])
 
     # For the ID & LD windows
@@ -200,7 +200,7 @@ for diag in ["NLOa","NLOb","NLOa&b"]
     end
 
     for comp in ["33","88","CC"]
-        BLIND_factor = BLIND_LD[1] ? BLIND_LD[2] : 1.0
+        BLIND_factor = (BLIND_LD[1] && comp != "CC") ? BLIND_LD[2] : 1.0
 
         AMU[diag][comp]      = amu[diag]["SD"][comp] + amu[diag]["ID"][comp] + amu[diag]["LD"][comp]/BLIND_factor
         AMUSYST[diag][comp]  = sqrt((amusyst[diag]["SD"][comp])^2 + (amusyst[diag]["ID"][comp])^2 + (amusyst[diag]["LD"][comp]/BLIND_factor)^2)
@@ -233,7 +233,7 @@ for diag in ["NLOa","NLOb","NLOa&b"]
     AMUSYST[diag]["tot"]  = sqrt(AMUSYST[diag]["SD"]^2 + AMUSYST[diag]["ID"]^2 + AMUSYST[diag]["LD"]^2)
     AMUt0ERR[diag]["tot"] = get_t0err([AMU[diag]["tot"]],sqrtt0_ph_Madrid)[1]
     AMUFVC[diag]["tot"]   = AMUFVC[diag]["NW"]
-    AMUERR[diag]["tot"] = sqrt(AMU[diag]["tot"].err^2 + AMUSYST[diag]["tot"]^2 + AMUt0ERR[diag]["tot"]^2 + AMUFVC[diag]["tot"]^2)
+    AMUERR[diag]["tot"]   = sqrt(AMU[diag]["tot"].err^2 + AMUSYST[diag]["tot"]^2 + AMUt0ERR[diag]["tot"]^2 + AMUFVC[diag]["tot"]^2)
 
     println("   aµ[$diag] = $(print_uwreal(10*AMU[diag]["tot"],10*[AMUSYST[diag]["tot"],AMUt0ERR[diag]["tot"],AMUFVC[diag]["tot"]],total=true))")
 end
@@ -341,14 +341,14 @@ list_old = Dict(
 )
 
 RES_sl = Dict(
-    "NLOa"   => [[uwreal([-21.61536,0.1161895],"Spacelike"),"Spacelike - Mainz 2025"]],
-    "NLOb"   => [[uwreal([11.118475,0.0791056],"Spacelike"),"Spacelike - Mainz 2025"]],
+    "NLOa"   => [[uwreal([-21.5,0.15],"Spacelike"),"Spacelike - Mainz 2025"]],
+    "NLOb"   => [[uwreal([11,0.1],"Spacelike"),"Spacelike - Mainz 2025"]],
     "NLOc"   => [
         # [uwreal([0.39710,0.00966],"Spacelike"),"Spacelike - Mainz 2022"],
         # [uwreal([0.37685,0.00837],"Spacelike"),"Spacelike - Mainz 2025"],
         [uwreal([0.3735,0.0081],"Spacelike"),"Spacelike - Mainz 2025"],
         ],
-    "NLO"    => [[uwreal([-10.13129,0.03680297],"Spacelike"),"Spacelike - Mainz 2025"]],
+    "NLO"    => [[uwreal([-10.5,0.1],"Spacelike"),"Spacelike - Mainz 2025"]],
 )
 
 # RES_WP = Dict("NLO" => [uwreal([-9.83,0.07],"WP25"),"WP 2025"])
@@ -980,32 +980,48 @@ AMU_pQCD = Dict(
     "NLOa" => uwreal([-8.034,0.127],"NLOa CC-pQCD"),
     "NLOb" => uwreal([2.247,0.038],"NLOb CC-pQCD")
 )
+AMU_pQCD["NLOa&b"] = uwreal([-5.787,0.089],"NLOab CC-pQCD")
+# AMU_pQCD["NLOa&b"] = AMU_pQCD["NLOa"] + AMU_pQCD["NLOb"]
 
-[uwerr(AMU_pQCD[key]) for key in keys(AMU_pQCD)]
+# [uwerr(AMU_pQCD[key]) for key in keys(AMU_pQCD)]
 
-fig, (ax1, ax2) = subplots(1, 2,
-    gridspec_kw = Dict("width_ratios" => [3, 3], "wspace" => 0),
-    figsize = (12, 6)
+fig, (ax1, ax2, ax3) = subplots(1, 3,
+    gridspec_kw = Dict("width_ratios" => [1, 1, 1], "wspace" => 0.1),
+    figsize = (14, 2)
 )
 
 factor = 10*4/9
 
-ax1.errorbar(factor*AMU["NLOa"]["CC"].mean, xerr=factor*AMU["NLOa"]["CC"].err, 0.0, 0.0, fmt="o", mfc="none", color="black", ms=10, capsize=2)
-ax1.errorbar(factor*AMU["NLOa"]["CC"].mean, xerr=factor*AMUERR["NLOa"]["CC"], 0.0, 0.0, fmt="o", mfc="none", color="black", ms=10, capsize=2)
-ax1.errorbar(AMU_pQCD["NLOa"].mean, xerr=AMU_pQCD["NLOa"].err, -1.0, 0.0, fmt="o", mfc="none", color="black", ms=10, capsize=2)
+@info("pQCD vs. lattice in the charm-quark sector :")
+println("-------------------------------------------------")
+for diag in ["NLOa","NLOb","NLOa&b"]
+    println(
+        "   aµ[$diag](CC-lat)  = $(print_uwreal(
+        factor*AMU[diag]["CC"],
+        factor*[AMUSYST[diag]["CC"],AMUt0ERR[diag]["CC"]],
+        total=true))"
+        )
+    println("   aµ[$diag](CC-pQCD) = $(print_uwreal(AMU_pQCD[diag]))")
+    println("-------------------------------------------------")
+end
 
-ax2.errorbar(factor*AMU["NLOb"]["CC"].mean, xerr=factor*AMU["NLOb"]["CC"].err, 0.0, 0.0, fmt="o", mfc="none", color="black", ms=10, capsize=2)
-ax2.errorbar(factor*AMU["NLOb"]["CC"].mean, xerr=factor*AMUERR["NLOb"]["CC"], 0.0, 0.0, fmt="o", mfc="none", color="black", ms=10, capsize=2)
-ax2.errorbar(AMU_pQCD["NLOb"].mean, xerr=AMU_pQCD["NLOb"].err, -1.0, 0.0, fmt="o", mfc="none", color="black", ms=10, capsize=2)
+for (k,diag) in enumerate(["NLOa","NLOb","NLOa&b"])
+    ax = [ax1,ax2,ax3][k]
 
-ax1.set_ylim(-1.5,0.5)
-ax2.set_ylim(-1.5,0.5)
+    ax.errorbar(factor*AMU[diag]["CC"].mean, xerr=factor*AMU[diag]["CC"].err, 0.0, 0.0, fmt="o", mfc="none", color="black", ms=10, capsize=2)
+    ax.errorbar(factor*AMU[diag]["CC"].mean, xerr=factor*AMUERR[diag]["CC"], 0.0, 0.0, fmt="o", mfc="none", color="black", ms=10, capsize=2)
+    ax.errorbar(AMU_pQCD[diag].mean, xerr=AMU_pQCD[diag].err, -1.0, 0.0, fmt="o", mfc="none", color="black", ms=10, capsize=2)
 
-ax1.set_yticks([0.0,-1.0], ["Lattice. Mainz","pQCD (Toni)"], rotation = 0, fontsize=15)
-ax2.set_yticks([])  # Remove redundant y-ticks on the second plot
+    ax.set_ylim(-1.5,0.5)
 
-ax1.set_xlabel(latexstring("(4/9)\\ a_\\mu^{c,c}[\\mathrm{NLOa}]\\ \\times\\ 10^{-11}"))
-ax2.set_xlabel(latexstring("(4/9)\\ a_\\mu^{c,c}[\\mathrm{NLOb}]\\ \\times\\ 10^{-11}"))
+    if k==1
+        ax.set_yticks([0.0,-1.0],["CLS","pQCD"])
+    else
+        ax.set_yticks([])  # Remove redundant y-ticks on the second plot
+    end
+    diag_str = diag != "NLOa&b" ? diag : "NLOa\\&b"
+    ax.set_xlabel(latexstring("(4/9)\\ a_\\mu^{c,c}[\\mathrm{$(diag_str)}]\\ \\times\\ 10^{-11}"))
+end
 
 tight_layout()
 display(gcf())

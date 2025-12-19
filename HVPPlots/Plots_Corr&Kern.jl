@@ -76,7 +76,7 @@ readIMPR_SET = ["1","2"] # ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
 RESC       = false
 STD_DERIV  = false
 
-BLIND = false
+BLIND = true
 
 path_bdio = path_bdio_dict["local"]
 
@@ -123,7 +123,7 @@ println("- Reading fvc...")
 fvc_hp_dict    = BDIOread_FVCcorr(path_bdio,ens)
 fvc_hpRef_dict = BDIOread_FVCcorr(path_bdio,ens,Vref=true)
 
-if ens.id != "A653"
+if ens.id ∉ ["A653","H650"]
     # GS_data_matrix, headers = readdlm("../gsFVC/$(ens.id)_gs_fvc.txt", '\t', header=true)
 
     # t_gs   = GS_data_matrix[:, 1]
@@ -335,11 +335,11 @@ close()
 @info("1D integrand plot")
 
 # comp = "g33_ll"
-impr_set = "1"
+impr_set = "2"
 
 DIAG = ["NLOb"]  # ["LO"]  ["NLOa","NLOb"]  ["LO","NLOa","NLOb"]
 COMP = ["g33_ll"]  # ["g33_ll"]  ["g33_ll","g88_ll"]  ["g33_ll","g88_ll","gCCconn_ll"]
-WIND = ["NW","SD","ID","LD"]  # ["SD","SDsub"]  ["SD","ILD"]  ["SD","ID","LD"]  ["NW","SD","ILD"]  ["NW","SD","ID","LD"]
+WIND = ["NW"]  # ["SD","SDsub"]  ["SD","ILD"]  ["SD","ID","LD"]  ["NW","SD","ILD"]  ["NW","SD","ID","LD"]
 
 SAVE     = false
 OVERSAVE = false
@@ -694,7 +694,7 @@ tcut0 = 10
 tstep = 1
 
 
-mpi  = m_ens[ens.id]["mPi"] 
+mpi  = m_ens[ens.id]["mPi"]
 mrho = m_ens[ens.id]["mRho"]
 E2pi = 2*sqrt(mpi^2 + (2π/ens.L)^2)
 # uwerr(E0_ens[ens.id]["E0"]); E0 = E0_ens[ens.id]["E0"].mean + E0_ens[ens.id]["E0"].err

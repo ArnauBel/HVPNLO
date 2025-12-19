@@ -34,7 +34,7 @@ path_bdio_dict = Dict{String,String}(
     "clust" => joinpath(julia_script_directory, "..", "ObsExternal", "mogon_mount", "ObsBDIO")
 )
 
-path_meson = joinpath(julia_script_directory, "..", "HVPData", "Meson_data")
+path_meson = joinpath(julia_script_directory, "..", "HVPData", "meson_data")
 
 path_rw    = joinpath(path_hvp_dict["local"], "reweight")
 path_ms    = joinpath(path_hvp_dict["local"], "ms_t0_dat")
@@ -306,7 +306,7 @@ mPi_fitinfo = Dict{String,Dict{String,Any}}(
     "A653" => Dict{String,Any}("2state" => true , "plat" => [0.40,0.50], "mdof" => 4),
     # "A654" => Dict{String,Any}("2state" => true , "plat" => [0.30,0.40], "mdof" => 4),
     "A654" => Dict{String,Any}("2state" => false, "plat" => [0.50,0.60], "mdof" => 4),
-    "H650" => Dict{String,Any}("2state" => false, "plat" => [0.40,0.50], "mdof" => 4),
+    "H650" => Dict{String,Any}("2state" => false, "plat" => [0.40,0.80], "mdof" => 4),
     "D150" => Dict{String,Any}("2state" => false, "plat" => [0.25,0.40], "mdof" => 4),
     "B450" => Dict{String,Any}("2state" => true , "plat" => [0.30,0.40], "mdof" => 4),
     "N452" => Dict{String,Any}("2state" => false, "plat" => [0.40,0.70], "mdof" => 4),
@@ -370,7 +370,7 @@ mK_fitinfo = Dict{String,Dict{String,Any}}(
     "J303" => Dict{String,Any}("2state" => false, "plat" => [0.20,0.80], "mdof" => 10),
     "J304" => Dict{String,Any}("2state" => false, "plat" => [0.15,0.80], "mdof" => 90),
     "E300" => Dict{String,Any}("2state" => false, "plat" => [0.10,0.70], "mdof" => 40),
-    "F300" => Dict{String,Any}("2state" => false, "plat" => [0.15,0.70], "mdof" => 70),
+    "F300" => Dict{String,Any}("2state" => false, "plat" => [0.10,0.70], "mdof" => 70),
     "J501" => Dict{String,Any}("2state" => false, "plat" => [0.20,0.80], "mdof" => 30),
 )
 
@@ -748,17 +748,17 @@ end # end ens loop
 
 MESON = ["Pion","Kaon"]  #  ["Pion"]  ["Kaon"]  ["Pion","Kaon"]
 
-ensid = ""
+ensid = "F300"
 
 fPi_fitinfo = Dict{String,Dict{String,Any}}(
     "A653" => Dict{String,Any}("MPCAC_plat" => [4,42]  ),
     "A654" => Dict{String,Any}("MPCAC_plat" => [4,42]  ),
     "H650" => Dict{String,Any}("MPCAC_plat" => [4,90]  ),
-    "D150" => Dict{String,Any}("MPCAC_plat" => [4,122]),
+    "D150" => Dict{String,Any}("MPCAC_plat" => [4,122] ),
     "B450" => Dict{String,Any}("MPCAC_plat" => [9,53]  ),
     "N452" => Dict{String,Any}("MPCAC_plat" => [10,115]),
     "N451" => Dict{String,Any}("MPCAC_plat" => [8,118] ),
-    "D450" => Dict{String,Any}("MPCAC_plat" => [5,121]),
+    "D450" => Dict{String,Any}("MPCAC_plat" => [5,121] ),
     "D451" => Dict{String,Any}("MPCAC_plat" => [8,117] ),
     "D452" => Dict{String,Any}("MPCAC_plat" => [7,119] ),
     "D251" => Dict{String,Any}("MPCAC_plat" => [58,68] ),
@@ -827,8 +827,8 @@ AIC       = true  # always
 PVAL      = false
 
 PLOT      = [true,true]
-WRITE     = false
-OVERWRITE = false
+WRITE     = true
+OVERWRITE = true
 
 path_bdio_w = path_bdio_dict["local"]
 
@@ -1107,7 +1107,7 @@ end # end ens loop
 
 ##==========================> Reading test <==========================##
 
-ensid = "D201"
+ensid = "F300"
 
 path_bdio_r = path_bdio_dict["local"]
 
