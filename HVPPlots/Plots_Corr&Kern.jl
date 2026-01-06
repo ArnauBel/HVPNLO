@@ -46,7 +46,7 @@ path_plot = joinpath(julia_script_directory,"..","..","Slides & Plots","Plots")
 # We do not have charm or disconnected data for some of the ensembles
 
 ensNOcharm = ["C102","D150","D201","D251","D451","F300","H200","H650","J304","J306","J307","J501","N451","N452"]
-ensNOdisc  = ["F300","H650","J306"]
+ensNOdisc  = ["F300","J306"]
 
 ensSPECdata = ["D200","E250"]  # J303
 
@@ -69,7 +69,7 @@ rcParams["axes.titlesize"] = 18
 
 # Set plot parameters
 
-ens = "F300"; ens = EnsInfo(ens)
+ens = "D150"; ens = EnsInfo(ens)
 
 readIMPR_SET = ["1","2"] # ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
 
@@ -572,12 +572,12 @@ SPEC_REC = true
 NMAX = 4 # nothing  E250: 4 ,  D200: 2
 
 
-tcut = 12
+tcut = 10
 tEeffFix = 12
 
 
 mpi  = m_ens[ens.id]["mPi"] 
-mrho = m_ens[ens.id]["mRhoOld"]; uwerr(mrho)
+mrho = m_ens[ens.id]["mRho"]; uwerr(mrho)
 L = ens.L
 E2pi = 2*sqrt(mpi^2 + (2*pi/L)^2); uwerr(E2pi)
 
@@ -585,31 +585,39 @@ sym_points = Int64(HVPobs.Data.get_T(ens.id)/2+1); t = collect(1:sym_points)
 aens = sqrtt0_ph / sqrt(t0)
 tfm = aens.*(t.-1)
 
+E0_33 = mrho < E2pi ? mrho : E2pi
+E0_88 = mrho
+
+if ens.id ∉ ensNOdisc && ens.kappa_l != ens.kappa_s
+    corr[impr_set]["g88_ll"] = corr[impr_set]["g88conn_ll"] .+ corr[impr_set]["g88disc_ll"] .+ (2).*corr[impr_set]["g08conn_ll"] .+ corr[impr_set]["g08disc_ll"] .+ corr[impr_set]["g80disc_ll"]
+    corr[impr_set]["g88_lc"] = corr[impr_set]["g88conn_lc"] .+ corr[impr_set]["g88disc_lc"] .+ corr[impr_set]["g08conn_lc"] .+ corr[impr_set]["g08disc_lc"]
+end
+
 fig = figure(figsize=(8,6))
 
 corr33 = corr[impr_set]["g33_$discr"][t]; uwerr.(corr33)
 errorbar(value.(tfm), value.(corr33), err.(corr33), color="blue", fmt="-o", mfc="none", label="33")
-# if ens.kappa_l != ens.kappa_s && ens.id ∉ ensNOdisc
-#     corr88 = corr[impr_set]["g88_$discr"][t]; uwerr.(corr88)
-#     errorbar(value.(tfm), value.(corr88), err.(corr88), color="red",  fmt="-s", mfc="none", label="88")
-# end
+if ens.kappa_l != ens.kappa_s && ens.id ∉ ensNOdisc
+    corr88 = corr[impr_set]["g88_$discr"][t]; uwerr.(corr88)
+    errorbar(value.(tfm), value.(corr88), err.(corr88), color="red",  fmt="-s", mfc="none", label="88")
+end
 
-UB33 = mrho < E2pi ? corr_bound(t, tcut, corr33, ens, value(mrho)-err(mrho)) : corr_bound(t, tcut, corr33, ens, value(E2pi)-err(E2pi)); uwerr.(UB33)
-LB33 = corr_bound(t, tcut, corr33, ens, Eeff(tEeffFix, corr33)); uwerr.(LB33)
-# if ens.kappa_l != ens.kappa_s && ens.id ∉ ensNOdisc
-#     UB88 = corr_bound(t, tcut, corr88, ens, value(mrho)-err(mrho)); uwerr.(UB88)
-#     LB88 = corr_bound(t, tcut, corr88, ens, Eeff(tEeffFix, corr88)); uwerr.(LB88)
-# end
+UB33 = corr_bound(t, tcut, corr33, E0_33); uwerr.(UB33)
+LB33 = corr_bound(t, tcut, corr33, Eeff(tEeffFix, corr33)); uwerr.(LB33)
+if ens.kappa_l != ens.kappa_s && ens.id ∉ ensNOdisc
+    UB88 = corr_bound(t, tcut, corr88, E0_88); uwerr.(UB88)
+    LB88 = corr_bound(t, tcut, corr88, Eeff(tEeffFix, corr88)); uwerr.(LB88)
+end
 
 axvline((tEeffFix-1)*value(aens), color="black", alpha=0.5, linestyle="--", linewidth=2)
 
 errorbar(value.(tfm[tcut+1:end]), value.(UB33), err.(UB33), color="lightblue", fmt="-o", mfc="none", capsize=2, label="33 UB")
 errorbar(value.(tfm[tcut+1:end]), value.(LB33), err.(LB33), color="darkblue",  fmt="-o", mfc="none", capsize=2, label="33 LB")
 
-# if ens.kappa_l != ens.kappa_s && ens.id ∉ ensNOdisc
-#     errorbar(value.(tfm[tcut+1:end]), value.(UB88), err.(UB88), color="indianred", fmt="-s", mfc="none", capsize=2, label="88 UB")
-#     errorbar(value.(tfm[tcut+1:end]), value.(LB88), err.(LB88), color="darkred",   fmt="-s", mfc="none", capsize=2, label="88 LB")
-# end
+if ens.kappa_l != ens.kappa_s && ens.id ∉ ensNOdisc
+    errorbar(value.(tfm[tcut+1:end]), value.(UB88), err.(UB88), color="indianred", fmt="-s", mfc="none", capsize=2, label="88 UB")
+    errorbar(value.(tfm[tcut+1:end]), value.(LB88), err.(LB88), color="darkred",   fmt="-s", mfc="none", capsize=2, label="88 LB")
+end
 
 ncol = 1
 if ens.id in ["D200","E250","J303"] && SPEC_REC
@@ -696,6 +704,10 @@ tstep = 1
 
 mpi  = m_ens[ens.id]["mPi"]
 mrho = m_ens[ens.id]["mRho"]
+if ens.id == "H650"    
+    uwerr(mrho); mrho = mrho.mean-mrho.err
+    # mrho = 0.3646
+end
 E2pi = 2*sqrt(mpi^2 + (2π/ens.L)^2)
 # uwerr(E0_ens[ens.id]["E0"]); E0 = E0_ens[ens.id]["E0"].mean + E0_ens[ens.id]["E0"].err
 
@@ -720,7 +732,7 @@ HVP = Dict(); HVPsyst = Dict(); plateau = Dict()
 ub = Dict(); lb = Dict(); lb0 = Dict();  averb = Dict()
 HVP33rec = 0.0
 trec = 0.0
-for comp in ["33"] # ((ens.kappa_l != ens.kappa_s && ens.id ∉ ensNOdisc) ? ["33","88conn","88"] : ["33"])
+for comp in ((ens.kappa_l != ens.kappa_s && ens.id ∉ ensNOdisc) ? ["33","88conn","88"] : ["33"])
     
     ub[comp]  = Vector{uwreal}()
     lb[comp]  = Vector{uwreal}()
@@ -805,7 +817,7 @@ end
 
 tcut0_fm = value(aens).*(collect(tcut0:tstep:t[end-1]).-1)
 
-for comp in ["33"] # ((ens.kappa_l != ens.kappa_s && ens.id ∉ ensNOdisc) ? ["33","88conn","88"] : ["33"])
+for comp in ((ens.kappa_l != ens.kappa_s && ens.id ∉ ensNOdisc) ? ["33","88conn","88"] : ["33"])
     fig = figure(figsize=(8,6))
 
     # axvline(aens.mean*(tEeffFix-1), color="black", alpha=0.2, linestyle="--", linewidth=2)

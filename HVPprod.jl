@@ -80,12 +80,13 @@ STD_DERIV = false
 
 IMPR_SET  = ["1","2"]  # ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
 
-OVERWRITE = true
+OVERWRITE = false
+
 
 path_bdio_w =  path_bdio_dict["local"]
 
 @time begin
-    for ens in EnsInfo.(["H650","E300"])
+    for ens in ensInfo
 
         @info("Reading corr ensemble: $(ens.id)")
         ens.id ∈ ensNOcharm ? @info("  > NO CHARM DATA FOR $(ens.id)") : nothing
@@ -234,6 +235,7 @@ end # end timer
 
 OVERWRITE = false  # Allows to erase data and overwrite it with new data, use carefully !!
 
+
 path_bdio_w =  path_bdio_dict["local"]
 
 @time begin
@@ -320,9 +322,10 @@ end # end timer
 
 ##==========================> t0 computation <==========================##
 
-OVERWRITE  = false
+OVERWRITE = false
 
 PLOT = true
+
 
 path_bdio_w = path_bdio_dict["local"]
 
@@ -364,10 +367,10 @@ end # end timer
 
 ##==========================> LO & NLO TMR computation <==========================##
 
-scale = "t0su3"  # t0  t0su3  fPi  fPiph
+scale = ""  # t0  t0su3  fPi  fPiph
 
 COMPTMRc  = false
-OVERWRITE = true
+OVERWRITE = false
 
 path_bdio_w = path_bdio_dict["local"]
 
@@ -401,7 +404,7 @@ path_bdio_w = path_bdio_dict["local"]
         TMRa = factor^2 .* Tildef4a(t_hat,path_coef)
         println("   - TMR for diagram 'NLOb'...")
         TMRb = factor^2 .* Tildef4b(t_hat,path_coef)
-        COMPTMRc = ens.id ∉ ensNOcharm
+        # COMPTMRc = ens.id ∉ ensNOcharm
         if  COMPTMRc
             println("   - TMR for diagram 'NLOc'...")
             TMRc = factor^4 .* Tildef4c(t_hat,path_coef)
@@ -477,6 +480,7 @@ scale = ""  # t0  fPi
 
 OVERWRITE = false  # Allows to erase data and overwrite it with new data, use carefully !!
 
+
 path_bdio = path_bdio_dict["local"]
 
 # BLIND = value(BDIOread_TMR(path_bdio,"A653","NLOb",BLIND=true)[2] / BDIOread_TMR(path_bdio,"A653","NLOb",BLIND=false)[2])  #  rand(Uniform(0.5, 2))
@@ -543,7 +547,7 @@ end # end timer
 ##==========================> READING TEST <==========================##
 
 diag     = ""
-ensid    = ""
+ensid    = "J306"
 impr_set = ""
 
 STD_DERIV = false

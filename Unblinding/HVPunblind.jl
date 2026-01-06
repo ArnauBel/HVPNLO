@@ -20,10 +20,6 @@ using Colors
 using ProgressBars
 using Suppressor
 
-# include uwreal constants
-
-# include("HVPtool/uwConst.jl")
-
 # BDIO path definition
 
 julia_script_directory = @__DIR__
@@ -41,10 +37,10 @@ path_FVCcont = joinpath(julia_script_directory, "..", "..", "FVCcont")
 path_plot    = joinpath(julia_script_directory, "..", "..", "Slides & Plots", "Plots")
 
 charge_factor = Dict(
-    "33" => 1., "88" => 1/3., "CC" => 4/9., "BB" => 1/9., "∆ls_amu" => 1/3., "∆lc_b" => 4/9.,
-    "33s" => "", "88s" => "(1/3)", "CCs" => "(4/9)", "BBs" => "(1/9)", "∆ls_amus" => "(1/3)", "∆lc_bs" => "(4/9)",
-    "3333" => 1., "3388" => 2/3., "33CC" => 8/9., "8888" => 1/9., "88CC" => 8/27., "CCCC" => 16/81., 
-    "3333s" => "", "3388s" => "(2/3)", "33CCs" => "(8/9)", "8888s" => "(1/9)", "88CCs" => "(8/27)", "CCCCs" => "(16/81)",
+    "33" => 1., "88" => 1/3., "88conn" => 1/3., "SS" => 1/9., "CC" => 4/9., "CCdisc" => 4/9., "C8disc" => 2/(3*sqrt(3)), "BB" => 1/9., "∆ls_amu" => 1/3., "∆ls_amuconn" => 1., "∆lc_b" => 4/9., "disc" => 1.,
+    "33s" => "     ", "88s" => "(1/3)", "88conns" => "(1/3)", "SSs" => "(1/9)", "CCs" => "(4/9)", "CCdisc" => "(4/9)", "C8disc" => "2/(3*√3)", "BBs" => "(1/9)", "∆ls_amus" => "(1/3)", "∆ls_amuconns" => "", "∆lc_bs" => "(4/9)", "discs" => "     ",
+    "3333" => 1.,  "3388" => 2/3., "33CC" => 8/9., "8888" => 1/9., "88CC" => 8/27., "CCCC" => 16/81., 
+    "3333s" => "",  "3388s" => "(2/3)", "33CCs" => "(8/9)", "8888s" => "(1/9)", "88CCs" => "(8/27)", "CCCCs" => "(16/81)",
 )
 
 # Plot parameters
@@ -91,9 +87,9 @@ if VREF
 end
 
 amu_bb = Dict(
-    "NLOa"   => -0.210485,
-    "NLOb"   => 0.0432925,
-    "NLOa&b" => -0.167192
+    "NLOa"   => -0.233484,
+    "NLOb"   => 0.0480212,
+    "NLOa&b" => -0.185463
 )
 
 AMUgamma = Dict(
@@ -122,8 +118,8 @@ for diag in ["NLOa","NLOb","NLOa&b"]
 
     # For the SD window
 
-    amu[diag]      = Dict("SD" => Dict(), "ID" => Dict(), "LD" => Dict())
-    amusyst[diag]  = Dict("SD" => Dict(), "ID" => Dict(), "LD" => Dict())
+    amu[diag]      = Dict("SD" => Dict(), "SDsub" => Dict(), "ID" => Dict(), "LD" => Dict())
+    amusyst[diag]  = Dict("SD" => Dict(), "SDsub" => Dict(), "ID" => Dict(), "LD" => Dict())
     AMU[diag]      = Dict()
     AMUSYST[diag]  = Dict()
     AMUt0ERR[diag] = Dict()
@@ -133,26 +129,43 @@ for diag in ["NLOa","NLOb","NLOa&b"]
     end
 
     amu33sub, info33sub = BDIOread_MAtot(path_bdio,diag,"SDsub","g33",StdDer=STD_DERIV,tlImpr=tl_IMPR,Vref=VREF,Q=Q33)
-    b33Pert = TXTread_bQ(path_bPert,diag)[Qlist .== Q33][1]; uwerr(b33Pert)
+    b33Pert_Q33 = TXTread_bQ(path_bPert,diag)[Qlist .== Q33][1]; uwerr(b33Pert_Q33)
+    b33Pert_QCC = TXTread_bQ(path_bPert,diag)[Qlist .== QCC][1]; uwerr(b33Pert_QCC)
     if VREF
         FVC_ChPT = JDL2read_FVC_ChPT(path_FVCcont,diag,"SDsub",Q=Q33)
         amu33sub += FVC_ChPT
         AMUFVC[diag]["SD"] = abs(0.1*FVC_ChPT)
     end
-    amu[diag]["SD"]["33"]     = amu33sub + Window("SD")(0) * b33Pert.mean
-    amusyst[diag]["SD"]["33"] = sqrt(info33sub["syst"]^2 + Window("SD")(0)^2 * b33Pert.err^2)
+    amu[diag]["SDsub"]["33"] = amu33sub
+    amu[diag]["SD"]["33"]    = amu33sub + Window("SD")(0) * b33Pert_Q33.mean
+    amusyst[diag]["SDsub"]["33"] = info33sub["syst"]
+    amusyst[diag]["SD"]["33"]    = sqrt(info33sub["syst"]^2 + Window("SD")(0)^2 * b33Pert_Q33.err^2)
 
-    ∆ls_amu, info∆ls_amu = BDIOread_MAtot(path_bdio,diag,"SDsub","∆ls_amu",StdDer=STD_DERIV)
-
+    ∆ls_amu, info∆ls_amu      = BDIOread_MAtot(path_bdio,diag,"SDsub","∆ls_amu",StdDer=STD_DERIV)
+    amu[diag]["SDsub"]["∆ls"] = ∆ls_amu
     amu[diag]["SD"]["88"]     = amu[diag]["SD"]["33"] + ∆ls_amu
-    amusyst[diag]["SD"]["88"] = amusyst[diag]["SD"]["33"] + info∆ls_amu["syst"]
+    amusyst[diag]["SDsub"]["∆ls"] = info∆ls_amu["syst"]
+    amusyst[diag]["SD"]["88"]     = sqrt(amusyst[diag]["SD"]["33"]^2 + info∆ls_amu["syst"]^2)
+
+    ∆ls_amu_conn, info∆ls_amu_conn = BDIOread_MAtot(path_bdio,diag,"SDsub","∆ls_amuconn",StdDer=STD_DERIV)
+    amu[diag]["SDsub"]["∆ls_conn"] = ∆ls_amu_conn
+    amu[diag]["SD"]["SS"]          = 2*amu[diag]["SD"]["33"] + 3*∆ls_amu_conn
+    amusyst[diag]["SDsub"]["∆ls_conn"] = info∆ls_amu_conn["syst"]
+    amusyst[diag]["SD"]["SS"]          = sqrt(4*amusyst[diag]["SD"]["33"]^2 + 9*info∆ls_amu_conn["syst"]^2)
+
+    amu[diag]["SD"]["disc"]     = 1/3. * amu[diag]["SD"]["88"] - 1/9. * (amu[diag]["SD"]["33"]+amu[diag]["SD"]["SS"])
+    amusyst[diag]["SD"]["disc"] = 1/3. * sqrt(amusyst[diag]["SD"]["88"]^2 + 1/9. * (amusyst[diag]["SD"]["33"]^2 + amusyst[diag]["SD"]["SS"]^2))
 
     amuCCsub, infoCCsub = BDIOread_MAtot(path_bdio,diag,"SDsub","gCCconn",StdDer=STD_DERIV,Q=QCC)
     ∆lc_b, info∆lc_b    = BDIOread_MAtot(path_bdio,diag,"SDsub","∆lc_b",StdDer=STD_DERIV,Q=QCC)
-    amu[diag]["SD"]["CC"] = amuCCsub + Window("SD")(0) * (2*b33Pert.mean + ∆lc_b); uwerr(amu[diag]["SD"]["CC"])
+    amu[diag]["SDsub"]["CC"]  = amuCCsub
+    amu[diag]["SDsub"]["∆lc"] = ∆lc_b
+    amu[diag]["SD"]["CC"] = amuCCsub + Window("SD")(0) * (2*b33Pert_QCC.mean + ∆lc_b); uwerr(amu[diag]["SD"]["CC"])
     der_mDs = mchist(amu[diag]["SD"]["CC"], "MD_ph [GeV]")[1] / artificial_err
     amu[diag]["SD"]["CC"]    += value(MD_ph - MD_ph_prime) * der_mDs
-    amusyst[diag]["SD"]["CC"] = sqrt(infoCCsub["syst"]^2 + Window("SD")(0)^2 * (4*b33Pert.err^2 + info∆lc_b["syst"]^2))
+    amusyst[diag]["SDsub"]["CC"]  = infoCCsub["syst"]
+    amusyst[diag]["SDsub"]["∆lc"] = info∆lc_b["syst"]
+    amusyst[diag]["SD"]["CC"] = sqrt(infoCCsub["syst"]^2 + Window("SD")(0)^2 * (4*b33Pert_QCC.err^2 + info∆lc_b["syst"]^2))
 
     AMU[diag]["SD"]      = amu[diag]["SD"]["33"] + (1/3) * amu[diag]["SD"]["88"] + (4/9) * amu[diag]["SD"]["CC"] + (1/9) * amu_bb[diag]
     AMUSYST[diag]["SD"]  = sqrt(amusyst[diag]["SD"]["33"]^2 + 1/9 * amusyst[diag]["SD"]["88"]^2 + 16/81 * amusyst[diag]["SD"]["CC"]^2)
@@ -160,7 +173,16 @@ for diag in ["NLOa","NLOb","NLOa&b"]
     AMUERR[diag]["SD"]   = !VREF ? sqrt(AMU[diag]["SD"].err^2 + AMUSYST[diag]["SD"]^2 + AMUt0ERR[diag]["SD"]^2) : sqrt(AMU[diag]["SD"].err^2 + AMUSYST[diag]["SD"]^2 + AMUt0ERR[diag]["SD"]^2 + AMUFVC[diag]["SD"]^2)
 
     # Add botttom effects on it (only considered to affect the SD piece)
-    amu[diag]["SD"]["BB"] = AMU[diag]["BB"] = uwreal(amu_bb[diag])
+    amu[diag]["SD"]["BB"]     = AMU[diag]["BB"]     = uwreal(amu_bb[diag])
+    amusyst[diag]["SD"]["BB"] = AMUSYST[diag]["BB"] = 0.5*amu_bb[diag]
+
+    # Add charm-disconnected piece
+    amuCCdisc, infoCCdisc = BDIOread_MAtot(path_bdio,diag,"SD","gCCdisc",StdDer=STD_DERIV)
+    amuC8disc, infoC8disc = BDIOread_MAtot(path_bdio,diag,"SD","gC8disc",StdDer=STD_DERIV)
+    amu[diag]["SD"]["CCdisc"] = AMU[diag]["CCdisc"] = amuCCdisc
+    amu[diag]["SD"]["C8disc"] = AMU[diag]["C8disc"] = amuC8disc
+    amusyst[diag]["SD"]["CCdisc"] = AMUSYST[diag]["CCdisc"] = infoCCdisc["syst"]
+    amusyst[diag]["SD"]["C8disc"] = AMUSYST[diag]["C8disc"] = infoC8disc["syst"]
 
     # For the ID & LD windows
 
@@ -175,12 +197,19 @@ for diag in ["NLOa","NLOb","NLOa&b"]
             AMUFVC[diag][wind] = abs(0.1*FVC_ChPT)
             amu33 += FVC_ChPT*BLIND_factor
         end
-        amu[diag][wind]["33"]     = amu33
-        amusyst[diag][wind]["33"] = info33["syst"]
+        amu[diag][wind]["33"]     = amu33/BLIND_factor
+        amusyst[diag][wind]["33"] = info33["syst"]/BLIND_factor
 
         amu88, info88 = BDIOread_MAtot(path_bdio,diag,wind,"g88",StdDer=STD_DERIV,BLIND=BLIND)
-        amu[diag][wind]["88"]     = amu88
-        amusyst[diag][wind]["88"] = info88["syst"]
+        amu[diag][wind]["88"]     = amu88/BLIND_factor
+        amusyst[diag][wind]["88"] = info88["syst"]/BLIND_factor
+
+        amuSS, infoSS = BDIOread_MAtot(path_bdio,diag,wind,"gSS",StdDer=STD_DERIV,BLIND=BLIND)
+        amu[diag][wind]["SS"]     = amuSS/BLIND_factor
+        amusyst[diag][wind]["SS"] = infoSS["syst"]/BLIND_factor
+
+        amu[diag][wind]["disc"]     = 1/3. * amu[diag][wind]["88"] - 1/9. * (amu[diag][wind]["33"]+amu[diag][wind]["SS"])
+        amusyst[diag][wind]["disc"] = 1/3. * sqrt(amusyst[diag][wind]["88"]^2 + 1/9. * (amusyst[diag][wind]["33"]^2 + amusyst[diag][wind]["SS"]^2))
 
         amuCC, infoCC = BDIOread_MAtot(path_bdio,diag,wind,"gCCconn",StdDer=STD_DERIV,BLIND=false); uwerr(amuCC)
         der_mDs = mchist(amuCC, "MD_ph [GeV]")[1] / artificial_err
@@ -188,8 +217,8 @@ for diag in ["NLOa","NLOb","NLOa&b"]
         amusyst[diag][wind]["CC"] = infoCC["syst"]
 
 
-        AMU[diag][wind]      = (amu[diag][wind]["33"] + (1/3) * amu[diag][wind]["88"])/BLIND_factor + (4/9) * amu[diag][wind]["CC"]
-        AMUSYST[diag][wind]  = sqrt((amusyst[diag][wind]["33"]^2 + 1/9 * amusyst[diag][wind]["88"]^2)/BLIND_factor^2 + 16/81 * amusyst[diag][wind]["CC"]^2)
+        AMU[diag][wind]      = (amu[diag][wind]["33"] + (1/3) * amu[diag][wind]["88"]) + (4/9) * amu[diag][wind]["CC"]
+        AMUSYST[diag][wind]  = sqrt(amusyst[diag][wind]["33"]^2 + 1/9 * amusyst[diag][wind]["88"]^2 + 16/81 * amusyst[diag][wind]["CC"]^2)
         AMUt0ERR[diag][wind] = get_t0err([AMU[diag][wind]],sqrtt0_ph_Madrid)[1]
         AMUERR[diag][wind]   = !VREF ? sqrt(AMU[diag][wind].err^2 + AMUSYST[diag][wind]^2 + AMUt0ERR[diag][wind]^2) : sqrt(AMU[diag][wind].err^2 + AMUSYST[diag][wind]^2 + AMUt0ERR[diag][wind]^2 + AMUFVC[diag][wind]^2)
     end
@@ -199,11 +228,11 @@ for diag in ["NLOa","NLOb","NLOa&b"]
         AMUFVC[diag]["NW"] = abs(0.1*FVC_ChPT)
     end
 
-    for comp in ["33","88","CC"]
-        BLIND_factor = (BLIND_LD[1] && comp != "CC") ? BLIND_LD[2] : 1.0
+    for comp in ["33","88","CC","SS","disc"]
+        # BLIND_factor = (BLIND_LD[1] && comp != "CC") ? BLIND_LD[2] : 1.0
 
-        AMU[diag][comp]      = amu[diag]["SD"][comp] + amu[diag]["ID"][comp] + amu[diag]["LD"][comp]/BLIND_factor
-        AMUSYST[diag][comp]  = sqrt((amusyst[diag]["SD"][comp])^2 + (amusyst[diag]["ID"][comp])^2 + (amusyst[diag]["LD"][comp]/BLIND_factor)^2)
+        AMU[diag][comp]      = amu[diag]["SD"][comp] + amu[diag]["ID"][comp] + amu[diag]["LD"][comp]
+        AMUSYST[diag][comp]  = sqrt(amusyst[diag]["SD"][comp]^2 + amusyst[diag]["ID"][comp]^2 + amusyst[diag]["LD"][comp]^2)
         AMUt0ERR[diag][comp] = get_t0err([AMU[diag][comp]],sqrtt0_ph_Madrid)[1]
         AMUERR[diag][comp]   = (!VREF || comp != "33") ? sqrt(AMU[diag][comp].err^2 + AMUSYST[diag][comp]^2 + AMUt0ERR[diag][comp]^2) : sqrt(AMU[diag][comp].err^2 + AMUSYST[diag][comp]^2 + AMUt0ERR[diag][comp]^2 + AMUFVC[diag]["NW"]^2)
     end
@@ -225,6 +254,26 @@ for comp in ["33CC","88CC","CCCC"]
     der_mDs = mchist(AMU["NLOc"][comp], "MD_ph [GeV]")[1] / artificial_err
     AMU["NLOc"][comp] += value(MD_ph - MD_ph_prime) * der_mDs
 end
+
+
+@info("Window-results :")
+for diag in ["NLOa","NLOb","NLOa&b"]
+    for wind in ["SD","ID","LD"]
+        println("   (aµ[$diag])($wind) = $(print_uwreal(10*AMU[diag][wind],10*[AMUSYST[diag][wind],AMUt0ERR[diag][wind],AMUFVC[diag][wind]],total=true))")
+    end
+    println("--------------------------------------------------------")
+end
+println("\n")
+
+
+@info("Channel-results :")
+for diag in ["NLOa","NLOb","NLOa&b"]
+    for ch in ["33","88","CC","SS","disc"]
+        println("   $(charge_factor[ch*"s"])(aµ[$diag])($ch) = $(print_uwreal(10*charge_factor[ch]*AMU[diag][ch],10*charge_factor[ch]*[AMUSYST[diag][ch]],total=true))")
+    end
+    println("--------------------------------------------------------")
+end
+println("\n")
 
 @info("Results in isoQCD :")
 for diag in ["NLOa","NLOb","NLOa&b"]
@@ -252,8 +301,9 @@ AMUERR["NLOc"]["tot"]   = sqrt(AMU["NLOc"]["tot"].err^2 + AMUSYST["NLOc"]["tot"]
 
 println("   aµ[NLOc] = $(print_uwreal(10*AMU["NLOc"]["tot"],10*[AMUSYST["NLOc"]["tot"],AMUt0ERR["NLOc"]["tot"]],total=true))")
 
-
-println("---------------------------------------------------------")
+println("\n")
+println("--------------------------------------------------------")
+println("--------------------------------------------------------")
 
 AMU["NLO"]      = Dict()
 AMUSYST["NLO"]  = Dict()
@@ -274,7 +324,7 @@ println("\n")
 
 for diag in ["NLOa","NLOb","NLOa&b","NLOc","NLO"]
     if diag == "NLO"
-            println("---------------------------------------------------------")
+            println("--------------------------------------------------------")
     end
     uwerr(AMUIB[diag])
     if diag != "NLOc"
@@ -455,12 +505,12 @@ for (j, diag) in enumerate(["NLOa", "NLOb", "NLOc", "NLO"])
     ax.errorbar(10*AMU[diag]["tot"].mean, xerr=10*AMU[diag]["tot"].err, -0.25, 0.0, mfc="none", fmt="o", color="black", ms=10, capsize=2)
     ax.errorbar(10*AMU[diag]["tot"].mean, xerr=10*AMUERR[diag]["tot"] , -0.25, 0.0, mfc="none", fmt="o", color="black", ms=10, capsize=2)
     i = 0
-    for res in reverse(RES_sl[diag])
-        i -= 1
-        uwerr(res[1])
-        ax.errorbar(10*(res[1].mean+AMUIB[diag].mean), xerr=10*sqrt(res[1].err^2+AMUIB[diag].err^2), i, 0.0, fmt="d", color="green", ms=10, capsize=2)
-        push!(y_ticks,res[2])
-    end
+    # for res in reverse(RES_sl[diag])
+    #     i -= 1
+    #     uwerr(res[1])
+    #     ax.errorbar(10*(res[1].mean+AMUIB[diag].mean), xerr=10*sqrt(res[1].err^2+AMUIB[diag].err^2), i, 0.0, fmt="d", color="green", ms=10, capsize=2)
+    #     push!(y_ticks,res[2])
+    # end
     i -= 1
     res = RES_WP[diag]["aver"]
     uwerr(res[1])
@@ -1027,3 +1077,150 @@ tight_layout()
 display(gcf())
 
 close()
+
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+
+# Contribution tales
+
+@info("Table for SDsub window partial results")
+println("
+\\begin{table}[H]
+    \\centering
+    \\small
+    \\begin{tabular}{c|c c}
+        \$(i)\$ & \$(a_\\mu^{3,3}[(i)])^{\\mathrm{SD}}_{\\mathrm{sub}}(Q^{(3,3)})\$ & \$\\frac{4}{9}(a_\\mu^{c,c}[(i)])^{\\mathrm{SD}}_{\\mathrm{sub}}(Q^{(c,c)})\$ \\\\
+        \\hline")
+for diag in ["NLOa","NLOb","NLOa&b"]
+    i_str = diag != "NLOa&b" ? "(4$(diag[4:end]))   " : "(4a\\&b)"
+    println("        $(i_str) & $(print_uwreal(10*amu[diag]["SDsub"]["33"],10*amusyst[diag]["SDsub"]["33"])) & $(print_uwreal(10*(4/9)*amu[diag]["SDsub"]["CC"],10*(4/9)*amusyst[diag]["SDsub"]["CC"])) \\\\")
+end
+println("    \\end{tabular}
+    \\break\\break\\break
+    \\begin{tabular}{c|c c c}
+        \$(i)\$ & \$\\frac{1}{3}\\Delta_{ls}(a_\\mu[(i)])^{\\mathrm{SD}}\$ & \$\\frac{1}{3}\\Delta_{ls}^{\\mathrm{conn}}(a_\\mu[(i)])^{\\mathrm{SD}}\$ & \$\\frac{4}{9}\\Delta_{lc}(b[(i)])(Q^{(c,c)})\$  \\\\
+        \\hline")
+for diag in ["NLOa","NLOb","NLOa&b"]
+    i_str = diag != "NLOa&b" ? "(4$(diag[4:end]))   " : "(4a\\&b)"
+    println("        $(i_str) & $(print_uwreal(10/3*amu[diag]["SDsub"]["∆ls"],10/3*amusyst[diag]["SDsub"]["∆ls"])) & $(print_uwreal(10/3*amu[diag]["SDsub"]["∆ls_conn"],10/3*amusyst[diag]["SDsub"]["∆ls_conn"])) & $(print_uwreal(10*(4/9)*amu[diag]["SDsub"]["∆lc"],10*(4/9)*amusyst[diag]["SDsub"]["∆lc"])) \\\\")
+end 
+println("    \\end{tabular}
+    \\caption{Partial results for the SD subtracted quantities. All results are given in units of \$10^{-11}\$. And \$Q^{(3,3)}=5\\, \\mathrm{GeV}\$ and \$Q^{(c,c)}=4\\, \\mathrm{GeV}\$ has been chosen.}
+    \\label{tab:isoQCD_SDpre}
+\\end{table}
+")
+
+#
+
+for wind in ["SD","ID","LD"]
+    @info("Table for $wind window results")
+    println("
+\\begin{table}[H]
+    \\centering
+    \\small
+    \\begin{tabular}{c|c c c|c c}
+        \$(i)\$ & \$(a_\\mu^{3,3}[(i)])^{\\mathrm{$(wind)}}\$ & \$\\frac{1}{3}(a_\\mu^{8,8}[(i)])^{\\mathrm{$(wind)}}\$ & \$\\frac{4}{9}(a_\\mu^{c,c}[(i)])^{\\mathrm{$(wind)}}\$ & \$\\frac{1}{9}(a_\\mu^{s,s}[(i)])^{\\mathrm{$(wind)}}\$ & \$(a_\\mu^{\\mathrm{disc}}[(i)])^{\\mathrm{$(wind)}}\$ \\\\
+        \\hline")
+    for diag in ["NLOa","NLOb","NLOa&b"]
+        i_str = diag != "NLOa&b" ? "(4$(diag[4:end]))   " : "(4a\\&b)"
+        println("        $(i_str) & $(print_uwreal(10*amu[diag][wind]["33"],10*amusyst[diag][wind]["33"])) & $(print_uwreal(10/3*amu[diag][wind]["88"],10/3*amusyst[diag][wind]["88"])) & $(print_uwreal(10*(4/9)*amu[diag][wind]["CC"],10*(4/9)*amusyst[diag][wind]["CC"]))  & $(print_uwreal(10*(1/9)*amu[diag][wind]["SS"],10*(1/9)*amusyst[diag][wind]["SS"]))  & $(print_uwreal(10*amu[diag][wind]["disc"],10*amusyst[diag][wind]["disc"])) \\\\")
+    end
+    if wind == "SD"
+        cap = "Isopspin and flavor decomposition of the SD window for diagrams NLOa, NLOb and their combination. The light contribution can be obtained from the isovector channel, \$(5/9)\\, a_\\mu^{l,l}[(i)] = 10/9\\, a_\\mu^{3,3}[(i)]\$.  All results are given in units of \$10^{-11}\$."
+    else
+        cap = "Same as Tab.~\\ref{tab:isoQCD_SD} but for the $wind window."
+    end
+    println("    \\end{tabular}
+    \\caption{$cap}
+    \\label{tab:isoQCD_$(wind)}
+\\end{table}
+")
+end
+
+#
+
+@info("isoQCD final results")
+println("
+\\begin{table}[H]
+    \\centering
+    \\small
+    \\begin{tabular}{c|c c c}
+        \$(i)\$ & \$(a_\\mu^{\\mathrm{hvp}}[(i)])^{\\mathrm{SD}}\$ & \$(a_\\mu^{\\mathrm{hvp}}[(i)])^{\\mathrm{ID}}\$ & \$(a_\\mu^{\\mathrm{hvp}}[(i)])^{\\mathrm{LD}}\$ \\\\
+        \\hline")
+for diag in ["NLOa","NLOb","NLOa&b"]
+    i_str = diag != "NLOa&b" ? "(4$(diag[4:end]))   " : "(4a\\&b)"
+    println("        $(i_str) & $(print_uwreal(10*AMU[diag]["SD"],10*AMUSYST[diag]["SD"])) & $(print_uwreal(10*AMU[diag]["ID"],10*AMUSYST[diag]["ID"])) & $(print_uwreal(10*AMU[diag]["LD"],10*AMUSYST[diag]["LD"])) \\\\")
+end
+println("    \\end{tabular}
+    \\break\\break\\break
+    \\begin{tabular}{c|c c c|c c}
+        \$(i)\$ & \$a_\\mu^{3,3}[(i)]\$ & \$\\frac{1}{3}a_\\mu^{8,8}[(i)]\$ & \$\\frac{4}{9}a_\\mu^{c,c}[(i)]\$ & \$\\frac{1}{9}a_\\mu^{s,s}[(i)]\$ & \$a_\\mu^{\\mathrm{disc}}[(i)]\$  \\\\
+        \\hline")
+for diag in ["NLOa","NLOb","NLOa&b"]
+    i_str = diag != "NLOa&b" ? "(4$(diag[4:end]))   " : "(4a\\&b)"
+    println("        $(i_str) & $(print_uwreal(10*AMU[diag]["33"],10*AMUSYST[diag]["33"])) & $(print_uwreal(10/3*AMU[diag]["88"],10/3*AMUSYST[diag]["88"])) & $(print_uwreal(10*(4/9)*AMU[diag]["CC"],10*(4/9)*AMUSYST[diag]["CC"])) & $(print_uwreal(10*(1/9)*AMU[diag]["SS"],10*(1/9)*AMUSYST[diag]["SS"]))  & $(print_uwreal(10*AMU[diag]["disc"],10*AMUSYST[diag]["disc"])) \\\\")
+end 
+println("    \\end{tabular}
+    \\caption{Final estimation in isoQCD for diagrams NLOa, NLOb, and their combination. We break down our results in the subsequent time-windows, and the isospin and flavor decomposition.}
+    \\label{tab:isoQCD_result}
+\\end{table}
+")
+
+#
+
+@info("Table for NLOc results")
+println("
+\\begin{table}[H]
+    \\centering
+    \\small
+    \\begin{tabular}{c c c c c c}
+        \$a_\\mu^{3,3-3,3}\$ & \$\\frac{2}{3}a_\\mu^{3,3-8,8}\$ & \$\\frac{8}{9}a_\\mu^{3,3-c,c}\$ & \$\\frac{1}{9}a_\\mu^{8,8-8,8}\$ & \$\\frac{8}{27}a_\\mu^{8,8-c,c}\$ & \$\\frac{16}{91}a_\\mu^{c,c-c,c}\$ \\\\
+        \\hline
+        $(print_uwreal(10*AMU["NLOc"]["3333"],10*AMUSYST["NLOc"]["3333"])) & $(print_uwreal(10*(2/3)*AMU["NLOc"]["3388"],10*(2/3)*AMUSYST["NLOc"]["3388"])) & $(print_uwreal(10*(8/9)*AMU["NLOc"]["33CC"],10*(8/9)*AMUSYST["NLOc"]["33CC"])) & $(print_uwreal(10*(1/9)*AMU["NLOc"]["8888"],10*(1/9)*AMUSYST["NLOc"]["8888"])) & $(print_uwreal(10*(8/27)*AMU["NLOc"]["88CC"],10*(8/27)*AMUSYST["NLOc"]["88CC"])) & $(print_uwreal(10*(16/91)*AMU["NLOc"]["CCCC"],10*(16/91)*AMUSYST["NLOc"]["CCCC"])) \\\\
+    \\end{tabular}
+    \\caption{IsoQCD estimation for all NLOc pieces. All values are given in units of \$10^{-11}\$.}
+    \\label{tab:isoQCD_NLOc}
+\\end{table}
+")
+
+##
+
+@info("Table for charm-diisconnected results")
+println("
+\\begin{table}[H]
+    \\centering
+    \\small
+    \\begin{tabular}{c c c}
+        \$(i)\$ & \$\\frac{4}{9}a_\\mu^{c,c(\\mathrm{disc})}[(i)]\$ & \$\\frac{2}{3\\sqrt{3}}a_\\mu^{c,8(\\mathrm{disc})}[(i)]\$ \\\\
+        \\hline")
+for diag in ["NLOa","NLOb","NLOa&b"]
+    i_str = diag != "NLOa&b" ? "(4$(diag[4:end]))   " : "(4a\\&b)"
+    println("        $(i_str) & \$$(print_uwreal(1e-10*(4/9)*AMU[diag]["CCdisc"],1e-10*(4/9)*AMUSYST[diag]["CCdisc"],LaTeX=true))\$ & \$$(print_uwreal(1e-10*(2/(3*sqrt(3)))*AMU[diag]["C8disc"],1e-10*(2/(3*sqrt(3)))*AMUSYST[diag]["C8disc"],LaTeX=true))\$ \\\\")
+end
+println("    \\end{tabular}
+    \\caption{Charm quark disconnected contributions to the main diagrams.}
+    \\label{tab:charm_disc}
+\\end{table}
+")
+
+
+##
+
+# @info("Table for NLOc results")
+# println("
+# \\begin{table}[H]
+#     \\centering
+#     \\small
+#     \\begin{tabular}{c c c c c c}
+#         \$a_\\mu^{3,3-3,3}\$ & \$\\frac{2}{3}a_\\mu^{3,3-8,8}\$ & \$\\frac{8}{9}a_\\mu^{3,3-c,c}\$ & \$\\frac{1}{9}a_\\mu^{8,8-8,8}\$ & \$\\frac{8}{27}a_\\mu^{8,8-c,c}\$ & \$\\frac{16}{91}a_\\mu^{c,c-c,c}\$ \\\\
+#         \\hline
+#         $(print_uwreal(1000*AMU["NLOc"]["3333"],1000*AMUSYST["NLOc"]["3333"])) & $(print_uwreal(1000*(2/3)*AMU["NLOc"]["3388"],1000*(2/3)*AMUSYST["NLOc"]["3388"])) & $(print_uwreal(1000*(8/9)*AMU["NLOc"]["33CC"],1000*(8/9)*AMUSYST["NLOc"]["33CC"])) & $(print_uwreal(1000*(1/9)*AMU["NLOc"]["8888"],1000*(1/9)*AMUSYST["NLOc"]["8888"])) & $(print_uwreal(1000*(8/27)*AMU["NLOc"]["88CC"],1000*(8/27)*AMUSYST["NLOc"]["88CC"])) & $(print_uwreal(1000*(16/91)*AMU["NLOc"]["CCCC"],1000*(16/91)*AMUSYST["NLOc"]["CCCC"])) \\\\
+#     \\end{tabular}
+#     \\caption{IsoQCD estimation for all NLOc pieces. All values are given in units of \$10^{-13}\$.}
+#     \\label{tab:isoQCD_NLOc}
+# \\end{table}
+# ")
+

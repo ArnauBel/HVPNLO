@@ -185,7 +185,7 @@ corr33tl_ll = uwreal.(corr33tl_ll); corr33tl_lc = uwreal.(corr33tl_lc)
                 for Q in Qlist
 
                     int = obs .* TMRsub(Q)
-                    amu = (alpha/pi)^exp_diag * sum( obs .* TMRsub(Q)) * 1e10
+                    amu = (alpha/pi)^exp_diag * sum(obs .* TMRsub(Q)) * 1e10
 
                     push!(HVPQ[key],amu)
                 end
@@ -252,23 +252,20 @@ corr33tl_ll = uwreal.(corr33tl_ll); corr33tl_lc = uwreal.(corr33tl_lc)
                 end
             end
 
-            if (ens.id ∉ ensNOdisc && ens.kappa_l != ens.kappa_s)
+            if ens.kappa_l != ens.kappa_s
                 println("      - Computing ∆ls(amu) & ∆ls(amu)conn...")
-                for discr in ["ll","lc"]
-                    key_∆     = "∆ls_amu_$discr"
-                    key_∆conn = "∆ls_amuconn_$discr"
-                    println("         - $key_∆, $key_∆conn")
-                    obs_∆     = corr["g88_$discr"][t] .- corr["g33_$discr"][t]
-                    obs_∆conn = corr["g88conn_$discr"][t] .- corr["g33_$discr"][t]
+                for sub_key in (ens.id ∉ ensNOdisc ? ["_ll","_lc","conn_ll","conn_lc"] : ["conn_ll","conn_lc"])
+                    key_∆ = "∆ls_amu$sub_key"
+                    println("         - $key_∆")
+                    obs_∆ = corr["g88$sub_key"][t] .- corr["g33_$(sub_key[end-1:end])"][t]
 
-                    int_∆     = obs_∆ .* TMRw
-                    int_∆conn = obs_∆conn .* TMRw
-                    amu_∆     = (alpha/pi)^exp_diag * sum(int_∆) * 1e10
-                    amu_∆conn = (alpha/pi)^exp_diag * sum(int_∆conn) * 1e10
+                    int_∆ = obs_∆ .* TMRw
+                    amu_∆ = (alpha/pi)^exp_diag * sum(int_∆) * 1e10
 
-                    HVP[key_∆]     = [amu_∆]
-                    HVP[key_∆conn] = [amu_∆conn]
+                    HVP[key_∆] = [amu_∆]
                 end
+            end
+            if (ens.kappa_l != ens.kappa_s && ens.id ∉ ensNOdisc)
                 println("      - Computing gCdisc...")
                 for (k,key) in enumerate(["gCCdisc_cc","gC8disc_cc"])
                     println("         - $key")
@@ -280,8 +277,6 @@ corr33tl_ll = uwreal.(corr33tl_ll); corr33tl_lc = uwreal.(corr33tl_lc)
 
                     HVP[key] = [amu]
                 end
-            else
-                println("         - 'G33 = G88 & GCCdisc = 0' for $(ens.id)")
             end
 
             println("      - Writing BDIO & JDL2...")
@@ -297,7 +292,7 @@ corr33tl_ll = uwreal.(corr33tl_ll); corr33tl_lc = uwreal.(corr33tl_lc)
 
             extra = Dict{String, Any}("ens" => ens.id, "impr_set" => impr_set, "diag" => diag, "wind" => "SDsub", "Qlist" => Qlist)
             ALPHAdobs_write(fb, HVPQ, extra=extra)
-            (ens.kappa_l != ens.kappa_s && ens.id ∉ ensNOdisc) ? ALPHAdobs_write(fb, HVP, extra=extra) : nothing
+            ALPHAdobs_write(fb, HVP, extra=extra)
 
             ALPHAdobs_close(fb)
 
@@ -394,8 +389,8 @@ end
         FVCPi = (alpha/pi)^exp_diag * sum(fvcPi .* TMRw) * 1e10
         FVCK  = (alpha/pi)^exp_diag * sum(fvcK  .* TMRw) * 1e10
 
-        FVC∆ls_amu     = ens.kappa_l == ens.kappa_s ? uwreal(0.0) : (alpha/pi)^exp_diag * sum(((-1/3*(fvcK/2) .- fvcPi) .* TMRw) * 1e10)
-        FVC∆ls_amuconn = ens.kappa_l == ens.kappa_s ? uwreal(0.0) : (alpha/pi)^exp_diag * sum(((-2/3*fvcPi) .* TMRw) * 1e10)
+        FVC∆ls_amu     = ens.kappa_l == ens.kappa_s ? uwreal([0.0,0.0],"") : (alpha/pi)^exp_diag * sum(((-1/3*(fvcK/2) .- fvcPi) .* TMRw) * 1e10)
+        FVC∆ls_amuconn = ens.kappa_l == ens.kappa_s ? uwreal([0.0,0.0],"") : (alpha/pi)^exp_diag * sum(((-2/3*fvcPi) .* TMRw) * 1e10)
 
         dataFVC =  Dict{String, Array{uwreal}}(
             "FVCPi" => [FVCPi], 
@@ -478,9 +473,9 @@ end # end timer
 
 ##==========================> READING TEST <==========================##
 
-diag     = ""  #  "LO"  "NLOa"  "NLOb"  "NLOa&b"  "NLOc"
-ensid    = ""
-impr_set = ""
+diag     = "NLOa&b"  #  "LO"  "NLOa"  "NLOb"  "NLOa&b"  "NLOc"
+ensid    = "F300"
+impr_set = "2"
 
 STD   = false
 VREF  = false

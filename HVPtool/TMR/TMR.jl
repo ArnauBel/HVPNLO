@@ -75,7 +75,9 @@ export Tildef4a, Tildef4aInner
 
 include("TMRNLOb.jl")
 export f4b
+export f4btau
 export Tildef4b_num
+export Tildef4btau_num
 export Tildef4b, Tildef4bInner
 
 include("TMRNLOc.jl")

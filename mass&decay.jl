@@ -333,12 +333,12 @@ mPi_fitinfo = Dict{String,Dict{String,Any}}(
     "N300" => Dict{String,Any}("2state" => false, "plat" => [0.30,0.70], "mdof" => 10),
     "J307" => Dict{String,Any}("2state" => false, "plat" => [0.20,0.80], "mdof" => 10),
     "N302" => Dict{String,Any}("2state" => false, "plat" => [0.30,0.65], "mdof" => 10),
-    # "J306" => Dict{String,Any}("2state" => false, "plat" => [0.10,0.75], "mdof" => 80),
     "J306" => Dict{String,Any}("2state" => false, "plat" => [0.22,0.75], "mdof" => 95),
     "J303" => Dict{String,Any}("2state" => false, "plat" => [0.20,0.80], "mdof" => 10),
     "J304" => Dict{String,Any}("2state" => false, "plat" => [0.15,0.80], "mdof" => 90),
-    "E300" => Dict{String,Any}("2state" => false, "plat" => [0.10,0.70], "mdof" => 40),
-    "F300" => Dict{String,Any}("2state" => false, "plat" => [0.20,0.80], "mdof" => 100),
+    # "E300" => Dict{String,Any}("2state" => false, "plat" => [0.10,0.70], "mdof" => 40), # wtf
+    "E300" => Dict{String,Any}("2state" => false, "plat" => [0.25,0.70], "mdof" => 40),
+    "F300" => Dict{String,Any}("2state" => false, "plat" => [0.20,0.80], "mdof" => 90),
     "J500" => Dict{String,Any}("2state" => false, "plat" => [0.20,0.80], "mdof" => 10),
     "J501" => Dict{String,Any}("2state" => false, "plat" => [0.20,0.80], "mdof" => 30),
 )
@@ -369,7 +369,7 @@ mK_fitinfo = Dict{String,Dict{String,Any}}(
     "J306" => Dict{String,Any}("2state" => false, "plat" => [0.22,0.75], "mdof" => 95),
     "J303" => Dict{String,Any}("2state" => false, "plat" => [0.20,0.80], "mdof" => 10),
     "J304" => Dict{String,Any}("2state" => false, "plat" => [0.15,0.80], "mdof" => 90),
-    "E300" => Dict{String,Any}("2state" => false, "plat" => [0.10,0.70], "mdof" => 40),
+    "E300" => Dict{String,Any}("2state" => false, "plat" => [0.25,0.70], "mdof" => 40),
     "F300" => Dict{String,Any}("2state" => false, "plat" => [0.10,0.70], "mdof" => 70),
     "J501" => Dict{String,Any}("2state" => false, "plat" => [0.20,0.80], "mdof" => 30),
 )
@@ -827,8 +827,8 @@ AIC       = true  # always
 PVAL      = false
 
 PLOT      = [true,true]
-WRITE     = true
-OVERWRITE = true
+WRITE     = false
+OVERWRITE = false
 
 path_bdio_w = path_bdio_dict["local"]
 
@@ -1107,15 +1107,20 @@ end # end ens loop
 
 ##==========================> Reading test <==========================##
 
-ensid = "F300"
+ensid = ""
 
 path_bdio_r = path_bdio_dict["local"]
 
-mDict = BDIOread_mPP(path_bdio,ensid)
+mDict = BDIOread_mPP(path_bdio_r,ensid)
 
-fDict = BDIOread_fPS(path_bdio,ensid)
+fDict = BDIOread_fPS(path_bdio_r,ensid)
 
-##
+@info("Data ready")
+
+## <<----------------------------------------------------------------------------------------------------------------------->> ##
+## <<----------------------------------------------------------------------------------------------------------------------->> ##
+
+## rough interpolation (usefull to approximate FVC for new ensembles)
 
 path_bdio_r = path_bdio_dict["local"]
 
@@ -1126,7 +1131,7 @@ for ens in ensInfo
     println("ens $(ens.id) => mPi fvc/err = $(round(∆Mπ_NLO(ens)/mDict["mPi"].err,digits=2)); fPi fvc/err = $(round(∆Fπ_NLO(ens)/fDict["fPi"].err,digits=2))")
 end
 
-## rough interpolation (usefull to approximate for new ensembles)
+## 
 
 y1 = m_ens["A653"]["mK"]
 y2 = m_ens["A654"]["mK"]
@@ -1137,7 +1142,6 @@ x  = 0.136850
                    
 par, _ = lin_fit([x1,x2],[y1,y2],wpm=wpmm,lineprint=false)
 y = y_lin_fit(par,x)
-
 
 
 

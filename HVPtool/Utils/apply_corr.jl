@@ -111,9 +111,12 @@ function HVP_VolCorrect!(HVP::Dict,FVC::Dict,diag::String;IMPR_SET::Vector{Strin
     DISCR = diag != "NLOc" ? ["ll","lc"] : ["llll","lclc"]
     if diag != "NLOc"
         COMP = ["g33"]
-        "g88_ll" in hvpkeys ? push!(COMP,"g88") : nothing
-        "∆ls_amu_ll" in hvpkeys ? push!(COMP,"∆ls_amu") : nothing
-        "∆lc_b_ll" in hvpkeys ? push!(COMP,"∆lc_b") : nothing
+        "g88_ll"         in hvpkeys ? push!(COMP,"g88") : nothing
+        # "g88conn_ll"     in hvpkeys ? push!(COMP,"g88conn_ll") : nothing
+        "gSS_ll"         in hvpkeys ? push!(COMP,"gSS") : nothing
+        "∆ls_amu_ll"     in hvpkeys ? push!(COMP,"∆ls_amu") : nothing
+        "∆ls_amuconn_ll" in hvpkeys ? push!(COMP,"∆ls_amuconn") : nothing
+        "∆lc_b_ll"       in hvpkeys ? push!(COMP,"∆lc_b") : nothing
     else
         COMP = ["g3333"]
         "g8888_llll" in hvpkeys ? push!(COMP,"g8888","g3388") : nothing

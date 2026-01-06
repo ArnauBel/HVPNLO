@@ -15,10 +15,6 @@ using ProgressBars
 using Suppressor
 using TimerOutputs
 
-# include uwreal constants
-
-include("HVPtool/uwConst.jl")
-
 # BDIO path definition (set 'STD_DERIV = true' to use the standard sym. derivative in the impr.)
 
 julia_script_directory = @__DIR__
@@ -48,15 +44,15 @@ ensList = [
     "N101","N200","N202","N203","N300",
     "N302","N451","N452","S400"
     ]
-# E250 & D200 have spectroscopy data !!
+
 
 ensInfo = EnsInfo.(ensList)
 
 # We do not have charm or disconnected data for some of the ensembles
 ensNOcharm = ["C102","D150","D201","D251","D451","F300","H200","H650","J304","J306","J307","J501","N451","N452"]
-ensNOdisc  = ["F300","H650","J306"]
+ensNOdisc  = ["F300","J306"]
 
-ensSPECdata = ["D200","E250"]  # J303
+# ensSPECdata = ["D200","E250"]  # J303
 
 # ensTAILfit  = ["A653","A654","B450"]
 
@@ -88,7 +84,11 @@ path_bdio = path_bdio_dict["local"]
 # BM = wind in ["NW","LD","ILD"]
 
 @info("STARTING HVP COMPUTATION [diag. NLOc; wind. NW]")
-STD_DERIV ? @info("SRANDART DERIVATIVE is being employed in the IMPROVEMENT") : nothing
+STD_DERIV ? @info("STANDARD DERIVATIVE is being employed in the IMPROVEMENT") : nothing
+
+# updated BM on: "A653","A654","B450","C101","C102","H101","H102","H200","H650","N101","F300","J306","J307","E250","E300","J303","N200","D251","J304","N202","N203","N451","N452","D150","D200","D201","D450","D451","D452","N300","N302","S400","J501","J500"
+# maybe check: "J304"
+# missing: all done
 
 @time begin
     for ens in ensInfo
@@ -96,7 +96,7 @@ STD_DERIV ? @info("SRANDART DERIVATIVE is being employed in the IMPROVEMENT") : 
         tcut0    = 10  # 10
         tstep    = 1   # 1
         tcut_max = Int64(HVPobs.Data.get_T(ens.id)/2)  # Int64(HVPobs.Data.get_T(ens.id)/2)
-        tcut_fix = 1.2  # (in fm)
+        tcut_fix = 1.5  # (in fm)
 
 
         @info("Computing HVP for ensemble $(ens.id)")
@@ -146,7 +146,17 @@ STD_DERIV ? @info("SRANDART DERIVATIVE is being employed in the IMPROVEMENT") : 
 
             println("      - Computing HVPs...")
 
-            uwerr(E0_ens[ens.id]["E0"]); E0 = E0_ens[ens.id]["E0"].mean + E0_ens[ens.id]["E0"].err
+            mpi  = m_ens[ens.id]["mPi"] 
+            mrho = m_ens[ens.id]["mRho"]
+            E2pi = 2*sqrt(mpi^2 + (2π/ens.L)^2)
+
+            if ens.id == "H650"
+                # H650 mrho is obtained from an extrapolation of the A boxes; error too large
+                # the most conservative solution:
+                uwerr(mrho); mrho = mrho.mean - mrho.err
+            end
+
+            E0 = mrho < E2pi ? mrho : E2pi
 
             HVP     =  Dict{String, uwreal}()
             HVPsyst =  Dict{String, Float64}()
@@ -372,10 +382,10 @@ OVERWRITE = false  # Allows to erase data and overwrite it with new data, use ca
 path_bdio = path_bdio_dict["local"]
 
 @info("STARTING FVC COMPUTATION [diag. NLOc; wind. NW]")
-STD_DERIV ? @info("SRANDART DERIVATIVE is being employed in the IMPROVEMENT") : nothing
+STD_DERIV ? @info("STANDARD DERIVATIVE is being employed in the IMPROVEMENT") : nothing
 
 @time begin
-    for ens in ensInfo
+    for ens in EnsInfo.(["J307"])
 
         @info("Computing for ensemble $(ens.id)")
 
@@ -400,13 +410,13 @@ STD_DERIV ? @info("SRANDART DERIVATIVE is being employed in the IMPROVEMENT") : 
         println("   - Reading fvc (HP)...")
         fvc_hp = BDIOread_FVCcorr(path_bdio,ens,Vref=false)
 
-        if ens.id != "A653"
+        if ens.id ∉ ["A653","H650"]
             println("   - Reading fvc (MLL)...")
             t_mll, fvc_mll = TXTread_FVCcorr_GS(pFVC_MLL,ens,Vref=false)
         end
 
         fvcPi_hp = vcat(TMRw[1],-fvc_hp["FVCPi6"])[t]
-        fvcPi = ens.id != "A653" ? vcat(fvcPi_hp[1:Int64(t_mll[1])],-fvc_mll...)[t] : fvcPi_hp
+        fvcPi = ens.id ∉ ["A653","H650"] ? vcat(fvcPi_hp[1:Int64(t_mll[1])],-fvc_mll...)[t] : fvcPi_hp
         fvcK  = vcat(TMRw[1],-fvc_hp["FVCK6" ])[t]
 
         println("   - Computing FVC...")
@@ -434,7 +444,7 @@ STD_DERIV ? @info("SRANDART DERIVATIVE is being employed in the IMPROVEMENT") : 
 
                 fvc33_hp = fvcPi_hp + fvcK/2
                 fvc33 = fvcPi + fvcK/2
-                fvc88 = 2/3 * fvcK
+                fvc88 = 2/3 * (fvcK/2)
             end
 
             FVC     = Dict{String, uwreal}()
@@ -608,7 +618,7 @@ STD   = false
 
 path_bdio = path_bdio_dict["local"]
 
-HVP, info = BDIOread_HVPens(path_bdio,"NLOc","NW",ensid,impr_set,info=true,resc=false,STD=STD,BLIND=false)
+HVP, info = BDIOread_HVPens(path_bdio,"NLOc","NW",ensid,impr_set,info=true,resc=false,STD=STD,BLIND=false) # ; HVPstr = Dict(); [HVPstr[key] = print_uwreal(HVP[key]) for key in keys(HVP)]; HVPstr
 
 FVC = BDIOread_FVCens(path_bdio,"NLOc","NW",ensid,Vref=false,resc=false,BLIND=false)
 

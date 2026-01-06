@@ -25,10 +25,6 @@ using Colors
 using ProgressBars
 using Suppressor
 
-# include uwreal constants
-
-include("../HVPtool/uwConst.jl")
-
 # BDIO path definition
 
 julia_script_directory = @__DIR__
@@ -56,8 +52,8 @@ rcParams["axes.titlesize"] = 18
 # Charge factor
 
 charge_factor = Dict(
-    "g33" => 1., "g88" => 1/3., "gCCconn" => 4/9., "∆ls_amu" => 1/3., "∆lc_b" => 4/9.,
-    "g33s" => "", "g88s" => "(1/3)", "gCCconns" => "(4/9)", "∆ls_amus" => "(1/3)", "∆lc_bs" => "(4/9)",
+    "g33" => 1., "g88" => 1/3., "g88conn" => 1/3., "gSS" => 1/9., "gCCconn" => 4/9., "gCCdisc" => 4/9., "gC8disc" => 2/(3*sqrt(3)), "∆ls_amu" => 1/3., "∆ls_amuconn" => 1., "∆lc_b" => 4/9.,
+    "g33s" => "", "g88s" => "(1/3)", "g88conns" => "(1/3)", "gSSs" => "(1/9)", "gCCconns" => "(4/9)", "gCCdiscs" => "(4/9)", "gC8discs" => "(2/3\\sqrt{3})", "∆ls_amus" => "(1/3)", "∆ls_amuconns" => "", "∆lc_bs" => "(4/9)",
     "g3333" => 1.,  "g3388" => 2/3., "g33CC" => 8/9., "g8888" => 1/9., "g88CC" => 8/27., "gCCCC" => 16/81., 
     "g3333s" => "",  "g3388s" => "(2/3)", "g33CCs" => "(8/9)", "g8888s" => "(1/9)", "g88CCs" => "(8/27)", "gCCCCs" => "(16/81)",
 )
@@ -75,17 +71,18 @@ FITdata = true
 # Set plot parameters
 
 diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = "SDsub"  #  NW  SD  SDsub  ID  LD  ILD
-comp = "g33"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+wind = "SD"  #  NW  SD  SDsub  ID  LD  ILD
+comp = "gC8disc"  #  g33  g88  gSS  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆ls_amuconn  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
 BLIND = false
 
 STD_DERIV = false
-VREF      = true
-tl_IMPR   = true
+tl_IMPR   = false
+VREF      = false
 RESC      = false
+
 
 path_bdio = path_bdio_dict["local"]
 
@@ -105,7 +102,7 @@ SYST = INFO["syst"]
 
 FITCUT   = sort(collect(keys(INFO["FITCUTtoMODEL"])), by = x -> Dict(s => i for (i, s) in enumerate(["None","beta","mass","beta&mass","beta_ext"]))[x])
 MultFunc = INFO["MultFunc"]
-IMPR_SET = INFO["IMPR_SET"]
+IMPR_SET = comp in ["gCCdisc","gC8disc"] ? [""] : INFO["IMPR_SET"]
 mykeys   = INFO["Keys"]
 
 println("- Reading PARTIAL result...")
@@ -236,7 +233,6 @@ for (j,impr_set) in enumerate(IMPR_SET)
             
             len = length(info[impr_set][FitCut]["weight"][key])
             W = info[impr_set]["average"]["weight"][key][(i+1):(i+len)][valid_indices]
-
             for (i,ind) in ProgressBar(enumerate(valid_indices))
                 if W[i] > Wcut
                     my = f_tot_isov[FitCut][ind](xarr[FitCut], param[impr_set][FitCut][key][ind]); uwerr.(my)
@@ -249,10 +245,10 @@ for (j,impr_set) in enumerate(IMPR_SET)
     end
 end
 
-#-- Stop for only plot compilation
+##-- Stop for only plot compilation
 
-SAVE     = false
-OVERSAVE = false
+SAVE     = true
+OVERSAVE = true
 
 # IMPR_SET = readIMPR_SET
 
@@ -310,7 +306,8 @@ for beta in b_values
 end
 xlabel(L"$a^2/8t_0$")
 diag_str = diag == "NLOa&b" ? "\\rm{NLOa\\&b}" : diag
-comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : (diag != "NLOc" ? "\\mathrm{$(comp[2]),$(comp[3])}" : "\\mathrm{$(comp[2]),$(comp[3])-$(comp[4]),$(comp[5])}")
+comp_str = comp[1] == '∆' ? (comp == "∆lc_b" ? "\\Delta_{lc}(b)" : comp == "∆ls_amu" ? ("\\Delta_{ls}(a_{\\mu})") : ("\\Delta^{\\mathrm{conn.}}_{ls}(a_{\\mu})")) : (diag != "NLOc" ? "\\mathrm{$(comp[2]),$(comp[3])}" : "\\mathrm{$(comp[2]),$(comp[3])-$(comp[4]),$(comp[5])}")
+if comp in ["gCCdisc","gC8disc"]; comp_str *= "\\mathrm{disc}"; end
 amu_str  = comp[1] == '∆' ? comp_str : "a_{\\mu}^{$comp_str}"
 wind_str = wind == "SDsub" ? "^{\\rm{SD}}_{\\rm{sub}}" : "^{\\rm{$wind}}"
 Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q\\ \\mathrm{GeV})" : ""
@@ -342,10 +339,14 @@ xlim(-0.001,0.06)
 # ylim(-48,-42) # LD
 # 88
 # ylim(-9.6,-8.6) # ID
+# ylim(-7.5,-5.0) # LD
+# SS
+# ylim(-5.7,-5.1) # ID
+# ylim(-3.3,-2.65)# LD
 # cc
-# ylim(-3.0,-1.75) # SDsub
+# ylim(-2.3,-1.5) # SDsub
 # ∆lc(m)
-ylim()
+# ylim(-2.3,-1.5) # SDsub
 display(gcf())
 if SAVE
     RESCstr = !RESC ? "" : "_resc"
@@ -365,8 +366,8 @@ close()
 
 ShowGHOST = false
 
-SAVE     = false
-OVERSAVE = false
+SAVE     = true
+OVERSAVE = true
 
 ARGPLOT = 1  #  set to 1 for best plot
 
@@ -457,7 +458,8 @@ for (i,impr_set) in enumerate(IMPR_SET)
         end
         # ylim([3,12.5])
         diag_str = diag == "NLOa&b" ? "NLOa\\&b" : diag
-        comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : (diag != "NLOc" ? "\\mathrm{$(comp[2]),$(comp[3])}" : "\\mathrm{$(comp[2]),$(comp[3])-$(comp[4]),$(comp[5])}")
+        comp_str = comp[1] == '∆' ? (comp == "∆lc_b" ? "\\Delta_{lc}(b)" : comp == "∆ls_amu" ? ("\\Delta_{ls}(a_{\\mu})") : ("\\Delta^{\\mathrm{conn.}}_{ls}(a_{\\mu})")) : (diag != "NLOc" ? "\\mathrm{$(comp[2]),$(comp[3])}" : "\\mathrm{$(comp[2]),$(comp[3])-$(comp[4]),$(comp[5])}")
+        if comp in ["gCCdisc","gC8disc"]; comp_str *= "\\mathrm{disc}"; end
         amu_str  = comp[1] == '∆' ? comp_str : "a_{\\mu}^{$comp_str}"
         wind_str = wind == "SDsub" ? "^{\\rm{SD}}_{\\rm{sub}}" : "^{\\rm{$wind}}"
         Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q\\ \\mathrm{GeV})" : ""
@@ -481,6 +483,130 @@ for (i,impr_set) in enumerate(IMPR_SET)
     end
 end
 
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+
+@info("Kaon chiral-continiuum best extrapolation")
+
+ShowGHOST = false
+
+SAVE     = true
+OVERSAVE = true
+
+ARGPLOT = 1  #  set to 1 for best plot
+
+IMPR_SET = IMPR_SET  #  readIMPR_SET  ["1"]  ["2"]  ["1","2"]  ["1old","2"]  ["1","1old","2"]
+
+Pi_ph = !RESC ? phi2_ph : y_ph
+K_ph  = !RESC ? phi4_ph : z_ph
+
+myFactor = charge_factor[comp] * (diag == "LO" ? 1 : 10)
+
+for (i,impr_set) in enumerate(IMPR_SET)
+    for (j,key) in enumerate(mykeys)
+        label = []
+        color = ["orange","red","purple","blue","green","brown"]
+        fmt   = ["o","^","s","d","h","v"]
+        
+        argSort = sortperm(eachindex(info[impr_set]["average"]["weight"][key]), 
+                   by=i -> vcat([label_tot_isov[FitCut] for FitCut in FITCUT]...)[i][1] in ["baseResc", "baseSimpResc"] ? -Inf : info[impr_set]["average"]["weight"][key][i], 
+                   rev=true)
+        argPlot = argSort[ARGPLOT]
+        discr   = key[end-1:end]
+
+        offset = 0
+        newArg   = nothing
+        myFitCut = nothing
+        for FitCut in FITCUT
+            len = length(label_tot_isov[FitCut])
+            if offset < argPlot <= offset + len
+                newArg = argPlot - offset
+                myFitCut = FitCut
+            end
+            offset += len
+        end
+        argPlot  = newArg
+
+        if myFitCut in ["beta","beta&mass"]
+            color = color[2:end]
+            fmt   = fmt[2:end]
+        elseif myFitCut == "beta_ext"
+            color = color[3:end]
+            fmt   = fmt[3:end]
+        end
+
+        fit      = fitres[impr_set][myFitCut][key][argPlot]
+        model    = label_tot_isov[myFitCut][argPlot]
+        myres    = res[impr_set][myFitCut][key][argPlot]; uwerr(myres)
+        myparam  = param[impr_set][myFitCut][key][argPlot]; uwerr.(myparam)
+
+        xproj_ch = deepcopy(xydata[myFitCut]["xdata"])
+        xproj_ch[:,2] = fill(Pi_ph, length(xydata[myFitCut]["xdata"][:,1]))::Vector{uwreal}
+        # ydata = f_tot_isov[argPlot](xproj_ch,value.(myparam)); uwerr.(ydata)
+        Deltay = f_tot_isov[myFitCut][argPlot](xproj_ch,value.(myparam)) - f_tot_isov[myFitCut][argPlot](xydata[myFitCut]["xdata"],value.(myparam))
+        ydata = myFactor * (xydata[myFitCut]["ydata"][impr_set][key] + Deltay); uwerr.(ydata)
+
+        println("Chosen model (diag=$diag, set=$impr_set, discr=$discr, cut=$myFitCut): $(label_tot_isov[myFitCut][argPlot]) (n: $argPlot)")
+        println("- chi2/dof     = $(fit.chi2/fit.dof)")
+        println("- chi2/chi2exp = $(fit.chi2/fit.chi2exp)")
+
+        # fig = figure(figsize=(10,7.5))
+        fig = figure(figsize=(8,6))
+
+        for (k,b) in  enumerate(sort(unique(getfield.(ensInfo[myFitCut], :beta))))
+            push!(label,L"$\beta=$"*"$b")
+            n_ = findall(x->x.beta == b, ensInfo[myFitCut])
+            a2_aux = mean(value.(xydata[myFitCut]["xdata"][:,1][n_]))
+            errorbar(value.(xydata[myFitCut]["xdata"][n_,3]), value.(ydata[n_]), err.(ydata[n_]), fmt=fmt[k], capsize=2, color=color[k], mfc="none", label=label[k])
+            if ShowGHOST
+                uwerr.(xydata[myFitCut]["ydata"][impr_set][key])
+                errorbar(value.(xydata[myFitCut]["xdata"][n_,3]), myFactor*value.(xydata[myFitCut]["ydata"][impr_set][key][n_]), myFactor*err.(xydata[myFitCut]["ydata"][impr_set][key][n_]), fmt=fmt[k], capsize=2, color=color[k], mfc="none", alpha=0.1)
+            end
+            xxx = !RESC ? [fill(a2_aux,100) fill(value(phi2_ph), 100) Float64.(range(1.05, 1.35, length=100))] : [fill(a2_aux,100) fill(value(y_ph), 100) Float64.(range(0.4, 0.6, length=100))]
+            yyy = myFactor*f_tot_isov[myFitCut][argPlot](xxx, myparam)
+            PyPlot.plot(xxx[:,3],value.(yyy),ls="--",color=color[k],lw=0.5)
+        end
+        xxx_ph = !RESC ? [fill(0.0,100) fill(value(phi2_ph), 100) Float64.(range(1.05, 1.35, length=100))] : [fill(0.0,100) fill(value(y_ph), 100) Float64.(range(0.4, 0.6, length=100))]
+        yyy_ph = myFactor*f_tot_isov[myFitCut][argPlot](xxx_ph, myparam); uwerr.(yyy_ph)
+        
+        errorbar(K_ph.mean, myFactor*myres.mean, myFactor*myres.err, fmt="^", capsize=2, color="black",label="ph.")
+        push!(label,"ph.")
+        PyPlot.plot(xxx_ph[:,3],value.(yyy_ph),ls="--",color="gray",lw=0.5)
+        fill_between(xxx_ph[:,3], value.(yyy_ph)-err.(yyy_ph), value.(yyy_ph)+err.(yyy_ph), alpha=0.2, color="gray")
+        # PyPlot.title("Chiral and continuum extrapolation (Discr. $(key[end-1:end]); impr. set $impr_set)")
+        axvline(x=K_ph.mean, ls="dashed", color="black", lw=0.2, alpha=0.7) 
+        if !RESC
+            xlabel(L"$\Phi_4$")
+        else
+            xlabel(L"$z$")
+        end
+        # ylim([3,12.5])
+        diag_str = diag == "NLOa&b" ? "NLOa\\&b" : diag
+        comp_str = comp[1] == '∆' ? (comp == "∆lc_b" ? "\\Delta_{lc}(b)" : comp == "∆ls_amu" ? ("\\Delta_{ls}(a_{\\mu})") : ("\\Delta^{\\mathrm{conn.}}_{ls}(a_{\\mu})")) : (diag != "NLOc" ? "\\mathrm{$(comp[2]),$(comp[3])}" : "\\mathrm{$(comp[2]),$(comp[3])-$(comp[4]),$(comp[5])}")
+        if comp in ["gCCdisc","gC8disc"]; comp_str *= "\\mathrm{disc}"; end
+        amu_str  = comp[1] == '∆' ? comp_str : "a_{\\mu}^{$comp_str}"
+        wind_str = wind == "SDsub" ? "^{\\rm{SD}}_{\\rm{sub}}" : "^{\\rm{$wind}}"
+        Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q\\ \\mathrm{GeV})" : ""
+        V_str    = VREF ? "(V_{\\rm{ref}})" : ""
+        fact_str = diag == "LO" ? "\\times10^{10}" : "\\times10^{11}"
+        if wind == "NW"
+            ylabel(latexstring("$(charge_factor[comp*"s"])$(amu_str)[\\mathrm{$(diag_str)}]$Q_str$fact_str"))
+        else
+            ylabel(latexstring("$(charge_factor[comp*"s"])\\left($(amu_str)[\\mathrm{$(diag_str)}]$(V_str)\\right)$wind_str$Q_str$fact_str"))
+        end
+        # !RESC ? xlim(0.06,0.8) : xlim(0.02,0.4)
+        legend(label,loc="best")
+        tight_layout()
+        display(gcf())
+        if SAVE
+            RESCstr = !RESC ? "" : "_resc"
+            p = create_path(path_plot,[diag,wind,"ChExtr(Kaon)_$(key)_$(impr_set)$(RESCstr).pdf"],OVERWRITE=OVERSAVE)
+            PyPlot.savefig(p)
+        end
+        close()
+    end
+end
+
 
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
@@ -490,8 +616,8 @@ end
 
 @info("Ensemble cut convergence plot")
 
-SAVE     = false
-OVERSAVE = false
+SAVE     = true
+OVERSAVE = true
 
 sqrtt0_ph_TAR = nothing  # 0.1443  sqrtt0_ph_CLS  nothing
 
@@ -557,6 +683,8 @@ for (i,impr_set) in enumerate(IMPR_SET)
                 curr = "VV"
             elseif key[end-1:end] == "lc"
                 curr = "VVc"
+            elseif key[end-1:end] == "cc"
+                curr = "VcVc"
             end
             str = curr * " - set " * impr_set
             if str ∉ groupLabel
@@ -597,7 +725,8 @@ end
 ax1.axvspan(value(myRES)-err(myRES), value(myRES)+err(myRES), color="limegreen", alpha=0.3)
 ax1.axvspan(value(myRES)-myERR, value(myRES)+myERR, color="limegreen", alpha=0.3, label="SD paper result")
 diag_str = diag == "NLOa&b" ? "NLOa\\&b" : diag
-comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : (diag != "NLOc" ? "\\mathrm{$(comp[2]),$(comp[3])}" : "\\mathrm{$(comp[2]),$(comp[3])-$(comp[4]),$(comp[5])}")
+comp_str = comp[1] == '∆' ? (comp == "∆lc_b" ? "\\Delta_{lc}(b)" : comp == "∆ls_amu" ? ("\\Delta_{ls}(a_{\\mu})") : ("\\Delta^{\\mathrm{conn.}}_{ls}(a_{\\mu})")) : (diag != "NLOc" ? "\\mathrm{$(comp[2]),$(comp[3])}" : "\\mathrm{$(comp[2]),$(comp[3])-$(comp[4]),$(comp[5])}")
+if comp in ["gCCdisc","gC8disc"]; comp_str *= "\\mathrm{disc}"; end
 amu_str  = comp[1] == '∆' ? comp_str : "a_{\\mu}^{$comp_str}"
 V_str    = VREF ? "(V_{\\rm{ref}})" : ""
 wind_str = wind == "SDsub" ? "^{\\rm{SD}}_{\\rm{sub}}" : "^{\\rm{$wind}}"
@@ -652,12 +781,12 @@ close()
 
 @info("Model average plot")
 
-nBEST = 40
+nBEST = 20
 
 Norm2DOF = false
 
-SAVE     = false
-OVERSAVE = false
+SAVE     = true
+OVERSAVE = true
 
 
 color_dict = Dict(
@@ -738,7 +867,8 @@ for impr_set in IMPR_SET
 end
 PyPlot.xticks([], [])
 diag_str = diag == "NLOa&b" ? "NLOa\\&b" : diag
-comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : (diag != "NLOc" ? "\\mathrm{$(comp[2]),$(comp[3])}" : "\\mathrm{$(comp[2]),$(comp[3])-$(comp[4]),$(comp[5])}")
+comp_str = comp[1] == '∆' ? (comp == "∆lc_b" ? "\\Delta_{lc}(b)" : comp == "∆ls_amu" ? ("\\Delta_{ls}(a_{\\mu})") : ("\\Delta^{\\mathrm{conn.}}_{ls}(a_{\\mu})")) : (diag != "NLOc" ? "\\mathrm{$(comp[2]),$(comp[3])}" : "\\mathrm{$(comp[2]),$(comp[3])-$(comp[4]),$(comp[5])}")
+if comp in ["gCCdisc","gC8disc"]; comp_str *= "\\mathrm{disc}"; end
 amu_str  = comp[1] == '∆' ? comp_str : "a_{\\mu}^{$comp_str}"
 wind_str = wind == "SDsub" ? "^{\\rm{SD}}_{\\rm{sub}}" : "^{\\rm{$wind}}"
 Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q)" : ""
@@ -861,8 +991,8 @@ close()
 
 @info("Hit plot")
 
-SAVE     = false
-OVERSAVE = false
+SAVE     = true
+OVERSAVE = true
 
 path_bdio = path_bdio_dict["local"]
 
@@ -946,7 +1076,7 @@ fill_betweenx([0.0,1.0], myFactor*(RES.mean-RES.err), myFactor*(RES.mean+RES.err
 fill_betweenx([0.0,1.0], myFactor*(RES.mean-sqrt(RES.err^2+SYST^2)), myFactor*(RES.mean+sqrt(RES.err^2+SYST^2)), color="gray", alpha=0.2)
 
 diag_str = diag == "NLOa&b" ? "NLOa\\&b" : diag
-comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : (diag != "NLOc" ? "\\mathrm{$(comp[2]),$(comp[3])}" : "\\mathrm{$(comp[2]),$(comp[3])-$(comp[4]),$(comp[5])}")
+comp_str = comp[1] == '∆' ? (comp == "∆lc_b" ? "\\Delta_{lc}(b)" : comp == "∆ls_amu" ? ("\\Delta_{ls}(a_{\\mu})") : ("\\Delta^{\\mathrm{conn.}}_{ls}(a_{\\mu})")) : (diag != "NLOc" ? "\\mathrm{$(comp[2]),$(comp[3])}" : "\\mathrm{$(comp[2]),$(comp[3])-$(comp[4]),$(comp[5])}")
 amu_str  = comp[1] == '∆' ? comp_str : "a_{\\mu}^{$comp_str}"
 V_str    = VREF ? "(V_{\\rm{ref}})" : ""
 wind_str = wind == "SDsub" ? "^{\\rm{SD}}_{\\rm{sub}}" : "^{\\rm{$wind}}"
@@ -977,18 +1107,18 @@ close()
 
 @info("SD (aµ + b) Q invariance plot")
 
-diag = ""  #  LO  NLOa  NLOb  NLOc  NLOa&b
-comp = ""  #  g33  gCCconn
+diag = "NLOb"  #  LO  NLOa  NLOb  NLOc  NLOa&b
+comp = "gCCconn"  #  g33  gCCconn
 
-STD_DERIV = false
-VREF      = false
-tlImpr    = false
-RESC      = false
+StdDer = false
+VREF   = false
+tlImpr = false
+RESC   = false
 
-SAVE      = false
-OVERSAVE  = false
+SAVE     = true
+OVERSAVE = true
 
-QRES  = 5.0  # "average"  "best"  5.0  4.0
+QRES  = 4.0  # "average"  "best"  5.0  4.0
 QLIST = Qlist  #  [5.0]  [5.0,8.0]  Qlist
 
 path_bdio = path_bdio_dict["local"]
@@ -997,6 +1127,7 @@ factor = diag == "LO" ? 1 : 10
 
 if comp == "gCCconn"
     factor *= 4/9 
+    MD_ph_prime, mDs_SU3 = BDIOread_mDs(path_bdio)
 end
 
 b33Pert = TXTread_bQ(path_bPert,diag); uwerr.(b33Pert)
@@ -1013,17 +1144,21 @@ SYST = [info0["syst"]]
 for Q in QLIST
     amu, amuInfo = BDIOread_MAtot(path_bdio,diag,"SDsub",comp,StdDer=StdDer,tlImpr=tlImpr,Vref=VREF,Q=Q)
     if comp == "g33"
-        bq = value(b33Pert[Q .== Qlist][1])
+        bq = b33Pert[Q .== Qlist][1].mean
         syst = sqrt(amuInfo["syst"]^2 + Window("SD")(0)^2 * b33Pert[Q .== Qlist][1].err^2)
     elseif comp == "gCCconn"
         ∆lc, ∆lcInfo = BDIOread_MAtot(path_bdio,diag,"SDsub","∆lc_b",StdDer=StdDer,Q=Q)
-        bq = 2*value(b33Pert[Q .== Qlist][1]) + ∆lc
+        bq = 2*b33Pert[Q .== Qlist][1].mean + ∆lc
         syst = sqrt(amuInfo["syst"]^2 + Window("SD")(0)^2 * (4*b33Pert[Q .== Qlist][1].err^2 + ∆lcInfo["syst"]^2))
     end
     res = amu + Window("SD")(0) * bq
-    if VREF
+    if VREF && comp == "g33"
         FVC_ChPT = JDL2read_FVC_ChPT(path_FVCcont,diag,"SDsub",Q=Q)
         res += FVC_ChPT
+    elseif comp == "gCCconn"
+        uwerr(res)
+        der_mDs = mchist(res, "MD_ph [GeV]")[1] / artificial_err
+        res    += value(MD_ph - MD_ph_prime) * der_mDs
     end
     push!(RES , res)
     push!(SYST, syst)
@@ -1059,9 +1194,9 @@ xlabel(latexstring("1/Q\\ [\\mathrm{GeV}^{-1}]"))
 diag_str = diag == "NLOa&b" ? "NLOa\\&b" : diag
 fact_str = diag == "LO" ? "10" : "11"
 if comp == "g33"
-    ylabel(latexstring("\\left[\\left(a_{\\mu}^{\\rm{3,3}}[\\rm{$diag_str}]\\right)^{\\rm{SD}}_{\\rm{sub}}(Q^2)+\\omega_{\\rm{SD}}(0)b^{\\rm{(3,3)}}[\\rm{$diag_str}](Q^2)\\right]\\times 10^{$(fact_str)}"))
+    ylabel(latexstring("\\left[\\left(a_{\\mu}^{\\rm{3,3}}[\\rm{$diag_str}]\\right)^{\\rm{SD}}_{\\rm{sub}}(Q^2)+\\Theta^{\\rm{SD}}(0)\\tilde{b}^{\\rm{(3,3)}}[\\rm{$diag_str}](Q^2)\\right]\\times 10^{$(fact_str)}"))
 elseif comp == "gCCconn"
-    ylabel(latexstring("\\frac{4}{9}\\left[\\left(a_{\\mu}^{\\rm{c,c}}[\\rm{$diag_str}]\\right)^{\\rm{SD}}_{\\rm{sub}}(Q^2)+\\omega_{\\rm{SD}}(0)b^{\\rm{(c,c)}}[\\rm{$diag_str}](Q^2)\\right]\\times 10^{$(fact_str)}"))
+    ylabel(latexstring("\\frac{4}{9}\\left[\\left(a_{\\mu}^{\\rm{c,c}}[\\rm{$diag_str}]\\right)^{\\rm{SD}}_{\\rm{sub}}(Q^2)+\\Theta^{\\rm{SD}}(0)\\tilde{b}^{\\rm{(c,c)}}[\\rm{$diag_str}](Q^2)\\right]\\times 10^{$(fact_str)}"))
 end
 xlim(xmin,xmax)
 

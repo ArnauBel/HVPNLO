@@ -15,10 +15,6 @@ using ProgressBars
 using Suppressor
 using TimerOutputs
 
-# include uwreal constants
-
-# include("HVPtool/uwConst.jl")
-
 # BDIO path definition (set 'STD_DERIV = true' to use the standard sym. derivative in the impr.)
 
 julia_script_directory = @__DIR__
@@ -73,7 +69,7 @@ wpm = Dict{String, Vector{Float64}}()
 ##==========================> 1D HVP computation (+ BM) [LO, NLOa, NLOb] <==========================##
 
 diag = ""  # LO  NLOa  NLOb  NLOa&b
-wind = ""  # NW  SD  ID  LD  ILD
+wind = ""  # NW  SD  ID  ILD  LD  LD1  LD2
 
 IMPR_SET = ["1","2"] # ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
 
@@ -211,6 +207,12 @@ end
                 mrho = m_ens[ens.id]["mRho"]
                 E2pi = 2*sqrt(mpi^2 + (2π/ens.L)^2)
 
+                if ens.id == "H650"
+                    # H650 mrho is obtained from an extrapolation of the A boxes; error too large
+                    # the most conservative solution:
+                    uwerr(mrho); mrho = mrho.mean - mrho.err
+                end
+
                 for key in light_keys
                     
                     ub = Vector{uwreal}()
@@ -287,7 +289,7 @@ end
                                 E0 = mrho
                             end
                             if aens*tcut < tEeffFix  # we fix the eff energy at some point
-                                Eeff_=Eeff(tcut, obs)
+                                Eeff_ = Eeff(tcut, obs)
                             end
 
                             UB = corr_bound(tBM, tcut, obs, E0)
@@ -301,7 +303,6 @@ end
                             
                             if diag == "NLOa&b" && aens*tBM[end] > NLOab_zero
                                 # since there's a sign flip in ; the roles of the upper und lower bound is reversed for larger time slices
-                                
                                 bit_vec = value.(aens .* (tBM.-1)) .< NLOab_zero
 
                                 upper_int, lower_int = [vcat(upper_int[bit_vec],lower_int[.!bit_vec]...),vcat(lower_int[bit_vec],upper_int[.!bit_vec]...)]
@@ -314,7 +315,7 @@ end
                             push!(lb, lb_)
                         end
                         
-                        CORR = (ens.id ∉ ["A654","A653"])
+                        CORR = (ens.id ∉ ["A654","A653","H650"])
                         HVP[key], HVPsyst[key], PlatRec[key] = bounding_method(ub,lb,aens,PLAT=true,AVER=false,tcut0=tcut0,tstep=tstep,correlations=CORR)
                     end
                 end
@@ -464,7 +465,7 @@ end # end timer
 ##==========================> 1D FVC computation [LO NLOa NLOb] <==========================##
 
 diag = ""  # LO  NLOa  NLOb  NLOa&b
-wind = ""  # NW  SD  ID  LD  ILD
+wind = ""  # NW  SD  ID  ILD  LD  LD1  LD2
 
 RESC  = false
 VREF  = false
@@ -607,7 +608,7 @@ impr_set = ""
 
 STD   = false
 VREF  = false
-RESC  = true
+RESC  = false
 
 BLIND = false
 

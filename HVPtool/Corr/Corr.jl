@@ -29,7 +29,6 @@ function corr33(path_data::String, ens::EnsInfo; path_rw::Union{Nothing,String}=
     Gamma_l = ["V1V1", "V2V2", "V3V3", "V1T10", "V2T20", "V3T30"]
     Gamma_c = ["V1V1c", "V2V2c", "V3V3c", "V1cT10", "V2cT20", "V3cT30"]
 
-105
     v1v1 = get_corr(path_data, ens, "light", Gamma_l[1], path_rw=path_rw, frw_bcwd=false, L=L, lma=lma)
     v2v2 = get_corr(path_data, ens, "light", Gamma_l[2], path_rw=path_rw, frw_bcwd=false, L=L, lma=lma)
     v3v3 = get_corr(path_data, ens, "light", Gamma_l[3], path_rw=path_rw, frw_bcwd=false, L=L, lma=lma)

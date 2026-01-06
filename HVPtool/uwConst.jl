@@ -144,7 +144,7 @@ const m_ens = Dict(
     "A653" => Dict("mPi" => uwreal([0.21193,0.00091], "mPi"), "mK" => uwreal([0.21193,0.00091], "mK"), "mRho" => uwreal([0.4240, 0.0088], "mRho")), 
     "A654" => Dict("mPi" => uwreal([0.16647,0.00121], "mPi"), "mK" => uwreal([0.22712,0.00089], "mK"), "mRho" => uwreal([0.3988, 0.0019], "mRho")), 
     # H650 is new, computed by myself (mRho=uwreal([0.3846, 0.0200], "mRho") from interpolation from A654 and A653)
-    "H650" => Dict("mPi" => uwreal([0.12721,0.00177], "mPi"), "mK" => uwreal([0.23098,0.00083], "mK"), "mRho" => uwreal([10.0,0.0], "mRho")), 
+    "H650" => Dict("mPi" => uwreal([0.12721,0.00177], "mPi"), "mK" => uwreal([0.23098,0.00083], "mK"), "mRho" => uwreal([0.3846, 0.0200], "mRho")), 
     
     "H101" => Dict("mPi" => uwreal([0.18217,0.00062], "mPi"), "mK" => uwreal([0.18217,0.00062], "mK"), "mRho" => uwreal([0.3709,0.0018], "mRho")),
     "H102" => Dict("mPi" => uwreal([0.15395,0.00071], "mPi"), "mK" => uwreal([0.19144,0.00057], "mK"), "mRho" => uwreal([0.3559,0.0036], "mRho")),

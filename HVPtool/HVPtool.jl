@@ -12,7 +12,11 @@ export Zvc_l, E0_ens, meson_ens, m_ens
 
 include("Const/Const.jl")
 
-export hbarc, masse, massmu, alpha, GammaEuler, Qlist, C4, kcd_in, p0_smallpbc_dict, wpmm, NLOab_zero
+export hbarc
+export alpha
+export masse, massmu, masstau  
+export GammaEuler
+export Qlist, C4, kcd_in, p0_smallpbc_dict, wpmm, NLOab_zero
 
 include("Corr/Corr.jl")
 
@@ -23,7 +27,7 @@ include("TMR/TMR.jl")
 using .TMR
 export f2, Tildef2_num, Tildef2, Tildef2Inner
 export f4a, Tildef4a_num, Tildef4a, Tildef4aInner
-export f4b, Tildef4b_num, Tildef4b, Tildef4bInner
+export f4b, Tildef4b_num, Tildef4b, Tildef4bInner, f4btau, Tildef4btau_num
 export Tildef4c, Tildef4cInner
 
 include("isovModel.jl")

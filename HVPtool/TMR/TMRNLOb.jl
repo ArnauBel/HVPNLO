@@ -17,7 +17,7 @@ end
 
 ## Tilde f[4b] num.
 
- function Tildef4b_num(t::Union{Int64,Float64,uwreal};rtol::Float64=1e-8)
+function Tildef4b_num(t::Union{Int64,Float64,uwreal};rtol::Float64=1e-8)
 
     integrand(w) = 8π^2 * f4b(w)/w * g(w*t)
     result, error = quadgk(integrand, 0.0, Inf, rtol=rtol)
@@ -93,5 +93,27 @@ function Tildef4b(t::Union{Int64,Float64,uwreal}, path_to_coef::String; OverErr:
     
     result = (16 * pi^2 / massmu^2) * Tildef4bInner(t, an, bn, cn, dn, idcs, factorials, OverErr=OverErr)
     #return replace(value.(result), NaN => 0.0)
+    return result
+end
+
+# we add the numerical kernel for the tau loop
+
+function f4btau(w::Union{Int64,Float64,uwreal})
+
+    function f2(w::Union{Int64,Float64,uwreal})
+        s = w^2
+        Z(s) = - (s-sqrt(s^2+4*s))/(2*s)
+        return (1/massmu^2) * s*Z(s)^3 * (1-s*Z(s))/(1+s*Z(s)^2)
+    end
+
+    Fl(w,ml) = -5/9 + (4 * ml^2) / (3 * w^2) - (1/3) * sqrt(1 + (4 * ml^2) / w^2) * (1 - (2 * ml^2) / w^2) * log((sqrt(1 + (4 * ml^2) / w^2) - 1) / (sqrt(1 + (4 * ml^2) / w^2) + 1))
+
+    return 2 * f2(w) * Fl(w,masstau/massmu)
+end
+
+function Tildef4btau_num(t::Union{Int64,Float64,uwreal};rtol::Float64=1e-8)
+
+    integrand(w) = 8π^2 * f4btau(w)/w * g(w*t)
+    result, error = quadgk(integrand, 0.0, Inf, rtol=rtol)
     return result
 end

@@ -129,7 +129,7 @@ function BDIOread_FVCens(pBDIO::String,diag::String,wind::String,ensid::String;I
         
         if wind == "SDsub"
             FVCens  = BDIOread_general(p, merge=true)
-            FVCens["FVCPi"] = FVCens["FVCPi"][1]; FVCens["FVCK"] = FVCens["FVCK"][1]; FVCens["FVC∆ls_amu"] = FVCens["FVC∆ls_amu"][1]
+            FVCens["FVCPi"] = FVCens["FVCPi"][1]; FVCens["FVCK"] = FVCens["FVCK"][1]; FVCens["FVC∆ls_amu"] = FVCens["FVC∆ls_amu"][1]; FVCens["FVC∆ls_amuconn"] = FVCens["FVC∆ls_amuconn"][1]
         else
             FVCens  = BDIOread_dim0(p)
         end
@@ -293,7 +293,7 @@ function BDIOread_MAtot(pBDIO::String,diag::String,wind::String,comp::String;rea
         return res, info
     elseif read == "impr"
         isnothing(impr_set) ? error("impr_set must be given if 'read=impr'") : nothing
-        IMPRstr = comp ∉ ["gCCdisc","gC8disc"] ? "_set$impr_set" : ""
+        IMPRstr = comp ∉ ["gCCdisc","gC8disc"] ? "_set$impr_set" : "_set"
         pbdio = joinpath(pBDIO,"Fit&MA",diag,wind,comp*tl_str,"MAtot","$(BLINstr)MAres$(SUBQstr)$(IMPRstr)$(RESstr)$(VREFstr)$(DERstr)")
         pJDL2 = joinpath(pBDIO,"Fit&MA",diag,wind,comp*tl_str,"MAtot","$(BLINstr)MAinfo$(SUBQstr)$(IMPRstr)$(RESstr)$(VREFstr)$(DERstr).jld2")
 

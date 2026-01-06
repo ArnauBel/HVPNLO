@@ -19,11 +19,14 @@ include("../uwConst.jl")
 DictComptoKey = Dict{String,Vector{String}}(
     "g33"      => ["g33_ll","g33_lc"],
     "g88"      => ["g88_ll","g88_lc"],
+    "g88conn"  => ["g88conn_ll","g88conn_lc"],
+    "gSS"      => ["gSS_ll","gSS_lc"],
     # only interested in the lc (local-conserved) discr. for the cc conn
-    "gCCconn"  => ["gCCconn_SU3_lc"],
-    # "gCCconn"  => ["gCCconn_SU3_ll","gCCconn_SU3_lc"],
+    "gCCconn"  => ["gCCconn_SU3_lc"], # ["gCCconn_ll","gCCconn_lc"]
+    # "gCCconn"  => ["gCCconn_SU3_ll","gCCconn_SU3_lc"], # ["gCCconn_SU3_ll","gCCconn_SU3_lc"]
 
     "∆ls_amu" => ["∆ls_amu_ll","∆ls_amu_lc"],
+    "∆ls_amuconn" => ["∆ls_amuconn_ll","∆ls_amuconn_lc"],
     "∆lc_b"   => ["∆lc_b_lc"],
 
     # only interested in the cc (conserved-conserved) discr. for the cc disc  & c8 disc

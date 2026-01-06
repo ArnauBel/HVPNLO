@@ -10,8 +10,9 @@ end
 
 const hbarc = 0.1973269804  # GeV fm
 
-const masse  = 0.5109989461e-3     # electron mass (GeV) from PDG
-const massmu = 0.10565837         # muon mass (GeV) from PDG
+const masse   = 0.5109989461e-3     # electron mass (GeV) from PDG
+const massmu  = 0.10565837          # muon mass (GeV) from PDG
+const masstau = 1.77693             # tauon mass (GeV) from PDG
 
 const alpha = 1/137.035999084     # em coupling q = 0
 const GammaEuler = 0.57721566490153286060651209008240243

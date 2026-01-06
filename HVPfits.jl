@@ -46,18 +46,21 @@ ensInfo = EnsInfo.(ensList)
 
 # We do not have charm or disconnected data for some of the ensembles
 ensNOcharm = ["C102","D150","D201","D251","D451","F300","H200","H650","J304","J306","J307","J501","N451","N452"]
-ensNOdisc  = ["F300","H650","J306"]
+ensNOdisc  = ["F300","J306"]
 
 # Dict to relate contributions to their Dict keys
 
 DictComptoKey = Dict{String,Vector{String}}(
     "g33"      => ["g33_ll","g33_lc"],
     "g88"      => ["g88_ll","g88_lc"],
+    "g88conn"  => ["g88conn_ll","g88conn_lc"],
+    "gSS"      => ["gSS_ll","gSS_lc"],
     # only interested in the lc (local-conserved) discr. for the cc conn
     "gCCconn"  => ["gCCconn_SU3_lc"], # ["gCCconn_ll","gCCconn_lc"]
     # "gCCconn"  => ["gCCconn_SU3_ll","gCCconn_SU3_lc"], # ["gCCconn_SU3_ll","gCCconn_SU3_lc"]
 
     "∆ls_amu" => ["∆ls_amu_ll","∆ls_amu_lc"],
+    "∆ls_amuconn" => ["∆ls_amuconn_ll","∆ls_amuconn_lc"],
     "∆lc_b"   => ["∆lc_b_lc"],
 
     # only interested in the cc (conserved-conserved) discr. for the cc disc  & c8 disc
@@ -83,7 +86,7 @@ DictComptoKey = Dict{String,Vector{String}}(
 ##==========================> Fits [LO, NLOa&b, NLOa, NLOb, NLOc] <==========================##
 
 diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOc  NLOa&b
-wind = "ID"  #  NW  SD  SDsub  ID  LD  ILD
+wind = "SD"  #  NW  SD  SDsub  ID  ILD  LD  LD1  LD2
 
 readIMPR_SET = ["1","2"] #  ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
 
@@ -91,7 +94,7 @@ BLIND = false
 
 STD_DERIV  = false
 tl_IMPR    = false
-VREF       = true
+VREF       = false
 RESC       = false
 
 path_bdio_r = path_bdio_dict["local"]
@@ -142,20 +145,20 @@ end
 
 ##==========================> Data ready to fit
 
-comp = "g33"  #  g33  g88  gCCconn  strange gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+comp = "gC8disc"  #  g33  g88  gSS  gCCconn  strange gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆ls_amuconn  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
-model_var_list = Function[a3,a4,a2phi2,a2phi4,phi2sqr,phi2log]  #  [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]  [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]  [a3,a2phi2,phi2sqr,phi2log,phi4]
+model_var_list = Function[a3,a2phi2,phi2sqr,phi2log,phi4]  #  [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]  [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]  [a3,a2phi2,phi2sqr,phi2log,phi4]
 # model_var_list = Function[a3,a2y,ysqr,ylog]  #  [a3,a4,a2y,a2z,a3y,ysqr,ylog]  [a3,a2y,ysqr,ylog]
 
 MultFunc = nothing  #  nothing  deltaphi
 
-IMPR_SET = readIMPR_SET  #  readIMPR_SET  ["1"]  ["2"]  ["1","2"]  ["1old","2"]  ["1","1old","2"]
+IMPR_SET = ["1"]  #  readIMPR_SET  ["1"]  ["2"]  ["1","2"]  ["1old","2"]  ["1","1old","2"]
 
-FITCUT = ["None","beta","mass","beta&mass"]  #  ["None","beta","mass","beta&mass","beta_ext"]  ["None","beta","mass","beta&mass"]  ["None","beta"]
+FITCUT = ["None","beta"]  #  ["None","beta","mass","beta&mass","beta_ext"]  ["None","beta","mass","beta&mass"]  ["None","beta"]
 
-SimpleBase = false
+SimpleBase = true
 a2RESC     = true
 
 FitINFO    = false
@@ -163,7 +166,7 @@ FitINFO    = false
 PVAL       = false
 
 WRITE      = true
-OVERWRITE  = true
+OVERWRITE  = false
 
 mdof = 4  # minimum number of d.o.f. allowed
 
@@ -172,20 +175,15 @@ mykeys = DictComptoKey[comp]  #  [DictComptoKey[comp][1]]
 path_bdio_w = path_bdio_dict["local"]
 
 # Following the LD paper, when it comes to the iso-vector analysis, the 'untrusted' ensembles are: H105, H200, N300,  N302, S400
-ensExcl = ["H105","H200","A654","N300","N302","S400"] # 33 (D201 problems for SD & ID)
-# ensExcl = ["H105","H200","N300","N302","S400"] # 88, ∆ls(aµ)
-# ensExcl = ["H105","H200","S400"] # CC, ∆lc(b) (S400 could be included in CC?)
+# ensExcl = ["H105","H200","A654","N300","N302","S400"] # 33, 88, SS, ∆ls(aµ) (D201 problems for SD & ID)
+# ensExcl = ["H105","H200","S400"] # ∆lc(b)
+ensExcl = ["H105","H200"] # CC
 
 
 if comp != "g33" && VREF
     error("Cannot project to Vref for chosen iso-spin")
 end
 
-# if comp == "strange"
-#     for ens in ensInfo
-
-#     end
-# end
 
 for FitCut in FITCUT
 
@@ -242,11 +240,11 @@ for FitCut in FITCUT
     println("- Creating 'x' & 'y' data points...")
     i = 0
     for ens in ensInfo
-        if ((comp ∈ ["gCCconn","∆lc_b","g33CC","g88CC","gCCCC"]) && (ens.id ∈ ensNOcharm)) || (comp ∈ ["g88","∆ls_amu","g3388","g8888","g88CC"] && ens.id ∈ ensNOdisc) || (comp ∈ ["gCCdisc","gC8disc"] && (ens.id ∈ ensNOdisc || ens.kappa_l == ens.kappa_s)) || (comp == "∆ls_amu" && ens.kappa_l == ens.kappa_s && MultFunc == deltaphi) || (ens.id ∈ union(ensExcl,ensExcl_type))
+        if ((comp ∈ ["gCCconn","∆lc_b","g33CC","g88CC","gCCCC"]) && (ens.id ∈ ensNOcharm)) || (comp ∈ ["g88","∆ls_amu","g3388","g8888","g88CC"] && ens.id ∈ ensNOdisc) || (comp ∈ ["gCCdisc","gC8disc"] && (ens.id ∈ ensNOdisc || ens.kappa_l == ens.kappa_s)) || (comp in ["∆ls_amu","∆ls_amuconn"] && ens.kappa_l == ens.kappa_s && MultFunc == deltaphi) || (ens.id ∈ union(ensExcl,ensExcl_type))
             println("   - [$(ens.id): Either excluded or 0 for contribution $comp]")
             continue
         end
-        # println("   [$(ens.id):]")
+        # println("   - [$(ens.id): Accepted]")
         i += 1
 
         mP = BDIOread_mPP(path_bdio_w,ens)
