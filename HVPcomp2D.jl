@@ -170,6 +170,7 @@ STD_DERIV ? @info("STANDARD DERIVATIVE is being employed in the IMPROVEMENT") : 
                 ub3388 = Vector{uwreal}(); lb3388 = Vector{uwreal}()
                 
                 println("            - Light contributions...")
+                
                 println("               - Bounding correlators...")
 
                 Eeff33 = uwreal(0.0); Eeff88 = uwreal(0.0)
@@ -271,8 +272,9 @@ STD_DERIV ? @info("STANDARD DERIVATIVE is being employed in the IMPROVEMENT") : 
 
                 println("               - Applying BM...")
 
+                # CORR = (ens.id ∉ ["A654","A653","B450"])
                 for (i,comp) in ((ens.kappa_l == ens.kappa_s || ens.id ∈ ensNOdisc) ? enumerate(["3333"]) : enumerate(["3333","8888","3388"]))
-                    HVP["g$(comp)_$(discr)$(discr)"], HVPsyst["g$(comp)_$(discr)$(discr)"], PlatRec["g$(comp)_$(discr)$(discr)"] = bounding_method(ub[i],lb[i],aens,PLAT=true,AVER=false,tcut0=tcut0,tstep=tstep)
+                    HVP["g$(comp)_$(discr)$(discr)"], HVPsyst["g$(comp)_$(discr)$(discr)"], PlatRec["g$(comp)_$(discr)$(discr)"] = bounding_method(ub[i],lb[i],aens,PLAT=true,AVER=false,tcut0=tcut0,tstep=tstep) # ,correlations=CORR)
                 end
 
                 if (ens.kappa_l == ens.kappa_s && ens.id ∉ ensNOdisc)
@@ -385,7 +387,7 @@ path_bdio = path_bdio_dict["local"]
 STD_DERIV ? @info("STANDARD DERIVATIVE is being employed in the IMPROVEMENT") : nothing
 
 @time begin
-    for ens in EnsInfo.(["J307"])
+    for ens in ensInfo
 
         @info("Computing for ensemble $(ens.id)")
 
@@ -609,8 +611,8 @@ end # end timer
 
 # diag     = "NLOc"
 # wind     = "NW"  #  "NW"  "SD"  "ID"  "LD"  "ILD"
-ensid    = ""
-impr_set = ""
+ensid    = "B450"
+impr_set = "1"
 
 STD   = false
 # VREF  = false

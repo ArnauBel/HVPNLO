@@ -69,19 +69,19 @@ DictComptoKey = Dict{String,Vector{String}}(
 
 ##==========================> Model Average <==========================##
 
-diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOc  NLOa&b
+diag = "NLOb"  #  LO  NLOa  NLOb  NLOc  NLOa&b
 wind = "SD"  #  NW  SD  SDsub  ID  ILD  LD  LD1  LD2
-comp = "gC8disc"  #  g33  g88  gSS  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆ls_amuconn  ∆lc_b
+comp = "gCCconn"  #  g33  g88  gSS  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆ls_amuconn  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
-model_var_list = Function[a3,a2phi2,phi2sqr,phi2log,phi4]  #  [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]  [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]  [a3,a2phi2,phi2sqr,phi2log,phi4]
+model_var_list = Function[a3,a4,a2phi2,phi2sqr,phi2log,phi4]  #  [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]  [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]  [a3,a2phi2,phi2sqr,phi2log,phi4]
 # model_var_list = Function[a3,a2y,ysqr,ylog,yinv,logy]
 MultFunc = nothing  #  nothing  deltaphi
 
-IMPR_SET = ["1"]  #  ["1"]  ["1old"]  ["2"]  ["1","2"]  ["1old","2"]  ["1","1old","2"]
+IMPR_SET = ["1","2"]  #  ["1"]  ["1old"]  ["2"]  ["1","2"]  ["1old","2"]  ["1","1old","2"]
 
-FITCUT = ["None"]  #  ["None","beta","mass","beta&mass","beta_ext"]  ["None","beta","mass","beta&mass"]  ["None","beta"]
+FITCUT = ["beta_ext"]  #  ["None","beta","mass","beta&mass","beta_ext"]  ["None","beta","mass","beta&mass"]  ["None","beta"]
 
 BLIND = false
 
@@ -212,10 +212,10 @@ end # end FitCut loop
 ##==========================> ENSEMBLE CUT COMBINATION <==========================##
 
 diag = "NLOb"  #  LO  NLOa  NLOb  NLOc  NLOa&b
-wind = "SD"  #  NW  SD  SDsub  ID  ILD  LD  LD1  LD2
-comp = "gC8disc"  #  g33  g88  gSS  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆ls_amuconn  ∆lc_b
+wind = "SDsub"  #  NW  SD  SDsub  ID  ILD  LD  LD1  LD2
+comp = "gCCconn"  #  g33  g88  gSS  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆ls_amuconn  ∆lc_b
 
-Q = 5.0  # virtuality for SDsub
+Q = 8.0  # virtuality for SDsub
 
 BLIND = false
 
@@ -223,7 +223,7 @@ discr = "all"  #  all  ll  lc
 
 MultFunc = nothing  #  nothing  deltaphi
 
-IMPR_SET = ["1"]  #  ["1"]  ["1old"]  ["2"]  ["1","2"]  ["1old","2"]  ["1","1old","2"]
+IMPR_SET = ["1","2"]  #  ["1"]  ["1old"]  ["2"]  ["1","2"]  ["1old","2"]  ["1","1old","2"]
 
 STD_DERIV  = false
 tl_IMPR    = false
@@ -250,19 +250,23 @@ path_bdio_w = path_bdio_dict["local"]
 #     "None"      => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
 #     "beta"      => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
 # )
+# CC - SD,SDsub
+FITCUTtoMODEL = Dict{String,Any}(
+    "None"      => [true,Function[a3,a4,a2phi2,phi2sqr,phi2log,phi4]],
+    "beta"      => [true,Function[a3,a4,a2phi2,phi2sqr,phi2log,phi4]],
+    "beta_ext"  => [true,Function[a3,a4,a2phi2,phi2sqr,phi2log,phi4]],
+)
 # ∆lc(b)
 # FITCUTtoMODEL = Dict{String,Any}(
-#     "None"      => [false,Function[a3,a2phi2,a2phi4,phi2sqr,phi2log]],
-#     "beta"      => [false,Function[a3,a2phi2,a2phi4,phi2sqr,phi2log]],
-#     # "mass"      => [false,Function[a3,a2phi2,a2phi4,phi2sqr,phi2log]],
-#     # "beta&mass" => [false,Function[a3,a2phi2,a2phi4,phi2sqr,phi2log]],
-#     # "beta_ext"  => [false,Function[a3,a2phi2,a2phi4,phi2sqr,phi2log]],
+#     "None"      => [false,Function[a3,a4,a2phi2,a2phi4,phi2sqr,phi2log]],
+#     "beta"      => [false,Function[a3,a4,a2phi2,a2phi4,phi2sqr,phi2log]],
+#     "beta_ext"  => [false,Function[a3,a4,a2phi2,a2phi4,phi2sqr,phi2log]],
 # )
 
 # CCdisc,C8disc - SD
-FITCUTtoMODEL = Dict{String,Any}(
-    "None"      => [true,Function[a3,a2phi2,phi2sqr,phi2log,phi4]],
-)
+# FITCUTtoMODEL = Dict{String,Any}(
+#     "None"      => [true,Function[a3,a2phi2,phi2sqr,phi2log,phi4]],
+# )
 
 # 33 - ID,LD
 # FITCUTtoMODEL = Dict{String,Any}(
@@ -278,13 +282,11 @@ FITCUTtoMODEL = Dict{String,Any}(
 #     "mass"      => [false,Function[a3,a2phi2,a2phi4,phi2sqr,phi2log]],
 #     "beta&mass" => [false,Function[a3,a2phi2,a2phi4,phi2sqr,phi2log]],
 # )
-# CC - SD,SDsub,ID,LD
+# CC - ID,LD
 # FITCUTtoMODEL = Dict{String,Any}(
 #     "None"      => [true,Function[a3,a2phi2,phi2sqr,phi2log,phi4]],
 #     "beta"      => [true,Function[a3,a2phi2,phi2sqr,phi2log,phi4]],
-#     # "beta_ext"  => [true,Function[a3,a2phi2,phi2sqr,phi2log,phi4]],
 # )
-
 
 
 if wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]
@@ -519,24 +521,24 @@ amu, info = BDIOread_MA(path_bdio_w,diag,wind,comp,model_var_list,FitCut,impr_se
 
 ##--- Full MA
 
-diag = "NLOa&b"  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = "LD2"  # NW  SD  SDsub  ID  LD  ILD
-comp = "g33"  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+diag = ""  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
+wind = ""  # NW  SD  SDsub  ID  LD  ILD
+comp = ""  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
-BLIND = true
+BLIND = false
 
 STD_DERIV  = false
 tl_IMPR    = false
-VREF       = true
+VREF       = false
 RESC       = false
 
 path_bdio_r = path_bdio_dict["local"]
 
 AMU, INFO = BDIOread_MAtot(path_bdio_r,diag,wind,comp,resc=RESC,StdDer=STD_DERIV,tlImpr=tl_IMPR,Vref=VREF,BLIND=BLIND,Q=Q)
 
-print_uwreal(AMU*10,INFO["syst"]*10)
+print_uwreal(10*AMU,10*INFO["syst"])
 
 # get_t0err([AMU],sqrtt0_ph_Regensburg)[1]
 
@@ -626,3 +628,33 @@ end
 #     uwerr(amu[i])
 #     println("$(round(value(amu[i]),digits=3))±$(round(err(amu[i]),digits=3))  \t $(round(chir[i],digits=2)) => $(round(w[i],digits=3))   \t $(modelInfo["label_tot_isov"][i])")
 # end
+
+##
+
+diag = "LO"  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
+wind = "SDsub"  # NW  SD  SDsub  ID  LD  ILD
+
+Q = 5.0  # virtuality for SDsub
+
+BLIND = false
+
+STD_DERIV  = false
+tl_IMPR    = false
+VREF       = false
+RESC       = false
+
+path_bdio_r = path_bdio_dict["local"]
+
+AMU_cc,  INFO_cc  = BDIOread_MAtot(path_bdio_r,diag,wind,"gCCconn",resc=RESC,StdDer=STD_DERIV,tlImpr=tl_IMPR,Vref=VREF,BLIND=BLIND,Q=Q); uwerr(AMU_cc)
+AMU_∆lc, INFO_∆lc = BDIOread_MAtot(path_bdio_r,diag,wind,"∆lc_b",resc=RESC,StdDer=STD_DERIV,tlImpr=tl_IMPR,Vref=VREF,BLIND=BLIND,Q=Q); uwerr(AMU_∆lc)
+
+MD_ph_prime, mDs_SU3 = BDIOread_mDs(path_bdio_r)
+
+der_mDs = mchist(AMU_cc, "MD_ph [GeV]")[1] / artificial_err
+AMU_cc += value(MD_ph - MD_ph_prime) * der_mDs
+
+der_mDs = mchist(AMU_∆lc, "MD_ph [GeV]")[1] / artificial_err
+AMU_∆lc += value(MD_ph - MD_ph_prime) * der_mDs
+
+println(print_uwreal(4/9*AMU_cc,4/9*INFO_cc["syst"]))
+println(print_uwreal(4/9*AMU_∆lc,4/9*INFO_∆lc["syst"]))

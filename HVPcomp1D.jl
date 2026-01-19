@@ -601,13 +601,13 @@ end # end timer
 
 ##==========================> READING TEST <==========================##
 
-diag     = ""  #  "LO"  "NLOa"  "NLOb"  "NLOa&b"  "NLOc"
-wind     = ""  #  "NW"  "SD"  "ID"  "LD"  "ILD"
-ensid    = ""
-impr_set = ""
+diag     = "NLOb"  #  "LO"  "NLOa"  "NLOb"  "NLOa&b"  "NLOc"
+wind     = "SDsub"  #  "NW"  "SD"  "ID"  "LD"  "ILD"
+ensid    = "J306"
+impr_set = "1"
 
 STD   = false
-VREF  = false
+VREF  = true
 RESC  = false
 
 BLIND = false

@@ -39,8 +39,8 @@ path_plot    = joinpath(julia_script_directory, "..", "..", "Slides & Plots", "P
 charge_factor = Dict(
     "33" => 1., "88" => 1/3., "88conn" => 1/3., "SS" => 1/9., "CC" => 4/9., "CCdisc" => 4/9., "C8disc" => 2/(3*sqrt(3)), "BB" => 1/9., "∆ls_amu" => 1/3., "∆ls_amuconn" => 1., "∆lc_b" => 4/9., "disc" => 1.,
     "33s" => "     ", "88s" => "(1/3)", "88conns" => "(1/3)", "SSs" => "(1/9)", "CCs" => "(4/9)", "CCdisc" => "(4/9)", "C8disc" => "2/(3*√3)", "BBs" => "(1/9)", "∆ls_amus" => "(1/3)", "∆ls_amuconns" => "", "∆lc_bs" => "(4/9)", "discs" => "     ",
-    "3333" => 1.,  "3388" => 2/3., "33CC" => 8/9., "8888" => 1/9., "88CC" => 8/27., "CCCC" => 16/81., 
-    "3333s" => "",  "3388s" => "(2/3)", "33CCs" => "(8/9)", "8888s" => "(1/9)", "88CCs" => "(8/27)", "CCCCs" => "(16/81)",
+    "3333" => 1.,  "3388" => 2/3., "33CC" => 8/9., "33BB" => 2/9., "8888" => 1/9., "88CC" => 8/27., "CCCC" => 16/81., 
+    "3333s" => "",  "3388s" => "(2/3)", "33CCs" => "(8/9)", "33BBs" => "(2/9)", "8888s" => "(1/9)", "88CCs" => "(8/27)", "CCCCs" => "(16/81)",
 )
 
 # Plot parameters
@@ -68,7 +68,7 @@ path_bdio = path_bdio_dict["local"]
 
 
 Q33 = 5.0
-QCC = 4.0
+QCC = 5.0
 
 STD_DERIV = false
 tl_IMPR   = true
@@ -87,9 +87,10 @@ if VREF
 end
 
 amu_bb = Dict(
-    "NLOa"   => -0.233484,
-    "NLOb"   => 0.0480212,
-    "NLOa&b" => -0.185463
+    "NLOa"   => -0.0233484*9,
+    "NLOb"   => 0.00480212*9,
+    "NLOa&b" => -0.0185463*9,
+    "NLOc"   => uwreal([0.4,0.4]*1e-3,"bottom")*(9/2)
 )
 
 AMUgamma = Dict(
@@ -174,7 +175,7 @@ for diag in ["NLOa","NLOb","NLOa&b"]
 
     # Add botttom effects on it (only considered to affect the SD piece)
     amu[diag]["SD"]["BB"]     = AMU[diag]["BB"]     = uwreal(amu_bb[diag])
-    amusyst[diag]["SD"]["BB"] = AMUSYST[diag]["BB"] = 0.5*amu_bb[diag]
+    amusyst[diag]["SD"]["BB"] = AMUSYST[diag]["BB"] = 0.0 # 0.5*amu_bb[diag]
 
     # Add charm-disconnected piece
     amuCCdisc, infoCCdisc = BDIOread_MAtot(path_bdio,diag,"SD","gCCdisc",StdDer=STD_DERIV)
@@ -255,6 +256,10 @@ for comp in ["33CC","88CC","CCCC"]
     AMU["NLOc"][comp] += value(MD_ph - MD_ph_prime) * der_mDs
 end
 
+AMU["NLOc"]["33BB"] = amu_bb["NLOc"]; uwerr(AMU["NLOc"]["33BB"])
+AMUSYST["NLOc"]["33BB"] = 0.0
+AMUt0ERR["NLOc"]["33BB"] = 0.0
+AMUERR["NLOc"]["33BB"] = AMU["NLOc"]["33BB"].err
 
 @info("Window-results :")
 for diag in ["NLOa","NLOb","NLOa&b"]
@@ -268,8 +273,12 @@ println("\n")
 
 @info("Channel-results :")
 for diag in ["NLOa","NLOb","NLOa&b"]
-    for ch in ["33","88","CC","SS","disc"]
-        println("   $(charge_factor[ch*"s"])(aµ[$diag])($ch) = $(print_uwreal(10*charge_factor[ch]*AMU[diag][ch],10*charge_factor[ch]*[AMUSYST[diag][ch]],total=true))")
+    for ch in ["33","88","CC","BB","SS","disc"]
+        if ch != "BB"
+            println("   $(charge_factor[ch*"s"])(aµ[$diag])($ch) = $(print_uwreal(10*charge_factor[ch]*AMU[diag][ch],10*charge_factor[ch]*[AMUSYST[diag][ch]],total=true))")
+        else
+            println("   $(charge_factor[ch*"s"])(aµ[$diag])($ch) = $(round(10*charge_factor[ch]*AMU[diag][ch].mean,sigdigits=2))(0)")
+        end
     end
     println("--------------------------------------------------------")
 end
@@ -284,13 +293,13 @@ for diag in ["NLOa","NLOb","NLOa&b"]
     AMUFVC[diag]["tot"]   = AMUFVC[diag]["NW"]
     AMUERR[diag]["tot"]   = sqrt(AMU[diag]["tot"].err^2 + AMUSYST[diag]["tot"]^2 + AMUt0ERR[diag]["tot"]^2 + AMUFVC[diag]["tot"]^2)
 
-    println("   aµ[$diag] = $(print_uwreal(10*AMU[diag]["tot"],10*[AMUSYST[diag]["tot"],AMUt0ERR[diag]["tot"],AMUFVC[diag]["tot"]],total=true))")
+    println("   aµ[$diag] = $(print_uwreal(10*AMU[diag]["tot"],10*[AMUSYST[diag]["tot"],AMUFVC[diag]["tot"]],total=true))")
 end
 
 
 AMU["NLOc"]["tot"] = uwreal(0.0); AMUSYSTNLOc2 = 0.0
 
-for comp in ["3333","3388","33CC","8888","88CC","CCCC"]
+for comp in ["3333","3388","33CC","33BB","8888","88CC","CCCC"]
     AMU["NLOc"]["tot"] += charge_factor[comp]*AMU["NLOc"][comp]
     AMUSYSTNLOc2       += (charge_factor[comp]*AMUSYST["NLOc"][comp])^2
 end
@@ -299,10 +308,11 @@ AMUSYST["NLOc"]["tot"]  = sqrt(AMUSYSTNLOc2)
 AMUt0ERR["NLOc"]["tot"] = get_t0err([AMU["NLOc"]["tot"]],sqrtt0_ph_Madrid)[1]
 AMUERR["NLOc"]["tot"]   = sqrt(AMU["NLOc"]["tot"].err^2 + AMUSYST["NLOc"]["tot"]^2 + AMUt0ERR["NLOc"]["tot"]^2)
 
-println("   aµ[NLOc] = $(print_uwreal(10*AMU["NLOc"]["tot"],10*[AMUSYST["NLOc"]["tot"],AMUt0ERR["NLOc"]["tot"]],total=true))")
+println("   aµ[NLOc] = $(print_uwreal(10*AMU["NLOc"]["tot"],10*[AMUSYST["NLOc"]["tot"]],total=true))")
 
-println("\n")
-println("--------------------------------------------------------")
+# effects from the tau-loop
+AMU["NLOb"]["tot"] += uwreal([0.006,0.003],"tau-loop")
+
 println("--------------------------------------------------------")
 
 AMU["NLO"]      = Dict()
@@ -317,7 +327,7 @@ AMUt0ERR["NLO"]["tot"] = get_t0err([AMU["NLO"]["tot"]],sqrtt0_ph_Madrid)[1]
 AMUFVC["NLO"]["tot"]   = AMUFVC["NLOa&b"]["tot"]
 AMUERR["NLO"]["tot"]   = sqrt(AMU["NLO"]["tot"].err^2 + AMUSYST["NLO"]["tot"]^2 + AMUt0ERR["NLO"]["tot"]^2 + AMUFVC["NLO"]["tot"]^2)
 
-println("   aµ[NLO] = $(print_uwreal(10*AMU["NLO"]["tot"],10*[AMUSYST["NLO"]["tot"],AMUt0ERR["NLO"]["tot"],AMUFVC["NLO"]["tot"]],total=true))")
+println("   aµ[NLO] = $(print_uwreal(10*AMU["NLO"]["tot"],10*[AMUSYST["NLO"]["tot"],AMUFVC["NLO"]["tot"]],total=true))")
 
 println("\n")
 @info("Final results :")
@@ -401,7 +411,7 @@ RES_sl = Dict(
     "NLO"    => [[uwreal([-10.5,0.1],"Spacelike"),"Spacelike - Mainz 2025"]],
 )
 
-# RES_WP = Dict("NLO" => [uwreal([-9.83,0.07],"WP25"),"WP 2025"])
+RES_WP = Dict("NLO" => [uwreal([-9.83,0.07],"WP25"),"WP 2025"])
 RES_WP = Dict(
     "NLOa" => Dict(
         "part" => [
@@ -435,6 +445,7 @@ RES_WP = Dict(
 
 for diag in ["NLOa","NLOb","NLOc","NLO"]
     PyPlot.title(diag)
+    uwerr(AMU[diag]["tot"])
     y_ticks = ["this work"]
     errorbar(10*(AMU[diag]["tot"].mean+AMUIB[diag].mean), xerr=10*AMU[diag]["tot"].err, 0.25, 0.0, fmt="o", color="black", ms=10, capsize=2)
     errorbar(10*(AMU[diag]["tot"].mean+AMUIB[diag].mean), xerr=10*sqrt(AMUERR[diag]["tot"]^2+AMUIB[diag].err^2), 0.25, 0.0, fmt="o", color="black", ms=10, capsize=2)
@@ -500,10 +511,10 @@ for (j, diag) in enumerate(["NLOa", "NLOb", "NLOc", "NLO"])
     # ax.set_title(diag, fontsize=16)
 
     y_ticks = ["this work"]
-    ax.errorbar(10*(AMU[diag]["tot"].mean+AMUIB[diag].mean), xerr=10*AMU[diag]["tot"].err, 0.25, 0.0, fmt="o", color="black", ms=10, capsize=2)
-    ax.errorbar(10*(AMU[diag]["tot"].mean+AMUIB[diag].mean), xerr=10*sqrt(AMUERR[diag]["tot"]^2+AMUIB[diag].err^2), 0.25, 0.0, fmt="o", color="black", ms=10, capsize=2)
-    ax.errorbar(10*AMU[diag]["tot"].mean, xerr=10*AMU[diag]["tot"].err, -0.25, 0.0, mfc="none", fmt="o", color="black", ms=10, capsize=2)
-    ax.errorbar(10*AMU[diag]["tot"].mean, xerr=10*AMUERR[diag]["tot"] , -0.25, 0.0, mfc="none", fmt="o", color="black", ms=10, capsize=2)
+    ax.errorbar(10*(AMU[diag]["tot"].mean+AMUIB[diag].mean), xerr=10*AMU[diag]["tot"].err, 0.25, 0.0, fmt="o", color="black", ms=10, capsize=4)
+    ax.errorbar(10*(AMU[diag]["tot"].mean+AMUIB[diag].mean), xerr=10*sqrt(AMUERR[diag]["tot"]^2+AMUIB[diag].err^2), 0.25, 0.0, fmt="o", color="black", ms=10, capsize=4)
+    ax.errorbar(10*AMU[diag]["tot"].mean, xerr=10*AMU[diag]["tot"].err, -0.25, 0.0, mfc="none", fmt="o", color="black", ms=10, capsize=4)
+    ax.errorbar(10*AMU[diag]["tot"].mean, xerr=10*AMUERR[diag]["tot"] , -0.25, 0.0, mfc="none", fmt="o", color="black", ms=10, capsize=4)
     i = 0
     # for res in reverse(RES_sl[diag])
     #     i -= 1
@@ -1223,4 +1234,3 @@ println("    \\end{tabular}
 #     \\label{tab:isoQCD_NLOc}
 # \\end{table}
 # ")
-

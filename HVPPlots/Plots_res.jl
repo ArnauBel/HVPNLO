@@ -70,17 +70,17 @@ FITdata = true
 
 # Set plot parameters
 
-diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = "SD"  #  NW  SD  SDsub  ID  LD  ILD
-comp = "gC8disc"  #  g33  g88  gSS  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆ls_amuconn  ∆lc_b
+diag = "NLOb"  #  LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
+wind = "SDsub"  #  NW  SD  SDsub  ID  LD  ILD
+comp = "g33"  #  g33  g88  gSS  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆ls_amuconn  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
 BLIND = false
 
 STD_DERIV = false
-tl_IMPR   = false
-VREF      = false
+tl_IMPR   = true
+VREF      = true
 RESC      = false
 
 
@@ -184,7 +184,7 @@ end
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
 
-@info("Continiuum 'magic' plot")
+@info("Continiuum extrapolation plot")
 
 # IMPR_SET = readIMPR_SET  #  readIMPR_SET  ["1"]  ["2"]  ["1","2"]  ["1old","2"]  ["1","1old","2"]
 
@@ -196,7 +196,7 @@ println("   - Computing 'x' and 'y' plot points")
 xarr  = Dict()
 xproj = Dict()
 for FitCut in FITCUT
-    xarr[FitCut] = [Float64.(range(1e-5, 1.5*maximum(value.(xydata[FitCut]["xdata"][:,1])), length=npoints)) fill(value(phi2_ph), npoints) fill(value(phi4_ph), npoints)]; yarr = Dict()
+    xarr[FitCut] = [Float64.(range(1e-5, maximum(value.(xydata[FitCut]["xdata"][:,1]))+0.005, length=npoints)) fill(value(phi2_ph), npoints) fill(value(phi4_ph), npoints)]; yarr = Dict()
 end
 yproj = Dict(); yproj_syst = Dict()
 yarr  = Dict()
@@ -247,8 +247,8 @@ end
 
 ##-- Stop for only plot compilation
 
-SAVE     = true
-OVERSAVE = true
+SAVE     = false
+OVERSAVE = false
 
 # IMPR_SET = readIMPR_SET
 
@@ -343,14 +343,12 @@ xlim(-0.001,0.06)
 # SS
 # ylim(-5.7,-5.1) # ID
 # ylim(-3.3,-2.65)# LD
-# cc
-# ylim(-2.3,-1.5) # SDsub
 # ∆lc(m)
 # ylim(-2.3,-1.5) # SDsub
 display(gcf())
 if SAVE
     RESCstr = !RESC ? "" : "_resc"
-    p = create_path(path_plot,[diag,wind,"$(diag)_$(comp)_ContExtr.$(RESCstr).pdf"],OVERWRITE=OVERSAVE)
+    p = create_path(path_plot,[diag,wind,"$(diag)_$(comp)_ContExtr$(RESCstr).pdf"],OVERWRITE=OVERSAVE)
     PyPlot.savefig(p)
 end
 close()
@@ -366,8 +364,8 @@ close()
 
 ShowGHOST = false
 
-SAVE     = true
-OVERSAVE = true
+SAVE     = false
+OVERSAVE = false
 
 ARGPLOT = 1  #  set to 1 for best plot
 
@@ -490,8 +488,8 @@ end
 
 ShowGHOST = false
 
-SAVE     = true
-OVERSAVE = true
+SAVE     = false
+OVERSAVE = false
 
 ARGPLOT = 1  #  set to 1 for best plot
 
@@ -616,8 +614,8 @@ end
 
 @info("Ensemble cut convergence plot")
 
-SAVE     = true
-OVERSAVE = true
+SAVE     = false
+OVERSAVE = false
 
 sqrtt0_ph_TAR = nothing  # 0.1443  sqrtt0_ph_CLS  nothing
 
@@ -781,13 +779,12 @@ close()
 
 @info("Model average plot")
 
-nBEST = 20
+nBEST = 50
 
 Norm2DOF = false
 
-SAVE     = true
-OVERSAVE = true
-
+SAVE     = false
+OVERSAVE = false
 
 color_dict = Dict(
     ""     => Dict("cc" => "cyan"),
@@ -991,11 +988,10 @@ close()
 
 @info("Hit plot")
 
-SAVE     = true
-OVERSAVE = true
+SAVE     = false
+OVERSAVE = false
 
 path_bdio = path_bdio_dict["local"]
-
 
 color_dict = Dict(
     ""     => Dict("cc" => "gold"),
@@ -1115,10 +1111,10 @@ VREF   = false
 tlImpr = false
 RESC   = false
 
-SAVE     = true
-OVERSAVE = true
+SAVE     = false
+OVERSAVE = false
 
-QRES  = 4.0  # "average"  "best"  5.0  4.0
+QRES  = "best"  # "average"  "best"  5.0  4.0
 QLIST = Qlist  #  [5.0]  [5.0,8.0]  Qlist
 
 path_bdio = path_bdio_dict["local"]

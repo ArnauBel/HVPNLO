@@ -69,14 +69,14 @@ rcParams["axes.titlesize"] = 18
 
 # Set plot parameters
 
-ens = "D150"; ens = EnsInfo(ens)
+ens = "E250"; ens = EnsInfo(ens)
 
 readIMPR_SET = ["1","2"] # ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
 
 RESC       = false
 STD_DERIV  = false
 
-BLIND = true
+BLIND = false
 
 path_bdio = path_bdio_dict["local"]
 
@@ -338,7 +338,7 @@ close()
 impr_set = "2"
 
 DIAG = ["NLOb"]  # ["LO"]  ["NLOa","NLOb"]  ["LO","NLOa","NLOb"]
-COMP = ["g33_ll"]  # ["g33_ll"]  ["g33_ll","g88_ll"]  ["g33_ll","g88_ll","gCCconn_ll"]
+COMP = ["g33_ll"]  # ["g33_ll"]  ["g33_ll","g88_ll"]  ["g33_ll","g88_ll","gCCconn_lc_sim"]
 WIND = ["NW"]  # ["SD","SDsub"]  ["SD","ILD"]  ["SD","ID","LD"]  ["NW","SD","ILD"]  ["NW","SD","ID","LD"]
 
 SAVE     = false
@@ -349,13 +349,14 @@ QLIST = Qlist  # Required for wind = SDsub
 T = HVPobs.Data.get_T(ens.id)
 t = collect(1:Int64(T/2+1))
 
-fig = figure(figsize=(10,6))
+fig = figure(figsize=(8,5))
 
 sym_points = Int64(HVPobs.Data.get_T(ens.id)/2+1); t = collect(1:sym_points)
 
 # label = ["Isovector (3,3)","Isoscalar (8,8)","Charm connected (c,c)"]
-label  = ["No window","W='SD'","W='ID'","W='LD'"]
-colour = ["black","lightgreen","brown","purple"]
+# label  = ["No window","W='SD'","W='ID'","W='LD'"]
+# colour = ["red","blue","green"]
+# colour = ["black","brown","gray","purple"]
 
 i = 0
 for diag in DIAG
@@ -398,21 +399,22 @@ for diag in DIAG
     end
 end
 # title("Integrands for $(ens.id) impr. set $(impr_set)")
-title(ens.id)
-xlabel(latexstring("t\\ [\\rm{fm}]"))
-ylabel(latexstring("\\tilde{f}^{(4b)}(\\hat{t})\\times G^{(3,3)}(t)\\times\\Theta_{\\rm{W}}(t)"))
+# title(ens.id)
+xlabel(latexstring("t\\ [\\mathrm{fm}]"))
+# ylabel(latexstring("\\tilde{f}^{(4b)}(\\hat{t})\\times G^{(d,e)}(t)"))
+# ylabel(latexstring("\\tilde{f}^{(4b)}(\\hat{t})\\times\\Theta_{\\mathrm{W}}(t)\\times G^{(3,3)}(t)"))
 xMin, xMax = xlim()
 xMin, xMax = any(x -> x in ["LD","ILD","NW"],WIND) ? [xMin,xMax] : ("ID" in WIND ? [-0.1,2.0] : [-0.05,1.0])
 # xlim(xMin,xMax)
-xlim(0.0,6.0)
-ylim(bottom=-40.)
+xlim(0.0,4.5)
+ylim(bottom=-20.)
 legend()
 tight_layout()
 display(gcf())
 if SAVE
     RESCstr = !RESC ? "" : "_resc"
-    # p = create_path(path_plot,["Other","IntegradIsospin.pdf"],OVERWRITE=OVERSAVE)
-    p = create_path(path_plot,["Other","IntegradWindows_$(ens.id).pdf"],OVERWRITE=OVERSAVE)
+    # p = create_path(path_plot,["Other","IntegrandIsospin_$(ens.id).pdf"],OVERWRITE=OVERSAVE)
+    # p = create_path(path_plot,["Other","IntegrandWindows_$(ens.id).pdf"],OVERWRITE=OVERSAVE)
     PyPlot.savefig(p)
 end
 close()

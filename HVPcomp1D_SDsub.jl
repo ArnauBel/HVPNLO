@@ -172,7 +172,7 @@ corr33tl_ll = uwreal.(corr33tl_ll); corr33tl_lc = uwreal.(corr33tl_lc)
             println("      - Computing HVPs...\n        For Q = $Qlist")
 
             HVPQ = Dict{String, Array{uwreal}}()
-            HVP = Dict{String, Array{uwreal}}()
+            HVP  = Dict{String, Array{uwreal}}()
             HVPsyst = Dict{String, Array{Float64}}()
 
             # HVPQ["g33_tl0"] = tl_cont
@@ -292,7 +292,9 @@ corr33tl_ll = uwreal.(corr33tl_ll); corr33tl_lc = uwreal.(corr33tl_lc)
 
             extra = Dict{String, Any}("ens" => ens.id, "impr_set" => impr_set, "diag" => diag, "wind" => "SDsub", "Qlist" => Qlist)
             ALPHAdobs_write(fb, HVPQ, extra=extra)
-            ALPHAdobs_write(fb, HVP, extra=extra)
+            if (ens.kappa_l != ens.kappa_s && ens.id ∉ ensNOdisc)
+                ALPHAdobs_write(fb, HVP, extra=extra)
+            end
 
             ALPHAdobs_close(fb)
 
@@ -473,9 +475,9 @@ end # end timer
 
 ##==========================> READING TEST <==========================##
 
-diag     = "NLOa&b"  #  "LO"  "NLOa"  "NLOb"  "NLOa&b"  "NLOc"
-ensid    = "F300"
-impr_set = "2"
+diag     = ""  #  "LO"  "NLOa"  "NLOb"  "NLOa&b"  "NLOc"
+ensid    = ""
+impr_set = ""
 
 STD   = false
 VREF  = false

@@ -85,16 +85,16 @@ DictComptoKey = Dict{String,Vector{String}}(
 
 ##==========================> Fits [LO, NLOa&b, NLOa, NLOb, NLOc] <==========================##
 
-diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOc  NLOa&b
-wind = "SD"  #  NW  SD  SDsub  ID  ILD  LD  LD1  LD2
+diag = "NLOb"  #  LO  NLOa  NLOb  NLOc  NLOa&b
+wind = "SDsub"  #  NW  SD  SDsub  ID  ILD  LD  LD1  LD2
 
 readIMPR_SET = ["1","2"] #  ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
 
 BLIND = false
 
 STD_DERIV  = false
-tl_IMPR    = false
-VREF       = false
+tl_IMPR    = true
+VREF       = true
 RESC       = false
 
 path_bdio_r = path_bdio_dict["local"]
@@ -145,39 +145,40 @@ end
 
 ##==========================> Data ready to fit
 
-comp = "gC8disc"  #  g33  g88  gSS  gCCconn  strange gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆ls_amuconn  ∆lc_b
+comp = "g33"  #  g33  g88  gSS  gCCconn  strange gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆ls_amuconn  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
-model_var_list = Function[a3,a2phi2,phi2sqr,phi2log,phi4]  #  [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]  [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]  [a3,a2phi2,phi2sqr,phi2log,phi4]
+model_var_list = Function[a3,a4,a2phi2,a2phi4,phi2sqr,phi2log]  #  [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]  [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]  [a3,a2phi2,phi2sqr,phi2log,phi4]
 # model_var_list = Function[a3,a2y,ysqr,ylog]  #  [a3,a4,a2y,a2z,a3y,ysqr,ylog]  [a3,a2y,ysqr,ylog]
 
 MultFunc = nothing  #  nothing  deltaphi
 
-IMPR_SET = ["1"]  #  readIMPR_SET  ["1"]  ["2"]  ["1","2"]  ["1old","2"]  ["1","1old","2"]
+IMPR_SET = [readIMPR_SET[2]]  #  readIMPR_SET  ["1"]  ["2"]  ["1","2"]  ["1old","2"]  ["1","1old","2"]
 
-FITCUT = ["None","beta"]  #  ["None","beta","mass","beta&mass","beta_ext"]  ["None","beta","mass","beta&mass"]  ["None","beta"]
+FITCUT = ["beta&mass"]  #  ["None","beta","mass","beta&mass","beta_ext"]  ["None","beta","mass","beta&mass"]  ["None","beta"]
 
-SimpleBase = true
-a2RESC     = true
+SimpleBase = false
+a2RESC     = false
 
-FitINFO    = false
+FitINFO    = true
 
 PVAL       = false
 
-WRITE      = true
+WRITE      = false
 OVERWRITE  = false
 
 mdof = 4  # minimum number of d.o.f. allowed
 
-mykeys = DictComptoKey[comp]  #  [DictComptoKey[comp][1]]
+mykeys = [DictComptoKey[comp][1]]  #  [DictComptoKey[comp][1]]
 
 path_bdio_w = path_bdio_dict["local"]
 
 # Following the LD paper, when it comes to the iso-vector analysis, the 'untrusted' ensembles are: H105, H200, N300,  N302, S400
-# ensExcl = ["H105","H200","A654","N300","N302","S400"] # 33, 88, SS, ∆ls(aµ) (D201 problems for SD & ID)
+ensExcl = ["H105","H200","A654","N300","N302","S400"] # 33, 88, SS, ∆ls(aµ) (D201 problems for SD & ID)
+# ensExcl = ["H105","H200","A654","N300","N302","S400","B450","A653"] # g3333, g8888, g3388
 # ensExcl = ["H105","H200","S400"] # ∆lc(b)
-ensExcl = ["H105","H200"] # CC
+# ensExcl = ["H105","H200"] # CC
 
 
 if comp != "g33" && VREF
