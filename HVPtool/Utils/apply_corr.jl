@@ -36,15 +36,15 @@ function apply_syst_FVC(fvc::Dict,diag::String,wind::String,ensid::String;factor
     if diag != "NLOc"
         for key in fvckeys
             if typeof(FVC[key]) == uwreal
-                FVC[key] = fvc[key] + uwreal([0.0,factor*FVC[key].mean],"FVC syst.  [$ensid-$diag,$wind,$key]")
+                FVC[key] = fvc[key] + uwreal([0.0,factor*FVC[key].mean],"FVC syst.")
             elseif typeof(FVC[key]) == Vector{uwreal}
-                FVC[key] = fvc[key] .+ [uwreal([0.0,factor*FVC[key][i].mean],"FVC syst. $systname [$ensid-$diag,$wind,$key]") for i=1:length(FVC[key])]
+                FVC[key] = fvc[key] .+ [uwreal([0.0,factor*FVC[key][i].mean],"FVC syst. $systname") for i=1:length(FVC[key])]
             end
         end
     else
         for impr_set = IMPR_SET
             for key in fvckeys
-                FVC[impr_set][key] = fvc[impr_set][key][end] + uwreal([0.0,factor*fvc[impr_set][key].mean],"FVC syst.  [$ensid-$diag,$wind,$key]")
+                FVC[impr_set][key] = fvc[impr_set][key][end] + uwreal([0.0,factor*fvc[impr_set][key].mean],"FVC syst.")
             end
         end
     end
@@ -56,16 +56,16 @@ function apply_syst_FVC!(FVC::Dict,diag::String,wind::String,ensid::String;facto
         fvckeys  = keys(FVC)
         for key in fvckeys
             if typeof(FVC[key]) == uwreal
-                FVC[key] += uwreal([0.0,factor*FVC[key].mean],"FVC syst.  [$ensid-$diag,$wind,$key]")
+                FVC[key] += uwreal([0.0,factor*FVC[key].mean],"FVC syst.")
             elseif typeof(FVC[key]) == Vector{uwreal}
-                FVC[key] .+= [uwreal([0.0,factor*FVC[key][i].mean],"FVC syst. [$ensid-$diag,$wind,$key]") for i=1:length(FVC[key])]
+                FVC[key] .+= [uwreal([0.0,factor*FVC[key][i].mean],"FVC syst.") for i=1:length(FVC[key])]
             end
         end
     else
         for impr_set = IMPR_SET
             fvckeys  = keys(FVC[impr_set])
             for key in fvckeys
-                FVC[impr_set][key] += uwreal([0.0,factor*FVC[impr_set][key].mean],"FVC syst.  [$ensid-$diag,$wind,$key]")
+                FVC[impr_set][key] += uwreal([0.0,factor*FVC[impr_set][key].mean],"FVC syst.")
             end
         end
     end
@@ -148,17 +148,17 @@ function HVP_3limpr!(HVP::Dict,HVP3l0::Union{Vector{Float64},Float64};IMPR_SET::
         for discr in ["ll","lc"]
             if meth == "prod"
                 if typeof(HVP[impr_set]["g33_$discr"]) == Vector{uwreal} && typeof(HVP3l0) == Vector{Float64}
-                    HVP[impr_set]["g33_$discr"] .*= HVP3l0 ./ HVP[impr_set]["g33tl_$discr"]
+                    HVP[impr_set]["g33_$discr"] .*= value.(HVP3l0 ./ HVP[impr_set]["g33tl_$discr"])
                 elseif typeof(HVP[impr_set]["g33_$discr"]) == uwreal && typeof(HVP3l0) == Float64
-                    HVP[impr_set]["g33_$discr"]  *= HVP3l0  / HVP[impr_set]["g33tl_$discr"]
+                    HVP[impr_set]["g33_$discr"]  *= value(HVP3l0  / HVP[impr_set]["g33tl_$discr"])
                 else
                     @warn("3l impr. could not be applied")
                 end
             elseif meth == "sum"
                 if typeof(HVP[impr_set]["g33_$discr"]) == Vector{uwreal} && typeof(HVP3l0) == Vector{Float64}
-                    HVP[impr_set]["g33_$discr"] .+= HVP3l0 .- HVP[impr_set]["g33tl_$discr"]
+                    HVP[impr_set]["g33_$discr"] .+= value.(HVP3l0 .- HVP[impr_set]["g33tl_$discr"])
                 elseif typeof(HVP[impr_set]["g33_$discr"]) == uwreal && typeof(HVP3l0) == Float64
-                    HVP[impr_set]["g33_$discr"]  += HVP3l0  - HVP[impr_set]["g33tl_$discr"]
+                    HVP[impr_set]["g33_$discr"]  += value(HVP3l0  - HVP[impr_set]["g33tl_$discr"])
                 else
                     @warn("3l impr. could not be applied")
                 end

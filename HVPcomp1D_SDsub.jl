@@ -483,10 +483,8 @@ STD   = false
 VREF  = false
 RESC  = false
 
-BLIND = false
-
 path_bdio = path_bdio_dict["local"]
 
-HVP, info = BDIOread_HVPens(path_bdio,diag,"SDsub",ensid,impr_set,info=true,resc=RESC,STD=STD,BLIND=BLIND)
+HVP, info = BDIOread_HVPens(path_bdio,diag,"SDsub",ensid,impr_set,info=true,resc=RESC,STD=STD,BLIND=false)
 
 FVC = BDIOread_FVCens(path_bdio,diag,"SDsub",ensid,Vref=VREF,resc=RESC,BLIND=BLIND)

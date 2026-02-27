@@ -60,15 +60,15 @@ rcParams["axes.titlesize"] = 18
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
 
-BL_factor = 1.45
-
-BLIND_LD  = Any[true,BL_factor]
+Q33 = 5.0
+QCC = 5.0
 
 path_bdio = path_bdio_dict["local"]
 
+BL_factor = 1.4348499925128186
+# BL_factor = value(BDIOread_TMR(path_bdio,"A653","NLOb",BLIND=true)[2] / BDIOread_TMR(path_bdio,"A653","NLOb",BLIND=false)[2])  #  rand(Uniform(0.5, 2))
 
-Q33 = 5.0
-QCC = 5.0
+BLIND_LD  = Any[true,BL_factor]
 
 STD_DERIV = false
 tl_IMPR   = true
@@ -93,25 +93,52 @@ amu_bb = Dict(
     "NLOc"   => uwreal([0.4,0.4]*1e-3,"bottom")*(9/2)
 )
 
+# amu_bb = Dict(
+#     "NLOa"   => 0.0,
+#     "NLOb"   => 0.0,
+#     "NLOa&b" => 0.0,
+#     "NLOc"   => uwreal(0.0)
+# )
+
 AMUgamma = Dict(
     "NLOa"   => uwreal([0.143 ,0.072],"HVPg"),
-    "NLOb"   => uwreal([-0.121,0.060],"HVPg"),
+    # "NLOb"   => uwreal([-0.121,0.060],"HVPg"),
+    "NLOb"   => uwreal([-0.106,0.053],"HVPg"),
     "NLOc"   => uwreal([-5.49 ,2.75].*1e-3,"HVPg"),
-    "NLOa&b" => uwreal([2.22  ,1.11].*1e-2,"HVPg"),
+    # "NLOa&b" => uwreal([2.22  ,1.11].*1e-2,"HVPg"),
+    "NLOa&b" => uwreal([3.75  ,1.88].*1e-2,"HVPg"),
     # "NLO"    => uwreal([1.67  ,0.84].*1e-2,"HVPg"),
+    # "NLO"    => uwreal([3.20  ,1.60].*1e-2,"HVPg"),
 )
 
 AMU38 = Dict(
     "NLOa"   => uwreal([-7.45,3.73].*1e-2,"HVP38"),
-    "NLOb"   => uwreal([5.19 ,2.60].*1e-2,"HVP38"),
+    # "NLOb"   => uwreal([5.19 ,2.60].*1e-2,"HVP38"),
+    "NLOb"   => uwreal([4.54 ,2.27].*1e-2,"HVP38"),
     "NLOc"   => uwreal([2.80 ,1.40].*1e-3,"HVP38"),
-    "NLOa&b" => uwreal([-2.26,1.13].*1e-2,"HVP38"),
+    # "NLOa&b" => uwreal([-2.26,1.13].*1e-2,"HVP38"),
+    "NLOa&b" => uwreal([-2.91,1.46].*1e-2,"HVP38"),
     # "NLO"    => uwreal([-1.98,0.99].*1e-2,"HVP38"),
+    # "NLO"    => uwreal([-2.63,1.32].*1e-2,"HVP38"),
 )
 
 AMUIB = Dict()
 [AMUIB[diag] = AMUgamma[diag] + AMU38[diag] for diag in keys(AMUgamma)]
 AMUIB["NLO"] = AMUIB["NLOa&b"] + AMUIB["NLOc"]
+
+# AMUcSEA = Dict(
+#     "NLOa"   => uwreal([-2.7,3.4].*1e-2,"∆c-sea"),
+#     "NLOb"   => uwreal([ 1.0,1.6].*1e-2,"∆c-sea"),
+#     "NLOa&b" => uwreal([-1.7,1.8].*1e-2,"∆c-sea"),
+#     "NLO"    => uwreal([-1.7,1.8].*1e-2,"∆c-sea"),
+# )
+AMUcSEA = Dict(
+    "NLOa"   => uwreal([0.0,3.4].*1e-2,"∆c-sea"),
+    "NLOb"   => uwreal([0.0,1.6].*1e-2,"∆c-sea"),
+    "NLOa&b" => uwreal([0.0,1.8].*1e-2,"∆c-sea"),
+    "NLO"    => uwreal([0.0,1.8].*1e-2,"∆c-sea"),
+)
+uwerr(AMUcSEA["NLOa"]); uwerr(AMUcSEA["NLOb"]); uwerr(AMUcSEA["NLOa&b"]); uwerr(AMUcSEA["NLO"])
 
 MD_ph_prime, mDs_SU3 = BDIOread_mDs(path_bdio)
 
@@ -129,9 +156,10 @@ for diag in ["NLOa","NLOb","NLOa&b"]
         AMUFVC[diag] = Dict()
     end
 
-    amu33sub, info33sub = BDIOread_MAtot(path_bdio,diag,"SDsub","g33",StdDer=STD_DERIV,tlImpr=tl_IMPR,Vref=VREF,Q=Q33)
     b33Pert_Q33 = TXTread_bQ(path_bPert,diag)[Qlist .== Q33][1]; uwerr(b33Pert_Q33)
     b33Pert_QCC = TXTread_bQ(path_bPert,diag)[Qlist .== QCC][1]; uwerr(b33Pert_QCC)
+
+    amu33sub, info33sub = BDIOread_MAtot(path_bdio,diag,"SDsub","g33",StdDer=STD_DERIV,tlImpr=tl_IMPR,Vref=VREF,Q=Q33)
     if VREF
         FVC_ChPT = JDL2read_FVC_ChPT(path_FVCcont,diag,"SDsub",Q=Q33)
         amu33sub += FVC_ChPT
@@ -218,7 +246,7 @@ for diag in ["NLOa","NLOb","NLOa&b"]
         amusyst[diag][wind]["CC"] = infoCC["syst"]
 
 
-        AMU[diag][wind]      = (amu[diag][wind]["33"] + (1/3) * amu[diag][wind]["88"]) + (4/9) * amu[diag][wind]["CC"]
+        AMU[diag][wind]      = amu[diag][wind]["33"] + (1/3) * amu[diag][wind]["88"] + (4/9) * amu[diag][wind]["CC"]
         AMUSYST[diag][wind]  = sqrt(amusyst[diag][wind]["33"]^2 + 1/9 * amusyst[diag][wind]["88"]^2 + 16/81 * amusyst[diag][wind]["CC"]^2)
         AMUt0ERR[diag][wind] = get_t0err([AMU[diag][wind]],sqrtt0_ph_Madrid)[1]
         AMUERR[diag][wind]   = !VREF ? sqrt(AMU[diag][wind].err^2 + AMUSYST[diag][wind]^2 + AMUt0ERR[diag][wind]^2) : sqrt(AMU[diag][wind].err^2 + AMUSYST[diag][wind]^2 + AMUt0ERR[diag][wind]^2 + AMUFVC[diag][wind]^2)
@@ -291,11 +319,19 @@ for diag in ["NLOa","NLOb","NLOa&b"]
     AMUSYST[diag]["tot"]  = sqrt(AMUSYST[diag]["SD"]^2 + AMUSYST[diag]["ID"]^2 + AMUSYST[diag]["LD"]^2)
     AMUt0ERR[diag]["tot"] = get_t0err([AMU[diag]["tot"]],sqrtt0_ph_Madrid)[1]
     AMUFVC[diag]["tot"]   = AMUFVC[diag]["NW"]
-    AMUERR[diag]["tot"]   = sqrt(AMU[diag]["tot"].err^2 + AMUSYST[diag]["tot"]^2 + AMUt0ERR[diag]["tot"]^2 + AMUFVC[diag]["tot"]^2)
+    AMUERR[diag]["tot"]   = sqrt(AMU[diag]["tot"].err^2 + AMUSYST[diag]["tot"]^2 + AMUt0ERR[diag]["tot"]^2 + AMUFVC[diag]["tot"]^2 + AMUcSEA[diag].err^2)
 
     println("   aµ[$diag] = $(print_uwreal(10*AMU[diag]["tot"],10*[AMUSYST[diag]["tot"],AMUFVC[diag]["tot"]],total=true))")
 end
 
+# effects from the tau-loop
+AMU["NLOb"]["tot"]   += uwreal([0.006,0.003],"tau-loop")
+AMU["NLOa&b"]["tot"] += uwreal([0.006,0.003],"tau-loop")
+
+# charm quenching effects
+AMU["NLOa"]["tot"]   += AMUcSEA["NLOa"].mean
+AMU["NLOb"]["tot"]   += AMUcSEA["NLOb"].mean
+AMU["NLOa&b"]["tot"] += AMUcSEA["NLOa&b"].mean
 
 AMU["NLOc"]["tot"] = uwreal(0.0); AMUSYSTNLOc2 = 0.0
 
@@ -310,9 +346,6 @@ AMUERR["NLOc"]["tot"]   = sqrt(AMU["NLOc"]["tot"].err^2 + AMUSYST["NLOc"]["tot"]
 
 println("   aµ[NLOc] = $(print_uwreal(10*AMU["NLOc"]["tot"],10*[AMUSYST["NLOc"]["tot"]],total=true))")
 
-# effects from the tau-loop
-AMU["NLOb"]["tot"] += uwreal([0.006,0.003],"tau-loop")
-
 println("--------------------------------------------------------")
 
 AMU["NLO"]      = Dict()
@@ -325,7 +358,7 @@ AMU["NLO"]["tot"]      = AMU["NLOa&b"]["tot"] + AMU["NLOc"]["tot"]
 AMUSYST["NLO"]["tot"]  = sqrt(AMUSYST["NLOa&b"]["tot"]^2 + AMUSYST["NLOc"]["tot"]^2)
 AMUt0ERR["NLO"]["tot"] = get_t0err([AMU["NLO"]["tot"]],sqrtt0_ph_Madrid)[1]
 AMUFVC["NLO"]["tot"]   = AMUFVC["NLOa&b"]["tot"]
-AMUERR["NLO"]["tot"]   = sqrt(AMU["NLO"]["tot"].err^2 + AMUSYST["NLO"]["tot"]^2 + AMUt0ERR["NLO"]["tot"]^2 + AMUFVC["NLO"]["tot"]^2)
+AMUERR["NLO"]["tot"]   = sqrt(AMU["NLO"]["tot"].err^2 + AMUSYST["NLO"]["tot"]^2 + AMUt0ERR["NLO"]["tot"]^2 + AMUFVC["NLO"]["tot"]^2 + AMUcSEA["NLO"].err^2)
 
 println("   aµ[NLO] = $(print_uwreal(10*AMU["NLO"]["tot"],10*[AMUSYST["NLO"]["tot"],AMUFVC["NLO"]["tot"]],total=true))")
 
@@ -341,7 +374,7 @@ for diag in ["NLOa","NLOb","NLOa&b","NLOc","NLO"]
         println(
             "   aµ[$diag] = $(print_uwreal(
             10*(AMU[diag]["tot"]+AMUIB[diag].mean),
-            10*[AMUSYST[diag]["tot"],AMUt0ERR[diag]["tot"],AMUFVC[diag]["tot"],AMUIB[diag].err],
+            10*[AMUSYST[diag]["tot"],AMUt0ERR[diag]["tot"],AMUIB[diag].err,AMUcSEA[diag].err,AMUFVC[diag]["tot"]],
             total=true))"
             )
     else
@@ -411,35 +444,37 @@ RES_sl = Dict(
     "NLO"    => [[uwreal([-10.5,0.1],"Spacelike"),"Spacelike - Mainz 2025"]],
 )
 
-RES_WP = Dict("NLO" => [uwreal([-9.83,0.07],"WP25"),"WP 2025"])
+RES_WP = Dict("NLO" => [uwreal([-9.83,0.07],"WP25"),"WP25"])
 RES_WP = Dict(
     "NLOa" => Dict(
         "part" => [
             [uwreal([-20.75 ,0.07 ],"KNT19 NLO"),"KNT19"],
             [uwreal([-21.34 ,0.13 ],"KNT19/CMD3 NLO"),"KNT19/CMD-3"]
         ],
-        "aver" => [uwreal([-21.045,0.295],"WP25"),"WP 2025"]
+        "aver" => [uwreal([-21.045,0.295],"WP25"),"WP25"]
     ),
     "NLOb" => Dict(
         "part" => [
             [uwreal([10.59 ,0.04 ],"KNT19 NLO"),"KNT19"],
             [uwreal([10.92 ,0.07 ],"KNT19/CMD3 NLO"),"KNT19/CMD-3"]
         ],
-        "aver" => [uwreal([10.755,0.165],"WP25"),"WP 2025"]
+        "aver" => [uwreal([10.755,0.165],"WP25"),"WP25"]
     ),
     "NLOc" => Dict(
         "part" => [
             [uwreal([0.34 ,0.01 ],"KNT19 NLO"),"KNT19"],
             [uwreal([0.36 ,0.01 ],"KNT19/CMD3 NLO"),"KNT19/CMD-3"]
         ],
-        "aver" => [uwreal([0.35,0.01],"WP25"),"WP 2025"]
+        "aver" => [uwreal([0.35,0.01],"WP25"),"WP25"]
     ),
     "NLO" => Dict(
         "part" => [
             [uwreal([-9.83 ,0.04 ],"KNT19 NLO"),"KNT19"],
-            [uwreal([-10.08,0.06 ],"KNT19/CMD3 NLO"),"KNT19/CMD-3"]
+            # [uwreal([-10.08,0.06 ],"KNT19/CMD3 NLO"),"KNT19/CMD-3"] # WP with old NLOc
+            [uwreal([-10.06,0.06 ],"KNT19/CMD3 NLO"),"KNT19/CMD-3"]
         ],
-        "aver" => [uwreal([-9.96,0.13],"WP25"),"WP 2025"]
+        # "aver" => [uwreal([-9.96,0.13],"WP25"),"WP25"] # WP with old NLOc
+        "aver" => [uwreal([-9.95,0.12],"WP25"),"WP25"]
     )
 )
 
@@ -452,12 +487,12 @@ for diag in ["NLOa","NLOb","NLOc","NLO"]
     errorbar(10*AMU[diag]["tot"].mean, xerr=10*AMU[diag]["tot"].err, -0.25, 0.0, mfc="none", fmt="o", color="black", ms=10, capsize=2)
     errorbar(10*AMU[diag]["tot"].mean, xerr=10*AMUERR[diag]["tot"] , -0.25, 0.0, mfc="none", fmt="o", color="black", ms=10, capsize=2)
     i = 0
-    for res in reverse(RES_sl[diag])
-        i -= 1
-        uwerr(res[1])
-        errorbar(10*(res[1].mean+AMUIB[diag].mean), xerr=10*sqrt(res[1].err^2+AMUIB[diag].err^2), i, 0.0, fmt="d", color="green", ms=10, capsize=2)
-        push!(y_ticks,res[2])
-    end
+    # for res in reverse(RES_sl[diag])
+    #     i -= 1
+    #     uwerr(res[1])
+    #     errorbar(10*(res[1].mean+AMUIB[diag].mean), xerr=10*sqrt(res[1].err^2+AMUIB[diag].err^2), i, 0.0, fmt="d", color="green", ms=10, capsize=2)
+    #     push!(y_ticks,res[2])
+    # end
     i -= 1
     res = RES_WP[diag]["aver"]
     uwerr(res[1])
@@ -473,7 +508,7 @@ for diag in ["NLOa","NLOb","NLOc","NLO"]
         i -= 1
         uwerr(res[1])
         mfc = (res[2] in list_old[diag]) ? "none" : "blue"
-        errorbar(10*res[1].mean, xerr=10*res[1].err, i, 0.0, fmt="o", mfc=mfc, color="blue", ms=10, capsize=2)
+        errorbar(10*res[1].mean, xerr=10*res[1].err, i, 0.0, fmt="d", mfc=mfc, color="blue", ms=10, capsize=2)
         push!(y_ticks,res[2])
     end
     fill_betweenx([1,i-1], 
@@ -482,7 +517,8 @@ for diag in ["NLOa","NLOb","NLOc","NLO"]
         color="gray", alpha=0.4
     )
     
-    xlabel(latexstring("a_{\\mu}^{\\rm{hvp}}[\\rm{$(diag)}]\\times10^{11}"))
+    diag_str = diag != "NLO" ?  "nlo($(diag[end]))" : "nlo"
+    xlabel(latexstring("a_{\\mu}^{\\mathrm{hvp,\\,$diag_str)}}\\times10^{11}"))
     PyPlot.yticks(reverse(collect(i:0)), y_ticks, rotation = 30, fontsize=15)
 
     tight_layout()
@@ -542,7 +578,7 @@ for (j, diag) in enumerate(["NLOa", "NLOb", "NLOc", "NLO"])
         i -= k
         uwerr(res[1])
         mfc = (res[2] in list_old[diag]) ? "none" : "blue"
-        ax.errorbar(10*res[1].mean, xerr=10*res[1].err, i, 0.0, fmt="o", mfc=mfc, color="blue", ms=10, capsize=2)
+        ax.errorbar(10*res[1].mean, xerr=10*res[1].err, i, 0.0, fmt="d", mfc=mfc, color="blue", ms=10, capsize=2)
         # push!(y_ticks,res[2])
     end
     ax.fill_betweenx([1,i-1], 
@@ -550,8 +586,9 @@ for (j, diag) in enumerate(["NLOa", "NLOb", "NLOc", "NLO"])
         10*((AMU[diag]["tot"].mean+AMUIB[diag].mean)+sqrt(AMUERR[diag]["tot"]^2+AMUIB[diag].err^2)), 
         color="gray", alpha=0.4
     )
-    
-    ax.set_xlabel(latexstring("a_{\\mu}^{\\rm{hvp}}[\\rm{$(diag)}]\\times10^{11}"), fontsize=16)
+
+    diag_str = diag != "NLO" ?  "nlo($(diag[end]))" : "nlo"
+    ax.set_xlabel(latexstring("a_{\\mu}^{\\mathrm{hvp,\\,$diag_str}}\\times10^{11}"), fontsize=16)
     ax.set_yticks(reverse(collect(i:0)), vcat(y_ticks,RES_NLO_str), rotation = 30, fontsize=14)
 
     if j == 1
@@ -566,7 +603,7 @@ end
 # tight_layout()
 display(fig)
 if SAVE
-    p = create_path(path_plot,["Results","Res_joint.pdf"],OVERWRITE=OVERSAVE)
+    p = create_path(path_plot,["Results","results.pdf"],OVERWRITE=OVERSAVE)
     PyPlot.savefig(p)
 end
 close()
@@ -595,6 +632,8 @@ function scale_color(base::Tuple{<:Real, <:Real, <:Real}, factor::Real)
     return (clamp01(base[1]*factor), clamp01(base[2]*factor), clamp01(base[3]*factor))
 end
 
+#
+
 for diag in ["NLOa","NLOb","NLOa&b"]
     res = Dict()
     res["SD"] = [charge_factor[key]*amu[diag]["SD"][key].mean for key in ["33","88","CC","BB"]]
@@ -607,7 +646,7 @@ for diag in ["NLOa","NLOb","NLOa&b"]
         "LD" => (0.4,0.8,0.3)
         )
 
-    scales = (1/1.2, 1/1.4, 1/1.6, 1/1.8)
+    scales = (1/1.0, 1/1.3, 1/1.6, 1/1.9)
     innerColors = reduce(vcat, [baseColors[key] for key in ["SD","ID","LD"]])
     outerColors = reduce(vcat, [[baseColors[key].*scales[i] for i=1:length(res[key])] for key in ["SD","ID","LD"]])
 
@@ -633,12 +672,10 @@ for diag in ["NLOa","NLOb","NLOa&b"]
             labels=nothing)
 
     diag_str = diag == "NLOa&b" ? "NLOa\\&b" : diag
-    ax.text(0.0, 0.0, latexstring("\\rm{$(diag_str)}"), ha="center", va="center", fontsize=12, fontweight="bold", color="black")
+    ax.text(0.0, 0.0, latexstring("\\mathrm{$(diag_str)}"), ha="center", va="center", fontsize=12, fontweight="bold", color="black")
     ax.set(aspect="equal")
 
-    # legend_colors = vcat(innerColors, [(0.9,0.9,0.9), (0.8,0.8,0.8), (0.7,0.7,0.7), (0.6,0.6,0.6)])
-    # legend_labels = vcat(["SD","ID","LD"], ["3,3","8,8","c,c","b,b"])
-    legend_colors = vcat(innerColors, [(0.9,0.9,0.9), (0.8,0.8,0.8), (0.7,0.7,0.7)])
+    legend_colors = vcat(innerColors, [(0.95,0.95,0.95), (0.8,0.8,0.8), (0.65,0.65,0.65)])
     legend_labels = vcat(["SD","ID","LD"], ["3,3","8,8","c,c"])
 
     mpatches = PyPlot.matplotlib[:patches]
@@ -665,7 +702,7 @@ ax.pie( res_vec,
         startangle=180,
         wedgeprops=Dict("width"=>0.3, "edgecolor"=>"white"))
 
-ax.text(0.0, 0.0, latexstring("\\rm{NLOc}"), ha="center", va="center", fontsize=12, fontweight="bold", color="black")
+ax.text(0.0, 0.0, latexstring("\\mathrm{NLOc}"), ha="center", va="center", fontsize=12, fontweight="bold", color="black")
 ax.set(aspect="equal")
 
 ax.legend(["3,3-3,3","3,3-8,8","3,3-c,c","8,8-8,8","8,8-c,c","c,c-c,c"], loc="center left", bbox_to_anchor=(1.0, 0.5), ncol=2, frameon=false)
@@ -700,7 +737,7 @@ for (j, diag) in enumerate(["NLOa", "NLOb", "NLOa&b"])
         "LD" => (0.4,0.8,0.3)
         )
 
-    scales = (1/1.2, 1/1.4, 1/1.6, 1/1.8)
+    scales = (1/1.0, 1/1.3, 1/1.6, 1/1.9)
     innerColors = reduce(vcat, [baseColors[key] for key in ["SD","ID","LD"]])
     outerColors = reduce(vcat, [[baseColors[key].*scales[i] for i=1:length(res[key])] for key in ["SD","ID","LD"]])
 
@@ -712,34 +749,37 @@ for (j, diag) in enumerate(["NLOa", "NLOb", "NLOa&b"])
             radius=1.0,
             colors=reverse(outerColors),
             startangle=180,
-            wedgeprops=Dict("width"=>0.3, "edgecolor"=>"white"))
+            wedgeprops=Dict("width"=>0.3, "edgecolor"=>"white")
+            )
 
     # Inner ring: radius 0.65, width 0.35
+    labels = ["LD","ID","SD"]
+    # labels = [L"\left(a_\mu^{\mathrm{hvp}}\right)^{\mathrm{LD}}",L"\left(a_\mu^{\mathrm{hvp}}\right)^{\mathrm{ID}}",L"\left(a_\mu^{\mathrm{hvp}}\right)^{\mathrm{SD}}"]
     ax.pie(abs.(reverse(innerValues)),
             radius=0.68,
             colors=reverse(innerColors),
             startangle=180,
             wedgeprops=Dict("width"=>0.3, "edgecolor"=>"white"),
-            labels=nothing)
+            labels=labels,
+            labeldistance=1.6   # < 1 moves inward (0.68), > 1 moves outward (1.6)
+            )
 
     diag_str = diag == "NLOa&b" ? "NLOa\\&b" : diag
-    ax.text(0.0, 0.0, latexstring("\\rm{$(diag_str)}"), ha="center", va="center", fontsize=12, fontweight="bold", color="black")
+    ax.text(0.0, 0.0, latexstring("\\mathrm{$(diag_str)}"), ha="center", va="center", fontsize=12, fontweight="bold", color="black")
     ax.set(aspect="equal")
 
-    # legend_colors = vcat(innerColors, [(0.9,0.9,0.9), (0.8,0.8,0.8), (0.7,0.7,0.7), (0.6,0.6,0.6)])
-    # legend_labels = vcat(["SD","ID","LD"], ["3,3","8,8","c,c","b,b"])
-    legend_colors = vcat(innerColors, [(0.9,0.9,0.9), (0.8,0.8,0.8), (0.7,0.7,0.7)])
+    legend_colors = vcat(innerColors, [(0.95,0.95,0.95), (0.8,0.8,0.8), (0.65,0.65,0.65)])
     legend_labels = vcat(["SD","ID","LD"], ["3,3","8,8","c,c"])
 
     mpatches = PyPlot.matplotlib[:patches]
     handles = [mpatches.Patch(facecolor=c) for c in legend_colors]
     if j == 3
-        ax.legend(handles, legend_labels, loc="center left", bbox_to_anchor=(1.0, 0.5), ncol=2, frameon=false)
+        ax.legend(handles, legend_labels, loc="center left", bbox_to_anchor=(1.2, 0.5), ncol=2, frameon=false)
     end
 end
 display(gcf())
 if SAVE
-    p = create_path(path_plot,["Results","PieChart_CV_joint.pdf"],OVERWRITE=OVERSAVE)
+    p = create_path(path_plot,["Results","CV_piechart.pdf"],OVERWRITE=OVERSAVE)
     PyPlot.savefig(p, bbox_inches="tight")
 end
 close()
@@ -762,7 +802,7 @@ for diag in ["NLOa","NLOb","NLOa&b"]
             AMU[diag][wind].err^2,
             AMUSYST[diag][wind]^2,
             AMUt0ERR[diag][wind]^2,
-            AMUFVC[diag][wind]^2
+            # AMUFVC[diag][wind]^2
             ]
     end
 
@@ -772,7 +812,7 @@ for diag in ["NLOa","NLOb","NLOa&b"]
         "LD" => (0.4,0.8,0.3)
         )
 
-    scales = (1/1.2, 1/1.4, 1/1.6, 1/1.8)
+    scales = (1/1.0, 1/1.3, 1/1.6, 1/1.9)
     innerColors = reduce(vcat, [baseColors[key] for key in ["SD","ID","LD"]])
     outerColors = reduce(vcat, [[baseColors[key].*scales[i] for i=1:length(var[key])] for key in ["SD","ID","LD"]])
 
@@ -784,6 +824,12 @@ for diag in ["NLOa","NLOb","NLOa&b"]
 
     push!(innerValues, AMUIB[diag].err^2)
     push!(outerValues, AMUIB[diag].err^2)
+
+    push!(innerColors, (0.0,0.0,0.0))
+    push!(outerColors, (0.0,0.0,0.0))
+
+    push!(innerValues, AMUFVC[diag]["tot"]^2 + AMUcSEA[diag].err^2)
+    push!(outerValues, AMUFVC[diag]["tot"]^2 + AMUcSEA[diag].err^2)
 
     fig = figure(figsize=(6,4))
     ax = fig.add_subplot(1,1,1)
@@ -804,15 +850,20 @@ for diag in ["NLOa","NLOb","NLOa&b"]
             labels=nothing)
 
     diag_str = diag == "NLOa&b" ? "NLOa\\&b" : diag
-    ax.text(0.0, 0.0, latexstring("\\rm{$(diag_str)}"), ha="center", va="center", fontsize=12, fontweight="bold", color="black")
+    ax.text(0.0, 0.0, latexstring("\\mathrm{$(diag_str)}"), ha="center", va="center", fontsize=12, fontweight="bold", color="black")
     ax.set(aspect="equal")
 
-    legend_colors = vcat(innerColors, [(0.9,0.9,0.9),(0.8,0.8,0.8),(0.7,0.7,0.7),(0.6,0.6,0.6)])
-    legend_labels = vcat(["SD","ID","LD","IB"], ["stat.","syst.","scale","fvc"])
-    # legend_labels = vcat(["SD","ID","LD"], ["stat.","syst.","scale","fvc"])
+    legend_colors = vcat(innerColors, [(0.95,0.95,0.95), (0.8,0.8,0.8), (0.65,0.65,0.65)]) # , (0.5,0.5,0.5)
+    legend_labels = vcat(["SD","ID","LD","IB","other"], ["stat.","syst.","scale"]) # ,"fvc"
 
     mpatches = PyPlot.matplotlib[:patches]
     handles = [mpatches.Patch(facecolor=c) for c in legend_colors]
+
+    for i=1:2
+        # add an empty legend entry
+        push!(handles, mpatches.Patch(facecolor=(1.0,1.0,1.0)))
+        push!(legend_labels,"")
+    end
 
     ax.legend(handles, legend_labels, loc="center left", bbox_to_anchor=(1.0, 0.5), ncol=2, frameon=false)
 
@@ -841,7 +892,7 @@ ax.pie( var_vec,
         startangle=180,
         wedgeprops=Dict("width"=>0.3, "edgecolor"=>"white"))
 
-ax.text(0.0, 0.0, latexstring("\\rm{NLOc}"), ha="center", va="center", fontsize=12, fontweight="bold", color="black")
+ax.text(0.0, 0.0, latexstring("\\mathrm{NLOc}"), ha="center", va="center", fontsize=12, fontweight="bold", color="black")
 ax.set(aspect="equal")
 
 ax.legend(["stat.","syst.","scale","IB"], loc="center left", bbox_to_anchor=(1.0, 0.5), ncol=1, frameon=false)
@@ -853,7 +904,7 @@ if SAVE
 end
 close()
 
-# All together
+## All together
 
 fig, axs = subplots(
     1, 3,
@@ -871,7 +922,7 @@ for (j, diag) in enumerate(["NLOa", "NLOb", "NLOa&b"])
             AMU[diag][wind].err^2,
             AMUSYST[diag][wind]^2,
             AMUt0ERR[diag][wind]^2,
-            AMUFVC[diag][wind]^2
+            # AMUFVC[diag][wind]^2
             ]
     end
 
@@ -881,7 +932,7 @@ for (j, diag) in enumerate(["NLOa", "NLOb", "NLOa&b"])
         "LD" => (0.4,0.8,0.3)
         )
 
-    scales = (1/1.2, 1/1.4, 1/1.6, 1/1.8)
+    scales = (1/1.0, 1/1.3, 1/1.6, 1/1.9)
     innerColors = reduce(vcat, [baseColors[key] for key in ["SD","ID","LD"]])
     outerColors = reduce(vcat, [[baseColors[key].*scales[i] for i=1:length(var[key])] for key in ["SD","ID","LD"]])
 
@@ -894,6 +945,12 @@ for (j, diag) in enumerate(["NLOa", "NLOb", "NLOa&b"])
     push!(innerValues, AMUIB[diag].err^2)
     push!(outerValues, AMUIB[diag].err^2)
 
+    push!(innerColors, (0.0,0.0,0.0))
+    push!(outerColors, (0.0,0.0,0.0))
+
+    push!(innerValues, AMUFVC[diag]["tot"]^2 + AMUcSEA[diag].err^2)
+    push!(outerValues, AMUFVC[diag]["tot"]^2 + AMUcSEA[diag].err^2)
+
     # Outer ring: radius 1.0, width 0.3
     ax.pie(abs.(reverse(outerValues)),
             radius=1.0,
@@ -902,35 +959,47 @@ for (j, diag) in enumerate(["NLOa", "NLOb", "NLOa&b"])
             wedgeprops=Dict("width"=>0.3, "edgecolor"=>"white"))
 
     # Inner ring: radius 0.65, width 0.35
+    labels = diag == "NLOa&b" ? ["other","IB","LD","ID","SD"] : ["","IB","LD","",""]
     ax.pie(abs.(reverse(innerValues)),
             radius=0.68,
             colors=reverse(innerColors),
             startangle=180,
             wedgeprops=Dict("width"=>0.3, "edgecolor"=>"white"),
-            labels=nothing)
+            labels=labels,
+            labeldistance=1.6   # < 1 moves inward (0.68), > 1 moves outward (1.6)
+            )
 
     diag_str = diag == "NLOa&b" ? "NLOa\\&b" : diag
-    ax.text(0.0, 0.0, latexstring("\\rm{$(diag_str)}"), ha="center", va="center", fontsize=12, fontweight="bold", color="black")
+    ax.text(0.0, 0.0, latexstring("\\mathrm{$(diag_str)}"), ha="center", va="center", fontsize=12, fontweight="bold", color="black")
     ax.set(aspect="equal")
 
-    legend_colors = vcat(innerColors, [(0.9,0.9,0.9),(0.8,0.8,0.8),(0.7,0.7,0.7),(0.6,0.6,0.6)])
-    legend_labels = vcat(["SD","ID","LD","IB"], ["stat.","syst.","scale","fvc"])
-    # legend_labels = vcat(["SD","ID","LD"], ["stat.","syst.","scale","fvc"])
+    legend_colors = vcat(innerColors, [(0.95,0.95,0.95), (0.8,0.8,0.8), (0.65,0.65,0.65)]) # , (0.5,0.5,0.5)
+    legend_labels = vcat(["SD","ID","LD","IB","other"], ["stat.","syst.","scale"]) # ,"fvc"
 
     mpatches = PyPlot.matplotlib[:patches]
     handles = [mpatches.Patch(facecolor=c) for c in legend_colors]
 
+    for i=1:2
+        # add an empty legend entry
+        push!(handles, mpatches.Patch(facecolor=(1.0,1.0,1.0)))
+        push!(legend_labels,"")
+    end
+
     if j == 3
-        ax.legend(handles, legend_labels, loc="center left", bbox_to_anchor=(1.0, 0.5), ncol=2, frameon=false)
+        ax.legend(handles, legend_labels, loc="center left", bbox_to_anchor=(1.1, 0.5), ncol=2, frameon=false)
     end
 end
 display(gcf())
 if SAVE
-    p = create_path(path_plot,["Results","PieChart_err_joint.pdf"],OVERWRITE=OVERSAVE)
+    p = create_path(path_plot,["Results","Var_piechart.pdf"],OVERWRITE=OVERSAVE)
     PyPlot.savefig(p, bbox_inches="tight")
 end
 close()  # avoid showing/accumulating figures in loops
 
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
@@ -1010,7 +1079,7 @@ ax.pie(abs.(reverse(innerValues)),
         wedgeprops=Dict("width"=>0.3, "edgecolor"=>"white"),
         labels=nothing)
 
-ax.text(0.0, 0.0, latexstring("\\rm{LO}"), ha="center", va="center", fontsize=12, fontweight="bold", color="black")
+ax.text(0.0, 0.0, latexstring("\\mathrm{LO}"), ha="center", va="center", fontsize=12, fontweight="bold", color="black")
 ax.set(aspect="equal")
 
 # legend_colors = vcat(innerColors, [(0.9,0.9,0.9), (0.8,0.8,0.8), (0.7,0.7,0.7), (0.6,0.6,0.6)])
@@ -1039,7 +1108,7 @@ close()
 
 AMU_pQCD = Dict(
     "NLOa" => uwreal([-8.034,0.127],"NLOa CC-pQCD"),
-    "NLOb" => uwreal([2.247,0.038],"NLOb CC-pQCD")
+    "NLOb" => uwreal([ 2.247,0.038],"NLOb CC-pQCD")
 )
 AMU_pQCD["NLOa&b"] = uwreal([-5.787,0.089],"NLOab CC-pQCD")
 # AMU_pQCD["NLOa&b"] = AMU_pQCD["NLOa"] + AMU_pQCD["NLOb"]
@@ -1103,7 +1172,7 @@ println("
     \\centering
     \\small
     \\begin{tabular}{c|c c}
-        \$(i)\$ & \$(a_\\mu^{3,3}[(i)])^{\\mathrm{SD}}_{\\mathrm{sub}}(Q^{(3,3)})\$ & \$\\frac{4}{9}(a_\\mu^{c,c}[(i)])^{\\mathrm{SD}}_{\\mathrm{sub}}(Q^{(c,c)})\$ \\\\
+        \$(i)\$ & \$(a_\\mu^{3,3}[(i)])^{\\mathrm{SD}}_{\\mathrm{sub}}(Q)\$ & \$\\frac{4}{9}(a_\\mu^{c,c}[(i)])^{\\mathrm{SD}}_{\\mathrm{sub}}(Q)\$ \\\\
         \\hline")
 for diag in ["NLOa","NLOb","NLOa&b"]
     i_str = diag != "NLOa&b" ? "(4$(diag[4:end]))   " : "(4a\\&b)"
@@ -1112,17 +1181,20 @@ end
 println("    \\end{tabular}
     \\break\\break\\break
     \\begin{tabular}{c|c c c}
-        \$(i)\$ & \$\\frac{1}{3}\\Delta_{ls}(a_\\mu[(i)])^{\\mathrm{SD}}\$ & \$\\frac{1}{3}\\Delta_{ls}^{\\mathrm{conn}}(a_\\mu[(i)])^{\\mathrm{SD}}\$ & \$\\frac{4}{9}\\Delta_{lc}(b[(i)])(Q^{(c,c)})\$  \\\\
+        \$(i)\$ & \$\\frac{1}{3}\\Delta_{ls}(a_\\mu[(i)])^{\\mathrm{SD}}\$ & \$\\frac{1}{3}\\Delta_{ls}^{\\mathrm{conn}}(a_\\mu[(i)])^{\\mathrm{SD}}\$ & \$\\frac{4}{9}\\Delta_{lc}(b[(i)])(Q)\$  \\\\
         \\hline")
 for diag in ["NLOa","NLOb","NLOa&b"]
     i_str = diag != "NLOa&b" ? "(4$(diag[4:end]))   " : "(4a\\&b)"
     println("        $(i_str) & $(print_uwreal(10/3*amu[diag]["SDsub"]["∆ls"],10/3*amusyst[diag]["SDsub"]["∆ls"])) & $(print_uwreal(10/3*amu[diag]["SDsub"]["∆ls_conn"],10/3*amusyst[diag]["SDsub"]["∆ls_conn"])) & $(print_uwreal(10*(4/9)*amu[diag]["SDsub"]["∆lc"],10*(4/9)*amusyst[diag]["SDsub"]["∆lc"])) \\\\")
 end 
 println("    \\end{tabular}
-    \\caption{Partial results for the SD subtracted quantities. All results are given in units of \$10^{-11}\$. And \$Q^{(3,3)}=5\\, \\mathrm{GeV}\$ and \$Q^{(c,c)}=4\\, \\mathrm{GeV}\$ has been chosen.}
+    \\caption{Partial results for the SD subtracted quantities. All results are given in units of \$10^{-11}\$, and \$Q=$Q33\\, \\mathrm{GeV}\$.}
     \\label{tab:isoQCD_SDpre}
 \\end{table}
 ")
+
+# \$(i)\$ & \$(a_\\mu^{3,3}[(i)])^{\\mathrm{SD}}_{\\mathrm{sub}}(Q^{(3,3)})\$ & \$\\frac{4}{9}(a_\\mu^{c,c}[(i)])^{\\mathrm{SD}}_{\\mathrm{sub}}(Q^{(c,c)})\$ \\\\
+# \\caption{Partial results for the SD subtracted quantities. All results are given in units of \$10^{-11}\$; \$Q^{(3,3)}=$Q33\\, \\mathrm{GeV}\$ and \$Q^{(c,c)}=$QCC\\, \\mathrm{GeV}\$ have been chosen.}
 
 #
 
@@ -1140,7 +1212,7 @@ for wind in ["SD","ID","LD"]
         println("        $(i_str) & $(print_uwreal(10*amu[diag][wind]["33"],10*amusyst[diag][wind]["33"])) & $(print_uwreal(10/3*amu[diag][wind]["88"],10/3*amusyst[diag][wind]["88"])) & $(print_uwreal(10*(4/9)*amu[diag][wind]["CC"],10*(4/9)*amusyst[diag][wind]["CC"]))  & $(print_uwreal(10*(1/9)*amu[diag][wind]["SS"],10*(1/9)*amusyst[diag][wind]["SS"]))  & $(print_uwreal(10*amu[diag][wind]["disc"],10*amusyst[diag][wind]["disc"])) \\\\")
     end
     if wind == "SD"
-        cap = "Isopspin and flavor decomposition of the SD window for diagrams NLOa, NLOb and their combination. The light contribution can be obtained from the isovector channel, \$(5/9)\\, a_\\mu^{l,l}[(i)] = 10/9\\, a_\\mu^{3,3}[(i)]\$.  All results are given in units of \$10^{-11}\$."
+        cap = "Isospin and flavor decomposition of the SD window for diagrams NLOa, NLOb and their combination. The light contribution can be obtained from the isovector channel via \$(5/9)\\, a_\\mu^{l,l}[(i)] = 10/9\\, a_\\mu^{3,3}[(i)]\$.  All results are given in units of \$10^{-11}\$."
     else
         cap = "Same as Tab.~\\ref{tab:isoQCD_SD} but for the $wind window."
     end
@@ -1175,7 +1247,7 @@ for diag in ["NLOa","NLOb","NLOa&b"]
     println("        $(i_str) & $(print_uwreal(10*AMU[diag]["33"],10*AMUSYST[diag]["33"])) & $(print_uwreal(10/3*AMU[diag]["88"],10/3*AMUSYST[diag]["88"])) & $(print_uwreal(10*(4/9)*AMU[diag]["CC"],10*(4/9)*AMUSYST[diag]["CC"])) & $(print_uwreal(10*(1/9)*AMU[diag]["SS"],10*(1/9)*AMUSYST[diag]["SS"]))  & $(print_uwreal(10*AMU[diag]["disc"],10*AMUSYST[diag]["disc"])) \\\\")
 end 
 println("    \\end{tabular}
-    \\caption{Final estimation in isoQCD for diagrams NLOa, NLOb, and their combination. We break down our results in the subsequent time-windows, and the isospin and flavor decomposition.}
+    \\caption{Final isoQCD estimates for diagrams NLOa, NLOb, and their combination. We decompose the results into the different time windows, as well as into the isospin and flavor components. The light-quark contribution can be obtained from the isovector channel via \$(5/9)\\, a_\\mu^{l,l}[(i)] = (10/9)\\, a_\\mu^{3,3}[(i)]\$. All results are given in units of \$10^{-11}\$. }
     \\label{tab:isoQCD_result}
 \\end{table}
 ")
@@ -1190,14 +1262,14 @@ println("
     \\begin{tabular}{c c c c c c}
         \$a_\\mu^{3,3-3,3}\$ & \$\\frac{2}{3}a_\\mu^{3,3-8,8}\$ & \$\\frac{8}{9}a_\\mu^{3,3-c,c}\$ & \$\\frac{1}{9}a_\\mu^{8,8-8,8}\$ & \$\\frac{8}{27}a_\\mu^{8,8-c,c}\$ & \$\\frac{16}{91}a_\\mu^{c,c-c,c}\$ \\\\
         \\hline
-        $(print_uwreal(10*AMU["NLOc"]["3333"],10*AMUSYST["NLOc"]["3333"])) & $(print_uwreal(10*(2/3)*AMU["NLOc"]["3388"],10*(2/3)*AMUSYST["NLOc"]["3388"])) & $(print_uwreal(10*(8/9)*AMU["NLOc"]["33CC"],10*(8/9)*AMUSYST["NLOc"]["33CC"])) & $(print_uwreal(10*(1/9)*AMU["NLOc"]["8888"],10*(1/9)*AMUSYST["NLOc"]["8888"])) & $(print_uwreal(10*(8/27)*AMU["NLOc"]["88CC"],10*(8/27)*AMUSYST["NLOc"]["88CC"])) & $(print_uwreal(10*(16/91)*AMU["NLOc"]["CCCC"],10*(16/91)*AMUSYST["NLOc"]["CCCC"])) \\\\
+        $(print_uwreal(1e3*AMU["NLOc"]["3333"],1e3*AMUSYST["NLOc"]["3333"])) & $(print_uwreal(1e3*(2/3)*AMU["NLOc"]["3388"],1e3*(2/3)*AMUSYST["NLOc"]["3388"])) & $(print_uwreal(1e3*(8/9)*AMU["NLOc"]["33CC"],1e3*(8/9)*AMUSYST["NLOc"]["33CC"])) & $(print_uwreal(1e3*(1/9)*AMU["NLOc"]["8888"],1e3*(1/9)*AMUSYST["NLOc"]["8888"])) & $(print_uwreal(1e3*(8/27)*AMU["NLOc"]["88CC"],1e3*(8/27)*AMUSYST["NLOc"]["88CC"])) & $(print_uwreal(1e3*(16/91)*AMU["NLOc"]["CCCC"],1e3*(16/91)*AMUSYST["NLOc"]["CCCC"])) \\\\
     \\end{tabular}
-    \\caption{IsoQCD estimation for all NLOc pieces. All values are given in units of \$10^{-11}\$.}
+    \\caption{IsoQCD estimates for all NLOc contributions. All values are given in units of \$10^{-13}\$.}
     \\label{tab:isoQCD_NLOc}
 \\end{table}
 ")
 
-##
+#
 
 @info("Table for charm-diisconnected results")
 println("
@@ -1217,20 +1289,82 @@ println("    \\end{tabular}
 \\end{table}
 ")
 
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+
+##==========================> Derivatives and dimensionless dependencies <==========================##
+
+uwerr(sqrtt0_ph); uwerr(MD_ph)
+uwerr(mpi_ph); uwerr(mK_ph)
+
+diag = "NLOb"
+comp = "33"
+
+uwerr(AMU[diag][comp])
+S_sqrtt0 = (10*charge_factor[comp]) * (mchist(AMU[diag][comp], "sqrtt0 [fm]")[1] / artificial_err) * sqrtt0_ph.mean
+S_mPi    = (10*charge_factor[comp]) * (mchist(AMU[diag][comp], "mpi_ph")[1] / mpi_ph.err) * mpi_ph.mean
+S_mK     = (10*charge_factor[comp]) * (mchist(AMU[diag][comp], "mK_ph")[1] / mK_ph.err) * mK_ph.mean
+if comp in ["CC","tot"]
+    S_mDs = (10*charge_factor[comp]) * (mchist(AMU[diag][comp], "MD_ph [GeV]")[1] / artificial_err) * MD_ph.mean
+else
+    S_mDs = 0.0
+end
 
 ##
 
-# @info("Table for NLOc results")
-# println("
-# \\begin{table}[H]
-#     \\centering
-#     \\small
-#     \\begin{tabular}{c c c c c c}
-#         \$a_\\mu^{3,3-3,3}\$ & \$\\frac{2}{3}a_\\mu^{3,3-8,8}\$ & \$\\frac{8}{9}a_\\mu^{3,3-c,c}\$ & \$\\frac{1}{9}a_\\mu^{8,8-8,8}\$ & \$\\frac{8}{27}a_\\mu^{8,8-c,c}\$ & \$\\frac{16}{91}a_\\mu^{c,c-c,c}\$ \\\\
-#         \\hline
-#         $(print_uwreal(1000*AMU["NLOc"]["3333"],1000*AMUSYST["NLOc"]["3333"])) & $(print_uwreal(1000*(2/3)*AMU["NLOc"]["3388"],1000*(2/3)*AMUSYST["NLOc"]["3388"])) & $(print_uwreal(1000*(8/9)*AMU["NLOc"]["33CC"],1000*(8/9)*AMUSYST["NLOc"]["33CC"])) & $(print_uwreal(1000*(1/9)*AMU["NLOc"]["8888"],1000*(1/9)*AMUSYST["NLOc"]["8888"])) & $(print_uwreal(1000*(8/27)*AMU["NLOc"]["88CC"],1000*(8/27)*AMUSYST["NLOc"]["88CC"])) & $(print_uwreal(1000*(16/91)*AMU["NLOc"]["CCCC"],1000*(16/91)*AMUSYST["NLOc"]["CCCC"])) \\\\
-#     \\end{tabular}
-#     \\caption{IsoQCD estimation for all NLOc pieces. All values are given in units of \$10^{-13}\$.}
-#     \\label{tab:isoQCD_NLOc}
-# \\end{table}
-# ")
+diag = "NLOa&b"
+
+uwerr(sqrtt0_ph); uwerr(MD_ph)
+uwerr(mpi_ph); uwerr(mK_ph)
+
+println("
+\\begin{table}[t]
+    \\centering
+    \\small
+    \\begin{tabular}{c | c c c c}
+         & \\multicolumn{4}{c}{$diag} \\\\
+        \\hline
+        \$\\mathcal{O}\$ & \$\\sqrt{t_0}\$ & \$m_\\pi\$ & \$m_K\$ & \$m_{D_s}\$ \\\\
+        \\hline")
+for comp in (diag != "NLOc" ? ["33","88","CC","tot"] : ["3333","3388","33CC","8888","88CC","CCCC","tot"])
+    uwerr(AMU[diag][comp])
+    S_sqrtt0 = (mchist(AMU[diag][comp], "sqrtt0 [fm]")[1] / artificial_err) * (sqrtt0_ph.mean/AMU[diag][comp].mean)
+    S_mPi    = (mchist(AMU[diag][comp], "mpi_ph")[1] / mpi_ph.err) * (mpi_ph.mean/AMU[diag][comp].mean)
+    S_mK     = (mchist(AMU[diag][comp], "mK_ph")[1] / mK_ph.err) * (mK_ph.mean/AMU[diag][comp].mean)
+    if comp in ["CC","33CC","88CC","CCCC","tot"]
+        S_mDs = (mchist(AMU[diag][comp], "MD_ph [GeV]")[1] / artificial_err) * (MD_ph.mean/AMU[diag][comp].mean)
+    else
+        S_mDs = 0.0
+    end
+    if comp == "tot"
+        println("        \\hline")
+    end
+    if comp in ["CC","33CC","88CC","CCCC","tot"]
+        println("        \$a_\\mu^{$comp}\$ & $(round(S_sqrtt0,digits=2)) & $(round(S_mPi,digits=2)) & $(round(S_mK,digits=2)) & $(round(S_mDs,digits=2)) \\\\")
+    else
+        println("        \$a_\\mu^{$comp}\$ & $(round(S_sqrtt0,digits=2)) & $(round(S_mPi,digits=2)) & $(round(S_mK,digits=2)) & - \\\\")
+    end
+end
+println("    \\end{tabular}
+    \\caption{.}
+    \\label{tab:dim_dep}
+\\end{table}
+")
+
+##<<------------------------------------------------------------------------------------------------------------------------>>
+
+amu = uwreal([-101.69,0.59],"amu lattice")
+# amu = uwreal([-101.83,0.53],"amu lattice")
+
+# amu_wp    = uwreal([-99.6,1.3],"amu WP25")
+amu_wp    = uwreal([-99.5,1.2],"amu WP25")
+# amu_cmd3  = uwreal([-100.8,0.6],"amu CMD3")
+amu_cmd3  = uwreal([-100.6,0.6],"amu CMD3")
+amu_knt19 = uwreal([-98.3,0.4],"amu KNT19")
+
+dif_wp    = amu - amu_wp   ; println("this work vs. WP25  : $(print_uwreal(dif_wp)) -> $(dif_wp.mean/dif_wp.err)")
+dif_cmd3  = amu - amu_cmd3 ; println("this work vs. CMD3  : $(print_uwreal(dif_cmd3)) -> $(dif_cmd3.mean/dif_cmd3.err)")
+dif_knt19 = amu - amu_knt19; println("this work vs. KNT19 : $(print_uwreal(dif_knt19)) -> $(dif_knt19.mean/dif_knt19.err)")

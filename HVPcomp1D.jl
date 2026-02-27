@@ -101,7 +101,7 @@ if wind == "SD"
 end
 
 @time begin
-    for ens in ensInfo
+    for ens in ensInfo[26:end]
 
         @info("Computing HVP for ensemble $(ens.id)")
         ens.id ∈ ensNOcharm ? @info("  > NO CHARM DATA FOR $(ens.id)") : nothing
@@ -140,10 +140,10 @@ end
 
         # define windowed kernel
         if wind == "NW"
-            TMRw  = TMR
+            TMRw = TMR
             ((ens.id ∉ ensNOcharm) || (ens.id ∉ ensNOdisc && ens.kappa_l != ens.kappa_s)) ? TMRwbeta = TMRbeta : nothing
         else
-            TMRw  = TMR .* Window(wind)(tfm)
+            TMRw = TMR .* Window(wind)(tfm)
             ((ens.id ∉ ensNOcharm) || (ens.id ∉ ensNOdisc && ens.kappa_l != ens.kappa_s)) ? TMRwbeta = TMRbeta .* Window(wind)(tfm_ß) : nothing
         end
 
@@ -444,7 +444,7 @@ end
             if BM
                 HVPinfo = Dict{String,Dict}(
                     "HVPsyst" => HVPsyst,
-                    "plateau/Reconstr" => PlatRec,
+                    "plat/rec" => PlatRec,
                 )
             else
                 HVPinfo = Dict{String,Dict}(
@@ -601,13 +601,13 @@ end # end timer
 
 ##==========================> READING TEST <==========================##
 
-diag     = "NLOb"  #  "LO"  "NLOa"  "NLOb"  "NLOa&b"  "NLOc"
-wind     = "SDsub"  #  "NW"  "SD"  "ID"  "LD"  "ILD"
-ensid    = "J306"
-impr_set = "1"
+diag     = ""  #  "LO"  "NLOa"  "NLOb"  "NLOa&b"  "NLOc"
+wind     = ""  #  "NW"  "SD"  "ID"  "LD"  "ILD"
+ensid    = ""
+impr_set = ""
 
 STD   = false
-VREF  = true
+VREF  = false
 RESC  = false
 
 BLIND = false

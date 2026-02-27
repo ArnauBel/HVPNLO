@@ -547,7 +547,7 @@ end # end timer
 ##==========================> READING TEST <==========================##
 
 diag     = ""
-ensid    = "J306"
+ensid    = ""
 impr_set = ""
 
 STD_DERIV = false

@@ -185,12 +185,12 @@ function BDIOread_res(pBDIO::String,diag::String,wind::String,comp::String,model
             end
         end
     end
-    if !isnothing(MultFunc)
-        x_ph = !resc ? [0 phi2_ph phi4_ph] : [0 y_ph z_ph]
-        for key in mykeys
-            res[key] = res[key] .* MultFunc(x_ph)[1]
-        end
-    end
+    # if !isnothing(MultFunc) # this should not be used since we compute the res in the continuum from the ansatz itself and not the parameters
+    #     x_ph = !resc ? [0 phi2_ph phi4_ph] : [0 y_ph z_ph]
+    #     for key in mykeys
+    #         res[key] = res[key] .* MultFunc(x_ph)[1]
+    #     end
+    # end
     param ? (return res, par) : (return res)
 end
 BDIOread_res(pBDIO::String,diag::String,wind::String,comp::String,model_var_list::Vector{Function},FitCUT::String,impr_set::String;resc::Bool=false,SimpleBase::Bool=false,MultFunc::Union{Nothing,Function}=nothing,StdDer::Bool=false,tlImpr::Bool=false,Vref::Bool=false,BLIND::Bool=false,Q::Float64=5.0,param::Bool=false) = BDIOread_res(pBDIO,diag,wind,comp,func_str(model_var_list),FitCUT,impr_set,resc=resc,SimpleBase=SimpleBase,MultFunc=MultFunc,StdDer=StdDer,tlImpr=tlImpr,Vref=Vref,BLIND=BLIND,Q=Q,param=param)

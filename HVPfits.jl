@@ -59,9 +59,9 @@ DictComptoKey = Dict{String,Vector{String}}(
     "gCCconn"  => ["gCCconn_SU3_lc"], # ["gCCconn_ll","gCCconn_lc"]
     # "gCCconn"  => ["gCCconn_SU3_ll","gCCconn_SU3_lc"], # ["gCCconn_SU3_ll","gCCconn_SU3_lc"]
 
-    "∆ls_amu" => ["∆ls_amu_ll","∆ls_amu_lc"],
+    "∆ls_amu"     => ["∆ls_amu_ll","∆ls_amu_lc"],
     "∆ls_amuconn" => ["∆ls_amuconn_ll","∆ls_amuconn_lc"],
-    "∆lc_b"   => ["∆lc_b_lc"],
+    "∆lc_b"       => ["∆lc_b_lc"],
 
     # only interested in the cc (conserved-conserved) discr. for the cc disc  & c8 disc
     "gCCdisc" => ["gCCdisc_cc"],
@@ -85,16 +85,16 @@ DictComptoKey = Dict{String,Vector{String}}(
 
 ##==========================> Fits [LO, NLOa&b, NLOa, NLOb, NLOc] <==========================##
 
-diag = "NLOb"  #  LO  NLOa  NLOb  NLOc  NLOa&b
-wind = "SDsub"  #  NW  SD  SDsub  ID  ILD  LD  LD1  LD2
+diag = ""  #  LO  NLOa  NLOb  NLOc  NLOa&b
+wind = ""  #  NW  SD  SDsub  ID  ILD  LD  LD1  LD2
 
 readIMPR_SET = ["1","2"] #  ["1"] ["2"] ["1","2"] ["1old","2"] ["1","1old","2"]
 
 BLIND = false
 
 STD_DERIV  = false
-tl_IMPR    = true
-VREF       = true
+tl_IMPR    = false
+VREF       = false
 RESC       = false
 
 path_bdio_r = path_bdio_dict["local"]
@@ -103,6 +103,7 @@ path_bdio_r = path_bdio_dict["local"]
 STD_DERIV ? @info("STANDARD DERIVATIVE is being employed in the IMPROVEMENT") : nothing
 
 if tl_IMPR
+    println("- Computing tree-level improvement at 'a=0'...")
     wind in ["SD","SDsub"] ? (amu3l = compute_HVPtl0(diag,wind,Qlist,path_coef)) : error("3l improvement cannot be applied for wind = $wind")
 end
 
@@ -145,23 +146,23 @@ end
 
 ##==========================> Data ready to fit
 
-comp = "g33"  #  g33  g88  gSS  gCCconn  strange gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆ls_amuconn  ∆lc_b
+comp = ""  # g33  g88  gSS  gCCconn  strange gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆ls_amuconn  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
-model_var_list = Function[a3,a4,a2phi2,a2phi4,phi2sqr,phi2log]  #  [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]  [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]  [a3,a2phi2,phi2sqr,phi2log,phi4]
-# model_var_list = Function[a3,a2y,ysqr,ylog]  #  [a3,a4,a2y,a2z,a3y,ysqr,ylog]  [a3,a2y,ysqr,ylog]
+model_var_list = Function[a3,a2phi2,a2phi4,phi2sqr,phi2log,phi2inv,logphi2]  #  [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log,phi2inv,logphi2]  [a3,a2phi2,a2phi4,a3phi2,phi2sqr,phi2log]  [a3,a2phi2,phi2sqr,phi2log,phi4]
+# model_var_list = Function[a3,a2y,a2z,ysqr,ylog]  #  [a3,a4,a2y,a2z,a3y,ysqr,ylog]  [a3,a2y,ysqr,ylog]
 
 MultFunc = nothing  #  nothing  deltaphi
 
-IMPR_SET = [readIMPR_SET[2]]  #  readIMPR_SET  ["1"]  ["2"]  ["1","2"]  ["1old","2"]  ["1","1old","2"]
+IMPR_SET = readIMPR_SET  #  readIMPR_SET  ["1"]  ["2"]  ["1","2"]  ["1old","2"]  ["1","1old","2"]
 
-FITCUT = ["beta&mass"]  #  ["None","beta","mass","beta&mass","beta_ext"]  ["None","beta","mass","beta&mass"]  ["None","beta"]
+FITCUT = ["None","beta","mass","beta&mass"]  #  ["None","beta","mass","beta&mass","beta_ext"]  ["None","beta","mass","beta&mass"]  ["None","beta"]
 
 SimpleBase = false
 a2RESC     = false
 
-FitINFO    = true
+FitINFO    = false
 
 PVAL       = false
 
@@ -170,15 +171,14 @@ OVERWRITE  = false
 
 mdof = 4  # minimum number of d.o.f. allowed
 
-mykeys = [DictComptoKey[comp][1]]  #  [DictComptoKey[comp][1]]
+mykeys = DictComptoKey[comp]  #  [DictComptoKey[comp][1]]
 
 path_bdio_w = path_bdio_dict["local"]
 
 # Following the LD paper, when it comes to the iso-vector analysis, the 'untrusted' ensembles are: H105, H200, N300,  N302, S400
 ensExcl = ["H105","H200","A654","N300","N302","S400"] # 33, 88, SS, ∆ls(aµ) (D201 problems for SD & ID)
 # ensExcl = ["H105","H200","A654","N300","N302","S400","B450","A653"] # g3333, g8888, g3388
-# ensExcl = ["H105","H200","S400"] # ∆lc(b)
-# ensExcl = ["H105","H200"] # CC
+# ensExcl = ["H105","H200","S400"] # CC, ∆lc(b)
 
 
 if comp != "g33" && VREF
@@ -198,10 +198,22 @@ for FitCut in FITCUT
     #     nmPi_max = [nmPi_max,1]
     # end
 
-    # following SD, ID, LD papers :
-    na_max   = 2
-    nmPi_max = wind in ["NW","ILD","LD","LD1","LD2"] ? 2 : 1
-    nmK_max  = 1
+    # Lattice-spacing freedom
+    if comp in ["g33","gCCconn","∆lc_b"] && wind in ["SD","SDsub","SID"] # "g33"
+        na_max = 3
+    else
+        na_max = 2
+    end
+    # Pion chiral freedom
+    if comp in ["gCCconn","gCCCC"]
+        nmPi_max = 1
+    elseif wind in ["NW","ILD","LD","LD1","LD2"] 
+        nmPi_max = 2
+    else 
+        nmPi_max = [2,1]
+    end
+    # Kaon chiral freedom
+    nmK_max = 1
 
 
     if wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]
@@ -411,18 +423,18 @@ end # end FitCut loop
 
 ##==========================> READING TEST <==========================##
 
-diag = "NLOa&b"  # LO  NLOa  NLOb  NLOc  NLOa&b
-wind = "SDsub"  # NW  SD  SDsub  ID  LD  ILD
-comp = "∆ls_amu"  # g33  g88  ∆ls_amu  ∆lc_b  gCCconn  gCCdisc  gC8disc
+diag = ""  # LO  NLOa  NLOb  NLOc  NLOa&b
+wind = ""  # NW  SD  SDsub  ID  LD  ILD
+comp = ""  # g33  g88  ∆ls_amu  ∆lc_b  gCCconn  gCCdisc  gC8disc
 
 BLIND = false
 
-impr_set = "1"
+impr_set = ""
 
 Q = 5.0  # virtuality for SDsub
 
-model_var_list = [a3,a2phi2,phi2sqr,phi2log]
-MultFunc = deltaphi  # nothing  deltaphi
+model_var_list = [a3,a2phi2,a2phi4,phi2sqr,phi2log]
+MultFunc = nothing  # nothing  deltaphi
 
 FitCut = "None"  # "None"  "beta"  "mass"  "beta&mass"
 

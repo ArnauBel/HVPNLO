@@ -59,7 +59,7 @@ comp = ""  #  g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  
 
 Q = 5.0  # virtuality for SDsub
 
-model_var_list = Function[a3,a2phi2,a2phi4,phi2sqr,phi2log]
+model_var_list = Function[a3,a2phi2,a2phi4,phi2sqr,phi2log,phi2inv,logphi2]
 # model_var_list = Function[a3,a2y,ysqr,ylog,yinv,logy]
 MultFunc = nothing  # nothing  deltaphi
 
@@ -76,7 +76,8 @@ RESC       = false
 
 SimpleBase = false
 
-path_bdio = path_bdio_dict["local"]
+# path_bdio = path_bdio_dict["local"]
+path_bdio = joinpath(julia_script_directory,"..","..","..","HVP lepton mass","ObsBDIO")
 
 
 # Data reading and definitions
@@ -121,7 +122,7 @@ MA = Dict(); info = Dict()
 for impr_set in readIMPR_SET
     println("- Reading fit & MA for impr. set $impr_set")
 
-    println("   - Reading X & Y data..")
+    println("   - Reading X & Y data...")
 
     xdata, ydata[impr_set] = BDIOread_XYdata(path_bdio,diag,wind,comp,model_var_list,FitCUT,impr_set,resc=RESC,SimpleBase=SimpleBase,MultFunc=MultFunc,StdDer=STD_DERIV,tlImpr=tl_IMPR,Vref=VREF,BLIND=BLIND,Q=Q)
 
@@ -221,13 +222,13 @@ for (j,impr_set) in enumerate(IMPR_SET)
     end
 end
 
-#-- Stop for only plot compilation
+##-- Stop for only plot compilation
 
 # IMPR_SET = readIMPR_SET
 
 # mykeys = [""]
 
-wPen = 0.2
+wPen = 1.0
 
 SHOWRES = false
 
@@ -266,23 +267,23 @@ res_str = SHOWRES ? "  [$(round(value(amu[1]),digits=digits))($(round(err(amu[1]
 PyPlot.title("Projection to continuum extrapolation$res_str")
 axvline(ls="dashed", color="black", lw=0.2, alpha=0.7)
 xlabel(L"$a^2/8t_0$")
-if diag != "LO" # we multiply the y axis by a factor 10
-    formatter(x, pos) = string(round(10 * x, digits=2))  # Round to 2 decimal places
-    ax = gca()
-    ax.yaxis.set_major_formatter(PyPlot.matplotlib.ticker.FuncFormatter(formatter))
-end
+# if diag != "LO" # we multiply the y axis by a factor 10
+#     formatter(x, pos) = string(round(10 * x, digits=2))  # Round to 2 decimal places
+#     ax = gca()
+#     ax.yaxis.set_major_formatter(PyPlot.matplotlib.ticker.FuncFormatter(formatter))
+# end
 xlim(right=0.065)
 # ylim(bottom=26.5/10)
 # ylim([1.8/10,2.9/10])
-diag_str = diag == "LO" ? "\\rm{LO}" : (diag == "NLOa&b" ? "\\rm{NLO}_{\\rm{a}\\&\\rm{b}}" : "\\rm{NLO}_{\\rm{$(diag[end])}}")
-comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : (diag != "NLOc" ? "\\mathrm{$(comp[2]),$(comp[3])}" : "\\mathrm{$(comp[2]),$(comp[3])-$(comp[4]),$(comp[5])}")
-Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q\\ \\rm{GeV})" : ""
-fact_str = diag == "LO" ? "\\times10^{10}" : "\\times10^{11}"
-if wind == "NW"
-    ylabel(latexstring("a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]$Q_str$fact_str"))
-else
-    ylabel(latexstring("\\left(a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]\\right)^{\\rm{$wind}}$Q_str$fact_str"))
-end
+# diag_str = diag == "LO" ? "\\rm{LO}" : (diag == "NLOa&b" ? "\\rm{NLO}_{\\rm{a}\\&\\rm{b}}" : "\\rm{NLO}_{\\rm{$(diag[end])}}")
+# comp_str = comp[1] == '∆' ? (comp[end] != 'b' ? "\\Delta_{ls}(a_{\\mu})" : "\\Delta_{lc}(b)") : (diag != "NLOc" ? "\\mathrm{$(comp[2]),$(comp[3])}" : "\\mathrm{$(comp[2]),$(comp[3])-$(comp[4]),$(comp[5])}")
+# Q_str    = (wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]) ? "($Q\\ \\rm{GeV})" : ""
+# fact_str = diag == "LO" ? "\\times10^{10}" : "\\times10^{11}"
+# if wind == "NW"
+#     ylabel(latexstring("a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]$Q_str$fact_str"))
+# else
+#     ylabel(latexstring("\\left(a_{\\mu}^{$comp_str}[\\rm{$(diag_str)}]\\right)^{\\rm{$wind}}$Q_str$fact_str"))
+# end
 PROJpoints ? legend(loc="lower center") : nothing
 tight_layout()
 display(gcf())
@@ -398,7 +399,7 @@ end
 
 ShowGHOST = false
 
-SAVE     = true
+SAVE     = false
 OVERSAVE = false
 
 ARGPLOT = 1  #  set to 1 for best plot

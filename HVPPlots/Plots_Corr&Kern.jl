@@ -22,7 +22,7 @@ using Suppressor
 
 # include uwreal constants
 
-include("../HVPtool/uwConst.jl")
+# include("../HVPtool/uwConst.jl")
 
 # BDIO path definition
 
@@ -150,7 +150,7 @@ end
 
 @info("SD-Substracted Kernel plot")
 
-diag = ""  # [LO]  [NLOa,NLOb]  [LO,NLOa,NLOc]
+diag = "NLOb"  # [LO]  [NLOa,NLOb]  [LO,NLOa,NLOc]
 
 SAVE     = false
 OVERSAVE = false
@@ -173,15 +173,16 @@ myTMRw = myTMR .* Window("SD")(t)
 TMRb(Q::Float64) = ((16/(Q/hbarc)^2)^2 * π^2 * (massmu/hbarc)^2) .* C4[diag].((massmu/hbarc).*t) .* sin.((Q/hbarc/4) .* t).^4
 TMRsub(Q::Float64) = myTMRw .- (Window("SD")(0) .* TMRb(Q))
 
-PyPlot.plot(t, (hbarc/massmu)^3*myTMRw./(t.^3), color = "black", label=L"Q=\infty")
+PyPlot.plot(t, myTMRw./(2π^2*t.^3), color = "black", label=L"Q=\infty")
 for Q in sort(QLIST,rev=true)
-    PyPlot.plot(t, (hbarc/massmu)^3*TMRsub(Q)./(t.^3), label="Q=$Q")
+    PyPlot.plot(t, TMRsub(Q)./(2π^2*t.^3), label="Q=$Q")
 end
 
-title("SD-substracted Kernel")
-xlabel("t [fm]")
+# title("SD-substracted Kernel")
+xlabel(latexstring("t\\, [\\mathrm{fm}]"))
 diag_str = diag != "NLOa&b" ? diag : "NLOa\\&b"
-ylabel(latexstring("\\frac{1}{\\left(m_\\mu t\\right)^3}\\tilde{K}^{(\\rm{$diag_str})}_{\\rm{sub}}(m_\\mu t;Q)"))
+# ylabel(latexstring("\\frac{1}{2\\pi^2 t^3}\\tilde{f}^{(\\rm{$diag_str})}_{\\rm{sub}}(m_\\mu t;Q)"))
+ylabel(latexstring("\\frac{1}{2\\pi^2 t^3}\\tilde{f}^{(4b)}_{\\rm{sub}}(m_\\mu t;Q)"))
 legend()
 tight_layout()
 display(gcf())
@@ -338,7 +339,7 @@ close()
 impr_set = "2"
 
 DIAG = ["NLOb"]  # ["LO"]  ["NLOa","NLOb"]  ["LO","NLOa","NLOb"]
-COMP = ["g33_ll"]  # ["g33_ll"]  ["g33_ll","g88_ll"]  ["g33_ll","g88_ll","gCCconn_lc_sim"]
+COMP = ["g33_ll","g88_ll","gCCconn_lc_sim"]  # ["g33_ll"]  ["g33_ll","g88_ll"]  ["g33_ll","g88_ll","gCCconn_lc_sim"]
 WIND = ["NW"]  # ["SD","SDsub"]  ["SD","ILD"]  ["SD","ID","LD"]  ["NW","SD","ILD"]  ["NW","SD","ID","LD"]
 
 SAVE     = false
@@ -353,10 +354,20 @@ fig = figure(figsize=(8,5))
 
 sym_points = Int64(HVPobs.Data.get_T(ens.id)/2+1); t = collect(1:sym_points)
 
-# label = ["Isovector (3,3)","Isoscalar (8,8)","Charm connected (c,c)"]
-# label  = ["No window","W='SD'","W='ID'","W='LD'"]
-# colour = ["red","blue","green"]
+label = ["Isovector (3,3)","Isoscalar (8,8)","Charm connected (c,c)"]
+# label  = ["No window","W=SD","W=ID","W=LD"]
+colour = ["blue","red","green"]
 # colour = ["black","brown","gray","purple"]
+# baseColors = Dict(
+#     "SD" => (0.2,0.6,0.9), 
+#     "ID" => (0.9,0.5,0.2),
+#     "LD" => (0.4,0.8,0.3)
+#     )
+# colour = reduce(vcat, [baseColors[key] for key in ["SD","ID","LD"]])
+# colour = vcat("black",colour)
+# fmt = ["-o","-s","-d","-^"]
+
+alpha = HVPtool.alpha
 
 i = 0
 for diag in DIAG
@@ -393,7 +404,7 @@ for diag in DIAG
                 comp_str = comp[2]*","*comp[3]
                 wind_str = wind != "NW" ? "; $wind" : ""
                 Qstr = wind == "SDsub" ? "; Q=$Q GeV" : ""
-                errorbar(value.(tfm), value.(int), err.(int),  c=colour[i], capsize=2, fmt="-o", mfc="none", label=label[i])  #  label[i])  "$diag_str; $comp_str$wind_str$Qstr"
+                errorbar(value.(tfm), value.(int), err.(int),  c=colour[i], capsize=2, mfc="none", fmt=fmt[i], label=label[i])  #  label[i])  "$diag_str; $comp_str$wind_str$Qstr"
             end
         end
     end
@@ -401,19 +412,20 @@ end
 # title("Integrands for $(ens.id) impr. set $(impr_set)")
 # title(ens.id)
 xlabel(latexstring("t\\ [\\mathrm{fm}]"))
-# ylabel(latexstring("\\tilde{f}^{(4b)}(\\hat{t})\\times G^{(d,e)}(t)"))
+ylabel(latexstring("\\tilde{f}^{(4b)}(\\hat{t})\\times G^{(d,e)}(t)"))
 # ylabel(latexstring("\\tilde{f}^{(4b)}(\\hat{t})\\times\\Theta_{\\mathrm{W}}(t)\\times G^{(3,3)}(t)"))
 xMin, xMax = xlim()
 xMin, xMax = any(x -> x in ["LD","ILD","NW"],WIND) ? [xMin,xMax] : ("ID" in WIND ? [-0.1,2.0] : [-0.05,1.0])
 # xlim(xMin,xMax)
 xlim(0.0,4.5)
 ylim(bottom=-20.)
+ylim(top=180)
 legend()
 tight_layout()
 display(gcf())
 if SAVE
     RESCstr = !RESC ? "" : "_resc"
-    # p = create_path(path_plot,["Other","IntegrandIsospin_$(ens.id).pdf"],OVERWRITE=OVERSAVE)
+    p = create_path(path_plot,["Other","IntegrandIsospin_$(ens.id).pdf"],OVERWRITE=OVERSAVE)
     # p = create_path(path_plot,["Other","IntegrandWindows_$(ens.id).pdf"],OVERWRITE=OVERSAVE)
     PyPlot.savefig(p)
 end
