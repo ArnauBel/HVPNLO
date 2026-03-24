@@ -6,7 +6,8 @@ using HVPobs
 include("Const/Const.jl")
 
 
-const sqrtt0_ph_Madrid     = uwreal([0.1442, 0.0007], "sqrtt0 [fm] (Madrid)")
+# const sqrtt0_ph_Madrid     = uwreal([0.1442, 0.0007], "sqrtt0 [fm] (Madrid)")
+const sqrtt0_ph_Madrid     = uwreal([0.1440, 0.0007], "sqrtt0 [fm] (Madrid)")
 const sqrtt0_ph_Regensburg = uwreal([0.1449, 0.0007], "sqrtt0 [fm] (Regensburg)")  # Regensburg
 const sqrtt0_ph_DESY       = uwreal([0.1443, 0.0014], "sqrtt0 [fm] (CLS)")  # 2206.06582v2 (ID window paper)
 const sqrtt0_ph_Bruno      = uwreal([0.1460, 0.0019], "sqrtt0 [fm] (Bruno)")

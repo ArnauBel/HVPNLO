@@ -48,9 +48,9 @@ charge_factor = Dict(
 ##==========================> INDIVIDUAL RESULTS <==========================##
 
 
-diag = "NLOc"  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
-wind = "NW"  # NW  SD  SDsub  ID  LD  ILD
-comp = "g3333"  # g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
+diag = "NLOa&b"  # LO  NLOa  NLOb  NLOc  NLOa&b  NLOa&b(+)
+wind = "SD"  # NW  SD  SDsub  ID  LD  ILD
+comp = "gCCdisc"  # g33  g88  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆lc_b
 
 IMPR = "all"  # "all"  "1"  "1old"  "2"
 
@@ -63,7 +63,7 @@ tl_IMPR    = false
 VREF       = false
 RESC       = false
 
-path_bdio = path_bdio_dict["clust"]
+path_bdio = path_bdio_dict["local"]
 
 
 if wind == "SDsub" && comp in ["g33","gCCconn","∆lc_b"]
@@ -102,10 +102,10 @@ end
 uwerr(AMU)
 # dig = comp in ["gCCdisc","gC8disc"] ? 7 : 5
 
-factor = diag == "LO" ? charge_factor[comp] : charge_factor[comp]*10
-sys_vec = !VREF ? [SYSTerr,SCALEerr] : [SYSTerr,SCALEerr,0.1*abs(FVC_ChPT)]
+# factor = diag == "LO" ? charge_factor[comp] : charge_factor[comp]*10
+# sys_vec = !VREF ? [SYSTerr,SCALEerr] : [SYSTerr,SCALEerr,0.1*abs(FVC_ChPT)]
 
-println("     ⟹ $(charge_factor[comp*"s"]) amu[$diag($wind)|$comp] = $(print_uwreal(factor*AMU,factor*sys_vec,total=true))")
+# println("     ⟹ $(charge_factor[comp*"s"]) amu[$diag($wind)|$comp] = $(print_uwreal(factor*AMU,factor*sys_vec,total=true))")
 
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##

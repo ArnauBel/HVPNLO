@@ -143,7 +143,6 @@ end
 
 @info(" ⟹ Data ready to be fitted\n\n")
 
-
 ##==========================> Data ready to fit
 
 comp = ""  # g33  g88  gSS  gCCconn  strange gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆ls_amuconn  ∆lc_b
@@ -157,7 +156,7 @@ MultFunc = nothing  #  nothing  deltaphi
 
 IMPR_SET = readIMPR_SET  #  readIMPR_SET  ["1"]  ["2"]  ["1","2"]  ["1old","2"]  ["1","1old","2"]
 
-FITCUT = ["None","beta","mass","beta&mass"]  #  ["None","beta","mass","beta&mass","beta_ext"]  ["None","beta","mass","beta&mass"]  ["None","beta"]
+FITCUT = ["None","beta","mass","beta&mass"]  #  ["None","beta","mass","beta&mass","beta_ext"]  ["None","beta","mass","beta&mass"]  ["None","beta"]  ["beta_ext"]
 
 SimpleBase = false
 a2RESC     = false
@@ -176,9 +175,10 @@ mykeys = DictComptoKey[comp]  #  [DictComptoKey[comp][1]]
 path_bdio_w = path_bdio_dict["local"]
 
 # Following the LD paper, when it comes to the iso-vector analysis, the 'untrusted' ensembles are: H105, H200, N300,  N302, S400
-ensExcl = ["H105","H200","A654","N300","N302","S400"] # 33, 88, SS, ∆ls(aµ) (D201 problems for SD & ID)
+ensExcl = ["H105","H200","A654","N300","N302","S400"] # 33, 88, SS, ∆ls(aµ), ∆ls(aµ)conn (D201 problems for SD & ID)
 # ensExcl = ["H105","H200","A654","N300","N302","S400","B450","A653"] # g3333, g8888, g3388
 # ensExcl = ["H105","H200","S400"] # CC, ∆lc(b)
+# ensExcl = ["H105","H200","S400","A654"] # CCdisc, C8disc
 
 
 if comp != "g33" && VREF
@@ -344,6 +344,10 @@ for FitCut in FITCUT
             println("      - Printing BDIO & JDL2...")
 
             model_str = func_str(model_var_list,Order=true)
+
+            if comp in ["gCCdisc","gC8disc"]
+                wind = "SD"
+            end
 
             tl_str  = (tl_IMPR && wind in ["SD","SDsub"] && comp in ["g33"]) ? "[tl]" : ""
             SIMstr  = SimpleBase ? "SIMPLE" : ""

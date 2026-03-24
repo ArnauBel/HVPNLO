@@ -101,7 +101,7 @@ if wind == "SD"
 end
 
 @time begin
-    for ens in ensInfo[26:end]
+    for ens in ensInfo
 
         @info("Computing HVP for ensemble $(ens.id)")
         ens.id ∈ ensNOcharm ? @info("  > NO CHARM DATA FOR $(ens.id)") : nothing

@@ -69,7 +69,7 @@ FITdata = true
 # Set plot parameters
 
 diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOc  NLOa&b
-wind = "SDsub"  #  NW  SD  SDsub  ID  LD  ILD
+wind = "ID"  #  NW  SD  SDsub  ID  LD  ILD
 comp = "g33"  #  g33  g88  gSS  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆ls_amuconn  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
@@ -77,12 +77,12 @@ Q = 5.0  # virtuality for SDsub
 BLIND = false
 
 STD_DERIV = false
-tl_IMPR   = true
+tl_IMPR   = false
 VREF      = true
 RESC      = false
 
 
-path_bdio = path_bdio_dict["local"]
+path_bdio = path_bdio_dict["clust"]
 # path_bdio = joinpath(julia_script_directory,"..","..","..","HVP lepton mass","ObsBDIO")
 
 # Data reading and definitions
@@ -248,7 +248,7 @@ end
 
 ##-- Stop for only plot compilation
 
-SAVE     = false
+SAVE     = true
 OVERSAVE = false
 
 # IMPR_SET = readIMPR_SET
@@ -262,7 +262,7 @@ wPen = 4.0
 # color_list = comp ∉ ["cc conn","cc disc","c8 disc"] ? ["blue","red","green","brown"] : ["blue","green"]
 ls_beta_ext = (0, (5, 2))      # long dashed
 color_dict = Dict(
-    ""     => Dict("cc" => "gold"),
+    ""     => Dict("cc" => "gray"),
     "1"    => Dict("ll" => "blue",  "lc" => "red"  ),
     "2"    => Dict("ll" => "green", "lc" => "brown")
 ); color_dict["1old"] = color_dict["1"]
@@ -388,7 +388,7 @@ close()
 
 ShowGHOST = false
 
-SAVE     = false
+SAVE     = true
 OVERSAVE = false
 
 ARGPLOT = 1  #  set to 1 for best plot
@@ -659,7 +659,7 @@ end
 
 @info("Ensemble cut convergence plot")
 
-SAVE     = false
+SAVE     = true
 OVERSAVE = false
 
 sqrtt0_ph_TAR = nothing  # 0.1443  sqrtt0_ph_CLS  nothing

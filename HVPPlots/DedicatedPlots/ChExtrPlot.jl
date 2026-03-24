@@ -68,15 +68,15 @@ charge_factor = Dict(
 
 diag = "NLOa&b"  #  LO  NLOa  NLOb  NLOc  NLOa&b
 wind = "SDsub"  #  NW  SD  SDsub  ID  LD  ILD
-comp = "∆ls_amu"  #  g33  g88  gSS  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆ls_amuconn  ∆lc_b
+comp = "g33"  #  g33  g88  gSS  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆ls_amuconn  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
 BLIND = false
 
 STD_DERIV = false
-tl_IMPR   = false
-VREF      = false
+tl_IMPR   = true
+VREF      = true
 RESC      = false
 
 
@@ -208,7 +208,7 @@ end
 ShowGHOST = false
 
 SAVE     = true
-OVERSAVE = true
+OVERSAVE = false
 
 ARGPLOT = 1  #  set to 1 for best plot
 
@@ -219,7 +219,7 @@ K_ph  = !RESC ? phi4_ph : z_ph
 
 myFactor = charge_factor[comp] * (diag == "LO" ? 1 : 10)
 
-impr_set = "1"
+impr_set = "2"
 key = mykeys[2]
 
 for (i,impr_set) in enumerate([impr_set])
@@ -356,3 +356,9 @@ for (i,impr_set) in enumerate([impr_set])
         close()
     end
 end
+
+##
+
+
+using Plots
+using Colors

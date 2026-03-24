@@ -77,7 +77,7 @@ MultFunc = nothing  #  nothing  deltaphi
 
 IMPR_SET = ["1","2"]  #  ["1"]  ["1old"]  ["2"]  ["1","2"]  ["1old","2"]  ["1","1old","2"]
 
-FITCUT = ["None","beta","mass","beta&mass"]  #  ["None","beta","mass","beta&mass","beta_ext"]  ["None","beta","mass","beta&mass"]  ["None","beta"]
+FITCUT = ["None","beta","mass","beta&mass"]  #  ["None","beta","mass","beta&mass","beta_ext"]  ["None","beta","mass","beta&mass"]  ["None","beta"]  ["beta_ext"]
 
 BLIND = false
 
@@ -207,9 +207,9 @@ end # end FitCut loop
 
 ##==========================> ENSEMBLE CUT COMBINATION <==========================##
 
-diag = ""  #  LO  NLOa  NLOb  NLOc  NLOa&b
-wind = ""  #  NW  SDsub  SD  SID  ID  ILD  LD  LD1  LD2
-comp = ""  #  g33  g88  gSS  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆ls_amuconn  ∆lc_b
+diag = "NLOb"  #  LO  NLOa  NLOb  NLOc  NLOa&b
+wind = "SD"  #  NW  SDsub  SD  SID  ID  ILD  LD  LD1  LD2
+comp = "gC8disc"  #  g33  g88  gSS  gCCconn  gCCdisc  gC8disc  g3333  g8888  gCCCC  g3388  g33CC  g88CC  ∆ls_amu  ∆ls_amuconn  ∆lc_b
 
 Q = 5.0  # virtuality for SDsub
 
@@ -219,14 +219,14 @@ discr = "all"  #  all  ll  lc
 
 MultFunc = nothing  #  nothing  deltaphi
 
-IMPR_SET = ["1","2"]  #  ["1"]  ["1old"]  ["2"]  ["1","2"]  ["1old","2"]  ["1","1old","2"]
+IMPR_SET = [""]  #  ["1"]  ["1old"]  ["2"]  ["1","2"]  ["1old","2"]  ["1","1old","2"]
 
 STD_DERIV  = false
 tl_IMPR    = false
 VREF       = false
 RESC       = false
 
-WRITE      = false
+WRITE      = true
 OVERWRITE  = false
 
 path_bdio_r = path_bdio_dict["local"]
@@ -242,7 +242,7 @@ path_bdio_w = path_bdio_dict["local"]
 #     "beta&mass" => [true,Function[a3,a4,a2phi2,a2phi4,phi2sqr,phi2log,phi4]],
 #     "beta_ext"  => [true,Function[a3,a2phi2,a2phi4,phi2sqr,phi2log,phi4]],
 # )
-# ∆ls(aµ)
+# ∆ls(aµ),∆ls(aµ)conn
 # FITCUTtoMODEL = Dict{String,Any}(
 #     "None"      => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
 #     "beta"      => [false,Function[a3,a2phi2,phi2sqr,phi2log]],
@@ -261,9 +261,9 @@ path_bdio_w = path_bdio_dict["local"]
 # )
 
 # CCdisc,C8disc - SD
-# FITCUTtoMODEL = Dict{String,Any}(
-#     "None"      => [true,Function[a3,a2phi2,phi2sqr,phi2log,phi4]],
-# )
+FITCUTtoMODEL = Dict{String,Any}(
+    "None"      => [true,Function[a3,a2phi2,phi2sqr,phi2log,phi4]],
+)
 
 # 33 - ID,LD
 # FITCUTtoMODEL = Dict{String,Any}(

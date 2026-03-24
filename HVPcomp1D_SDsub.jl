@@ -90,7 +90,7 @@ corr33tl_v3s03_ll, corr33tl_v3s03_lc = read_tree_level_v3sig03(path_tl, cons=tru
 corr33tl_ll = uwreal.(corr33tl_ll); corr33tl_lc = uwreal.(corr33tl_lc)
 
 @time begin
-    for ens in ensInfo
+    for ens in EnsInfo.(["F300","J306"])
 
         @info("Computing for ensemble $(ens.id)")
         ens.id ∈ ensNOcharm ? @info("  > NO CHARM DATA FOR $(ens.id)") : nothing
@@ -292,7 +292,7 @@ corr33tl_ll = uwreal.(corr33tl_ll); corr33tl_lc = uwreal.(corr33tl_lc)
 
             extra = Dict{String, Any}("ens" => ens.id, "impr_set" => impr_set, "diag" => diag, "wind" => "SDsub", "Qlist" => Qlist)
             ALPHAdobs_write(fb, HVPQ, extra=extra)
-            if (ens.kappa_l != ens.kappa_s && ens.id ∉ ensNOdisc)
+            if (ens.kappa_l != ens.kappa_s)
                 ALPHAdobs_write(fb, HVP, extra=extra)
             end
 

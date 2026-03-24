@@ -2,7 +2,7 @@
 
 using Revise
 
-include("../HVPtool/HVPtool.jl")
+include("HVPtool/HVPtool.jl")
 using .HVPtool
 using HVPobs
 
@@ -25,16 +25,16 @@ using Suppressor
 julia_script_directory = @__DIR__
 
 path_bdio_dict = Dict{String,String}(
-    "local" => joinpath(julia_script_directory, "..", "..", "ObsBDIO"),
-    # "local" => joinpath(julia_script_directory, "..", "..", "ObsCrosschecks", "Obs4LD(t0=Regensburg)", "ObsBDIO"),
-    "SSD"   => joinpath(julia_script_directory, "..", "..", "ObsExternal", "PortableSSD", "ObsBDIO"),
-    "clust" => joinpath(julia_script_directory, "..", "..", "ObsExternal", "mogon_mount", "ObsBDIO")
+    "local" => joinpath(julia_script_directory, "..", "ObsBDIO"),
+    # "local" => joinpath(julia_script_directory, "..", "ObsCrosschecks", "Obs4LD(t0=Regensburg)", "ObsBDIO"),
+    "SSD"   => joinpath(julia_script_directory, "..", "ObsExternal", "PortableSSD", "ObsBDIO"),
+    "clust" => joinpath(julia_script_directory, "..", "ObsExternal", "mogon_mount", "ObsBDIO")
 )
 
-path_bPert   = joinpath(julia_script_directory, "..", "..", "PertSD")
-path_FVCcont = joinpath(julia_script_directory, "..", "..", "FVCcont")
+path_bPert   = joinpath(julia_script_directory, "..", "PertSD")
+path_FVCcont = joinpath(julia_script_directory, "..", "FVCcont")
 
-path_plot    = joinpath(julia_script_directory, "..", "..", "Slides & Plots", "Plots")
+path_plot    = joinpath(julia_script_directory, "..", "Slides & Plots", "Plots")
 
 charge_factor = Dict(
     "33" => 1., "88" => 1/3., "88conn" => 1/3., "SS" => 1/9., "CC" => 4/9., "CCdisc" => 4/9., "C8disc" => 2/(3*sqrt(3)), "BB" => 1/9., "∆ls_amu" => 1/3., "∆ls_amuconn" => 1., "∆lc_b" => 4/9., "disc" => 1.,
@@ -63,12 +63,7 @@ rcParams["axes.titlesize"] = 18
 Q33 = 5.0
 QCC = 5.0
 
-path_bdio = path_bdio_dict["clust"]
-
-BL_factor = 1.4348499925128186
-# BL_factor = value(BDIOread_TMR(path_bdio,"A653","NLOb",BLIND=true)[2] / BDIOread_TMR(path_bdio,"A653","NLOb",BLIND=false)[2])  #  rand(Uniform(0.5, 2))
-
-BLIND_LD  = Any[true,BL_factor]
+path_bdio = path_bdio_dict["local"]
 
 STD_DERIV = false
 tl_IMPR   = true
@@ -97,7 +92,7 @@ amu_bb = Dict(
 #     "NLOa"   => 0.0,
 #     "NLOb"   => 0.0,
 #     "NLOa&b" => 0.0,
-#     "NLOc"   => uwreal(0.0)
+#     "NLOc"   => uwreal([0.0,0.0],"bottom")
 # )
 
 AMUgamma = Dict(
@@ -118,12 +113,6 @@ AMUIB = Dict()
 [AMUIB[diag] = AMUgamma[diag] + AMU38[diag] for diag in keys(AMUgamma)]
 AMUIB["NLO"] = AMUIB["NLOa&b"] + AMUIB["NLOc"]
 
-# AMUcSEA = Dict(
-#     "NLOa"   => uwreal([-2.7,3.4].*1e-2,"∆c-sea"),
-#     "NLOb"   => uwreal([ 1.0,1.6].*1e-2,"∆c-sea"),
-#     "NLOa&b" => uwreal([-1.7,1.8].*1e-2,"∆c-sea"),
-#     "NLO"    => uwreal([-1.7,1.8].*1e-2,"∆c-sea"),
-# )
 AMUcSEA = Dict(
     "NLOa"   => uwreal([0.0,3.4].*1e-2,"∆c-sea"),
     "NLOb"   => uwreal([0.0,1.6].*1e-2,"∆c-sea"),
@@ -214,26 +203,22 @@ for diag in ["NLOa","NLOb","NLOa&b"]
     # For the ID & LD windows
 
     for wind in ["ID","LD"]
-        BLIND        = (wind=="LD") ? BLIND_LD[1] : false
-        BLIND_factor = BLIND ? BLIND_LD[2] : 1.0
-
-
-        amu33, info33 = BDIOread_MAtot(path_bdio,diag,wind,"g33",StdDer=STD_DERIV,BLIND=BLIND,Vref=VREF)
+        amu33, info33 = BDIOread_MAtot(path_bdio,diag,wind,"g33",StdDer=STD_DERIV,BLIND=false,Vref=VREF)
         if VREF
             FVC_ChPT = JDL2read_FVC_ChPT(path_FVCcont,diag,wind)
             AMUFVC[diag][wind] = abs(0.1*FVC_ChPT)
-            amu33 += FVC_ChPT*BLIND_factor
+            amu33 += FVC_ChPT
         end
-        amu[diag][wind]["33"]     = amu33/BLIND_factor
-        amusyst[diag][wind]["33"] = info33["syst"]/BLIND_factor
+        amu[diag][wind]["33"]     = amu33
+        amusyst[diag][wind]["33"] = info33["syst"]
 
-        amu88, info88 = BDIOread_MAtot(path_bdio,diag,wind,"g88",StdDer=STD_DERIV,BLIND=BLIND)
-        amu[diag][wind]["88"]     = amu88/BLIND_factor
-        amusyst[diag][wind]["88"] = info88["syst"]/BLIND_factor
+        amu88, info88 = BDIOread_MAtot(path_bdio,diag,wind,"g88",StdDer=STD_DERIV,BLIND=false)
+        amu[diag][wind]["88"]     = amu88
+        amusyst[diag][wind]["88"] = info88["syst"]
 
-        amuSS, infoSS = BDIOread_MAtot(path_bdio,diag,wind,"gSS",StdDer=STD_DERIV,BLIND=BLIND)
-        amu[diag][wind]["SS"]     = amuSS/BLIND_factor
-        amusyst[diag][wind]["SS"] = infoSS["syst"]/BLIND_factor
+        amuSS, infoSS = BDIOread_MAtot(path_bdio,diag,wind,"gSS",StdDer=STD_DERIV,BLIND=false)
+        amu[diag][wind]["SS"]     = amuSS
+        amusyst[diag][wind]["SS"] = infoSS["syst"]
 
         amu[diag][wind]["disc"]     = 1/3. * amu[diag][wind]["88"] - 1/9. * (amu[diag][wind]["33"]+amu[diag][wind]["SS"])
         amusyst[diag][wind]["disc"] = 1/3. * sqrt(amusyst[diag][wind]["88"]^2 + 1/9. * (amusyst[diag][wind]["33"]^2 + amusyst[diag][wind]["SS"]^2))
@@ -256,8 +241,6 @@ for diag in ["NLOa","NLOb","NLOa&b"]
     end
 
     for comp in ["33","88","CC","SS","disc"]
-        # BLIND_factor = (BLIND_LD[1] && comp != "CC") ? BLIND_LD[2] : 1.0
-
         AMU[diag][comp]      = amu[diag]["SD"][comp] + amu[diag]["ID"][comp] + amu[diag]["LD"][comp]
         AMUSYST[diag][comp]  = sqrt(amusyst[diag]["SD"][comp]^2 + amusyst[diag]["ID"][comp]^2 + amusyst[diag]["LD"][comp]^2)
         AMUt0ERR[diag][comp] = get_t0err([AMU[diag][comp]],sqrtt0_ph_Madrid)[1]
@@ -324,7 +307,7 @@ for diag in ["NLOa","NLOb","NLOa&b"]
     AMUFVC[diag]["tot"]   = AMUFVC[diag]["NW"]
     AMUERR[diag]["tot"]   = sqrt(AMU[diag]["tot"].err^2 + AMUSYST[diag]["tot"]^2 + AMUt0ERR[diag]["tot"]^2 + AMUFVC[diag]["tot"]^2 + AMUcSEA[diag].err^2)
 
-    println("   aµ[$diag] = $(print_uwreal(10*(AMU[diag]["tot"] - (1/9)*amu_bb[diag]),10*[AMUSYST[diag]["tot"],AMUFVC[diag]["tot"]],total=true))")
+    println("   aµ[$diag] = $(print_uwreal(10*(AMU[diag]["tot"] - (1/9)*amu_bb[diag]),10*[AMUSYST[diag]["tot"],AMUFVC[diag]["tot"]],total=false))")
 end
 
 # effects from the tau-loop
@@ -347,7 +330,13 @@ AMUSYST["NLOc"]["tot"]  = sqrt(AMUSYSTNLOc2)
 AMUt0ERR["NLOc"]["tot"] = get_t0err([AMU["NLOc"]["tot"]],sqrtt0_ph_Madrid)[1]
 AMUERR["NLOc"]["tot"]   = sqrt(AMU["NLOc"]["tot"].err^2 + AMUSYST["NLOc"]["tot"]^2 + AMUt0ERR["NLOc"]["tot"]^2)
 
-println("   aµ[NLOc] = $(print_uwreal(10*AMU["NLOc"]["tot"],10*[AMUSYST["NLOc"]["tot"]],total=true))")
+# t0 shift
+for comp in ["3333","3388","33CC","8888","88CC","CCCC","tot"] # "33BB"
+    uwerr(AMU["NLOc"][comp]); der_sqrtt0 = mchist(AMU["NLOc"][comp], "sqrtt0 [fm]")[1] / artificial_err
+    AMU["NLOc"][comp] += der_sqrtt0 * (0.1440 - 0.1442)
+end
+
+println("   aµ[NLOc] = $(print_uwreal(10*(AMU["NLOc"]["tot"] - charge_factor["33BB"]*AMU["NLOc"]["33BB"]),10*[AMUSYST["NLOc"]["tot"]],total=true))")
 
 println("--------------------------------------------------------")
 
@@ -629,8 +618,8 @@ close()
 
 # Pie-chart for the central value
 
-SAVE     = false
-OVERSAVE = false
+SAVE     = true
+OVERSAVE = true
 
 clamp01(x) = max(0.0, min(1.0, float(x)))
 
@@ -651,7 +640,7 @@ for diag in ["NLOa","NLOb","NLOa&b"]
     res = Dict()
     res["SD"] = [charge_factor[key]*amu[diag]["SD"][key].mean for key in ["33","88","CC","BB"]]
     res["ID"] = [charge_factor[key]*amu[diag]["ID"][key].mean for key in ["33","88","CC"]]
-    res["LD"] = [(charge_factor[key]/BLIND_LD[2])*amu[diag]["LD"][key].mean for key in ["33","88","CC"]]
+    res["LD"] = [charge_factor[key]*amu[diag]["LD"][key].mean for key in ["33","88","CC"]]
 
     baseColors = Dict(
         "SD" => (0.2,0.6,0.9), 
@@ -693,7 +682,7 @@ for diag in ["NLOa","NLOb","NLOa&b"]
 
     mpatches = PyPlot.matplotlib[:patches]
     handles = [mpatches.Patch(facecolor=c) for c in legend_colors]
-    ax.legend(handles, legend_labels, loc="center left", bbox_to_anchor=(1.0, 0.5), ncol=2, frameon=false)
+    # ax.legend(handles, legend_labels, loc="center left", bbox_to_anchor=(1.0, 0.5), ncol=2, frameon=false)
 
     display(gcf())
     if SAVE
@@ -742,7 +731,7 @@ for (j, diag) in enumerate(["NLOa", "NLOb", "NLOa&b"])
     res = Dict()
     res["SD"] = [charge_factor[key]*amu[diag]["SD"][key].mean for key in ["33","88","CC","BB"]]
     res["ID"] = [charge_factor[key]*amu[diag]["ID"][key].mean for key in ["33","88","CC"]]
-    res["LD"] = [(charge_factor[key]/BLIND_LD[2])*amu[diag]["LD"][key].mean for key in ["33","88","CC"]]
+    res["LD"] = [charge_factor[key]*amu[diag]["LD"][key].mean for key in ["33","88","CC"]]
 
     baseColors = Dict(
         "SD" => (0.2,0.6,0.9), 
@@ -805,8 +794,8 @@ close()
 
 # Pie-chart for the variance
 
-SAVE     = false
-OVERSAVE = false
+SAVE     = true
+OVERSAVE = true
 
 for diag in ["NLOa","NLOb","NLOa&b"]
     var = Dict()
@@ -917,7 +906,7 @@ if SAVE
 end
 close()
 
-## All together
+# All together
 
 fig, axs = subplots(
     1, 3,
@@ -1021,8 +1010,8 @@ close()  # avoid showing/accumulating figures in loops
 
 # LO pie-chart
 
-SAVE     = false
-OVERSAVE = false
+SAVE     = true
+OVERSAVE = true
 
 clamp01(x) = max(0.0, min(1.0, float(x)))
 
@@ -1067,7 +1056,7 @@ baseColors = Dict(
     "LD" => (0.4,0.8,0.3)
     )
 
-scales = (1/1.2, 1/1.4, 1/1.6, 1/1.8)
+scales = (1/1.0, 1/1.3, 1/1.6, 1/1.9)
 innerColors = reduce(vcat, [baseColors[key] for key in ["SD","ID","LD"]])
 outerColors = reduce(vcat, [[baseColors[key].*scales[i] for i=1:length(res[key])] for key in ["SD","ID","LD"]])
 
@@ -1102,8 +1091,7 @@ legend_labels = vcat(["SD","ID","LD"], ["3,3","8,8","c,c"])
 
 mpatches = PyPlot.matplotlib[:patches]
 handles = [mpatches.Patch(facecolor=c) for c in legend_colors]
-ax.legend(handles, legend_labels, loc="center left", bbox_to_anchor=(1.0, 0.5), ncol=2, frameon=false)
-
+# ax.legend(handles, legend_labels, loc="center left", bbox_to_anchor=(1.0, 0.5), ncol=2, frameon=false)
 display(gcf())
 if SAVE
     p = create_path(path_plot,["Results","PieChart_CV_LO.pdf"],OVERWRITE=OVERSAVE)
@@ -1177,7 +1165,7 @@ close()
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
 
-# Contribution tales
+# Contribution tables
 
 @info("Table for SDsub window partial results")
 println("
@@ -1328,7 +1316,7 @@ end
 
 ##
 
-diag = "NLOa&b"
+diag = "NLOc"
 
 uwerr(sqrtt0_ph); uwerr(MD_ph)
 uwerr(mpi_ph); uwerr(mK_ph)
@@ -1396,13 +1384,12 @@ println("    \\end{tabular}
 
 ##<<------------------------------------------------------------------------------------------------------------------------>>
 
-amu = uwreal([-101.69,0.59],"amu lattice")
-# amu = uwreal([-101.83,0.53],"amu lattice")
+amu = uwreal([-101.57,0.59],"amu lattice")
 
-# amu_wp    = uwreal([-99.6,1.3],"amu WP25")
-amu_wp    = uwreal([-99.5,1.2],"amu WP25")
-# amu_cmd3  = uwreal([-100.8,0.6],"amu CMD3")
-amu_cmd3  = uwreal([-100.6,0.6],"amu CMD3")
+amu_wp    = uwreal([-99.6,1.3],"amu WP25")
+# amu_wp    = uwreal([-99.5,1.2],"amu WP25")
+amu_cmd3  = uwreal([-100.8,0.6],"amu CMD3")
+# amu_cmd3  = uwreal([-100.6,0.6],"amu CMD3")
 amu_knt19 = uwreal([-98.3,0.4],"amu KNT19")
 
 dif_wp    = amu - amu_wp   ; println("this work vs. WP25  : $(print_uwreal(dif_wp)) -> $(dif_wp.mean/dif_wp.err)")
@@ -1411,15 +1398,62 @@ dif_knt19 = amu - amu_knt19; println("this work vs. KNT19 : $(print_uwreal(dif_k
 
 ##
 
-diag = "NLOa&b"
-wind = "LD"
+diag = "NLOc"
 
-uwerr(AMU[diag][wind]); der_sqrtt0 = mchist(AMU[diag][wind], "sqrtt0 [fm]")[1] / artificial_err
+uwerr(AMU[diag]["tot"]); der_sqrtt0 = mchist(AMU[diag]["tot"], "sqrtt0 [fm]")[1] / artificial_err
 # 10 * value(AMU[diag]["tot"] + der_sqrtt0 * (0.1440 - 0.1442) + AMUIB[diag].mean)
-println("Old t0:\n - $(10*value(AMU[diag][wind]))\nNew t0:\n - $(10*value(AMU[diag][wind] + der_sqrtt0 * (0.1440 - 0.1442)))")
+println("Old t0:\n - $(10*value(AMU[diag]["tot"] + AMUIB[diag].mean))\nNew t0:\n - $(10*value(AMU[diag]["tot"] + der_sqrtt0 * (0.1440 - 0.1442) + AMUIB[diag].mean))")
+
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+
+amu33sub_new, info33sub = BDIOread_MAtot(path_bdio_dict["local"],"NLOa&b","SDsub","g33",StdDer=STD_DERIV,tlImpr=tl_IMPR,Vref=VREF,Q=Q33)
+amu33sub_old, info33sub = BDIOread_MAtot(path_bdio_dict["clust"],"NLOa&b","SDsub","g33",StdDer=STD_DERIV,tlImpr=tl_IMPR,Vref=VREF,BLIND=false,Q=Q33)
+
+amu33sub_old /= 1.4348499925128186
+
+uwerr(amu33sub_old); der_sqrtt0 = mchist(amu33sub_old, "sqrtt0 [fm]")[1] / artificial_err
+
+amu33sub_shift = amu33sub_old + der_sqrtt0 * (0.1440 - 0.1442); print_uwreal(amu33sub_shift)
+print_uwreal(amu33sub_new)
 
 ##
 
-uwerr(obs); der_sqrtt0 = mchist(obs, "sqrtt0 [fm]")[1] / artificial_err
+AMU_NLOab = Dict()
+AMU_NLOab["SD"] = [-24.241238962556686,-24.23396023814304]
+AMU_NLOab["ID"] = [-45.98746857387721,-45.97035552780018]
+AMU_NLOab["LD"] = [-35.365687946644016,-35.290810905439855]
 
-obs_new = obs + der_sqrtt0 * (0.1440 - 0.1442)
+AMU_NLO = [-101.68699363208317,-101.59858794023447]
+
+##
+
+wind = "LD"
+
+AMU_pre = AMU_NLOab[wind]
+AMU_new = AMU["NLOa&b"][wind]*10; uwerr(AMU_new)
+AMU_err = AMUt0ERR["NLOa&b"][wind]*10
+# AMU_err = 10*sqrt(AMU["NLOa&b"][wind].err^2 + AMUSYST["NLOa&b"][wind]^2 + AMUt0ERR["NLOa&b"][wind]^2)
+AMU_err = 10*AMUt0ERR["NLOa&b"][wind]
+
+##
+
+AMU_pre = AMU_NLO
+AMU_new = (AMU["NLO"]["tot"] + AMUIB["NLO"].mean)*10; uwerr(AMU_new)
+AMU_err = AMUt0ERR["NLO"]["tot"]*10
+
+##
+
+fig = figure(figsize=(6,4))
+
+errorbar(0.0, AMU_pre[1]  , AMU_err, fmt="s", color="gray", ms=10, capsize=2)
+errorbar(1.0, AMU_pre[2]  , AMU_err, fmt="s", color="black", ms=10, capsize=2)
+errorbar(2.0, AMU_new.mean, AMU_err, fmt="o", color="black", ms=10, capsize=2)
+
+xlim(-0.5,2.5)
+# ylabel(latexstring("\\left(a_\\mu^{\\mathrm{nlo(a\\&b)}}\\right)^{\\mathrm{$wind}}"))
+ylabel(latexstring("a_\\mu^{\\mathrm{hvp,\\,nlo}}"))
+gca().set_xticks([0.0,1.0,2.0], ["old t0","old t0 + shift","new t0"], rotation = 30, fontsize=14)
+tight_layout()
+display(gcf())
+close()

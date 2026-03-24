@@ -20,6 +20,8 @@ using PyPlot
 using PyCall
 using Colors
 
+mpl_fold = pyimport("mpl_fold_axis")
+
 using ProgressBars
 using Suppressor
 
@@ -74,7 +76,7 @@ COMP = ["g3333","g3388","g33CC"]  #  g33  g88  gSS  gCCconn  gCCdisc  gC8disc  
 
 Q = 5.0  # virtuality for SDsub
 
-BLIND = false
+BLIND     = false
 
 STD_DERIV = false
 tl_IMPR   = false
@@ -82,14 +84,17 @@ VREF      = false
 RESC      = false
 
 SAVE      = true
-OVERSAVE  = true
+OVERSAVE  = false
+
+SHIFT_t0  = true
 
 path_bdio = path_bdio_dict["local"]
 # path_bdio = joinpath(julia_script_directory,"..","..","..","HVP lepton mass","ObsBDIO")
 
 # Data reading and definitions
 
-fig = figure(figsize=(8,10))
+# fig = figure(figsize=(8,10))
+fig = figure(figsize=(10,10))
 
 funcOrder_conv = [
     "a2","a2loga","a3","a4",
@@ -281,6 +286,22 @@ for comp in COMP
         end
     end
 
+    # Shift to new t0
+    if SHIFT_t0
+        der_sqrtt0 = mchist(RES, "sqrtt0 [fm]")[1] / artificial_err
+
+        RES += der_sqrtt0 * (0.1440 - 0.1442); uwerr(RES)
+        for impr_set in IMPR_SET
+            for key in mykeys
+                for FitCut in FITCUT
+                    for i=1:length(yarr[impr_set][key][FitCut])
+                        yarr[impr_set][key][FitCut][i] .+= der_sqrtt0 * (0.1440 - 0.1442)
+                    end
+                end
+            end
+        end
+    end
+
     wPen = 1.0
 
     ls_beta_ext = (0, (5, 2))      # long dashed
@@ -327,7 +348,6 @@ axvline(0.0, color="black", lw=0.2, alpha=0.8)
 for beta in b_values
     axvline(value(1/(8 * t0sym(beta))) ,ls="dotted", color="black", lw=0.2, alpha=0.7)
 end
-##
 xlabel(L"$a^2/8t_0$")
 diag_str = diag == "NLOa&b" ? "NLOa\\&b" : diag
 comp_str = diag == "NLOc" ? "d,e-f,g" : "d,e"
@@ -340,7 +360,7 @@ BLIND_str = BLIND ? "\\mathrm{BLIND}\\times" : ""
 # else
 #     ylabel(latexstring("$(BLIND_str)\\left(a_{\\mu}^{\\mathrm{hvp}}[\\mathrm{$(diag_str)}]$(V_str)\\right)$wind_str$fact_str"))
 # end
-ylabel(latexstring("$(BLIND_str)a_{\\mu}^{\\mathrm{hvp,\\,4c}}$(V_str)$fact_str"))
+ylabel(latexstring("$(BLIND_str)a_{\\mu}^{\\mathrm{hvp,\\,nlo(c)}}$(V_str)$fact_str"))
 mpl = pyimport("matplotlib.lines")  # Import the `lines` module from Matplotlib
 Line2D = mpl.Line2D  # Get the Line2D class
 handles = []
@@ -372,15 +392,20 @@ end
 for FitCut in ["None","beta","mass","beta&mass"]
     push!(handles,Line2D([], [], color="gray", linestyle=ls_dict[FitCut], label=DictFITCUTtoSTR[FitCut]))
 end
-legend(handles=handles, loc=[0.2,0.57], ncol=2)
+# legend(handles=handles, loc="upper left", bbox_to_anchor=(0.2, 0.35), ncol=2)
+legend(handles=handles, loc="upper left", bbox_to_anchor=(0.25, 0.35), ncol=2)
+ax = gca()
+mpl_fold.fold_axis(ax, [(120, 230, 0.05)], axis="y", which="both")
+ax.set_yticks([0, 25, 50, 75, 100, 250, 275])
+ax.set_yticklabels(["0", "25", "50", "75", "100", "250", "275"])
 tight_layout()
 xlim(-0.001,0.06)
 ylim(0.0,280)
 display(gcf())
 if SAVE
-    RESCstr = !RESC ? "" : "_resc"
-    p = create_path(path_plot,["NLOc$(RESCstr).pdf"],OVERWRITE=OVERSAVE)
+    RESCstr  = !RESC ? "" : "_resc"
+    SHIFTstr = !SHIFT_t0 ? "" : "_shift"
+    p = create_path(path_plot,["NLOc$(RESCstr)$(SHIFTstr).pdf"],OVERWRITE=OVERSAVE)
     PyPlot.savefig(p)
 end
-##
 close()

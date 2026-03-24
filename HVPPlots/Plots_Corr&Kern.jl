@@ -329,20 +329,18 @@ close()
 
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
-## <<--------------------------------------------------- INTEGRAND PLOTS ---------------------------------------------------->> ##
+## <<------------------------------------------------------ CORR PLOTS ------------------------------------------------------>> ##
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
 ## <<------------------------------------------------------------------------------------------------------------------------>> ##
 
-@info("1D integrand plot")
 
-# comp = "g33_ll"
+@info("Corr plot")
+
 impr_set = "2"
 
-DIAG = ["NLOb"]  # ["LO"]  ["NLOa","NLOb"]  ["LO","NLOa","NLOb"]
-COMP = ["g33_ll","g88_ll","gCCconn_lc_sim"]  # ["g33_ll"]  ["g33_ll","g88_ll"]  ["g33_ll","g88_ll","gCCconn_lc_sim"]
-WIND = ["NW"]  # ["SD","SDsub"]  ["SD","ILD"]  ["SD","ID","LD"]  ["NW","SD","ILD"]  ["NW","SD","ID","LD"]
+COMP = ["g33_ll","g88_ll"]  # ["g33_ll"]  ["g33_ll","g88_ll"]  ["g33_ll","g88_ll","gCCconn_lc_sim"]
 
-SAVE     = false
+SAVE     = true
 OVERSAVE = false
 
 QLIST = Qlist  # Required for wind = SDsub
@@ -354,18 +352,76 @@ fig = figure(figsize=(8,5))
 
 sym_points = Int64(HVPobs.Data.get_T(ens.id)/2+1); t = collect(1:sym_points)
 
-label = ["Isovector (3,3)","Isoscalar (8,8)","Charm connected (c,c)"]
-# label  = ["No window","W=SD","W=ID","W=LD"]
+label = ["Isovector (3,3)","Isoscalar (8,8)"]
 colour = ["blue","red","green"]
+fmt = ["-o","-s","-d","-^"]
+
+alpha = HVPtool.alpha
+
+aens = sqrtt0_ph / sqrt(t0)
+tfm = aens.*(t.-1)
+
+i = 0
+for comp in COMP
+    i += 1
+
+    obs = corr[impr_set][comp][t]; uwerr.(obs)
+    errorbar(value.(tfm), value.(obs), err.(obs),  c=colour[i], capsize=2, mfc="none", fmt=fmt[i], label=label[i])
+end
+xlabel(latexstring("t\\ [\\mathrm{fm}]"))
+ylabel(latexstring("G^{(d,e)}(t)"))
+xMin, xMax = xlim()
+xlim(0.0,4.5)
+yscale("log")
+ylim(1e-10,1)
+legend()
+tight_layout()
+display(gcf())
+if SAVE
+    p = create_path(path_plot,["Other","corr_$(ens.id).pdf"],OVERWRITE=OVERSAVE)
+    PyPlot.savefig(p)
+end
+close()
+
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+## <<--------------------------------------------------- INTEGRAND PLOTS ---------------------------------------------------->> ##
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+## <<------------------------------------------------------------------------------------------------------------------------>> ##
+
+@info("1D integrand plot")
+
+# comp = "g33_ll"
+impr_set = "2"
+
+DIAG = ["NLOb"]  # ["LO"]  ["NLOa","NLOb"]  ["LO","NLOa","NLOb"]
+COMP = ["g33_ll"]  # ["g33_ll"]  ["g33_ll","g88_ll"]  ["g33_ll","g88_ll","gCCconn_lc_sim"]
+WIND = ["NW","SD","ID","LD"]  # ["SD","SDsub"]  ["SD","ILD"]  ["SD","ID","LD"]  ["NW","SD","ILD"]  ["NW","SD","ID","LD"]
+
+SAVE     = true
+OVERSAVE = false
+
+QLIST = Qlist  # Required for wind = SDsub
+
+T = HVPobs.Data.get_T(ens.id)
+t = collect(1:Int64(T/2+1))
+
+fig = figure(figsize=(8,5))
+
+sym_points = Int64(HVPobs.Data.get_T(ens.id)/2+1); t = collect(1:sym_points)
+
+# label = ["Isovector (3,3)","Isoscalar (8,8)","Charm connected (c,c)"]
+label  = ["No window","W=SD","W=ID","W=LD"]
+# colour = ["blue","red","green"]
 # colour = ["black","brown","gray","purple"]
-# baseColors = Dict(
-#     "SD" => (0.2,0.6,0.9), 
-#     "ID" => (0.9,0.5,0.2),
-#     "LD" => (0.4,0.8,0.3)
-#     )
-# colour = reduce(vcat, [baseColors[key] for key in ["SD","ID","LD"]])
-# colour = vcat("black",colour)
-# fmt = ["-o","-s","-d","-^"]
+baseColors = Dict(
+    "SD" => (0.2,0.6,0.9), 
+    "ID" => (0.9,0.5,0.2),
+    "LD" => (0.4,0.8,0.3)
+    )
+colour = reduce(vcat, [baseColors[key] for key in ["SD","ID","LD"]])
+colour = vcat("black",colour)
+fmt = ["-o","-s","-d","-^"]
 
 alpha = HVPtool.alpha
 
@@ -400,11 +456,13 @@ for diag in DIAG
 
                 int = ((alpha/π)^2*1e10) .* corr[impr_set][comp][t] .* TMRw; uwerr.(int)
 
+                # alph = wind == "LD" ? 1.0 : 0.15
+
                 diag_str = diag != "NLOa&b" ? diag : "NLOa\\&b"
                 comp_str = comp[2]*","*comp[3]
                 wind_str = wind != "NW" ? "; $wind" : ""
                 Qstr = wind == "SDsub" ? "; Q=$Q GeV" : ""
-                errorbar(value.(tfm), value.(int), err.(int),  c=colour[i], capsize=2, mfc="none", fmt=fmt[i], label=label[i])  #  label[i])  "$diag_str; $comp_str$wind_str$Qstr"
+                errorbar(value.(tfm), value.(int), err.(int),  c=colour[i], capsize=2, mfc="none", fmt=fmt[i], label=label[i]) #  , alpha=alph  #  label[i])  "$diag_str; $comp_str$wind_str$Qstr"
             end
         end
     end
@@ -412,21 +470,22 @@ end
 # title("Integrands for $(ens.id) impr. set $(impr_set)")
 # title(ens.id)
 xlabel(latexstring("t\\ [\\mathrm{fm}]"))
-ylabel(latexstring("\\tilde{f}^{(4b)}(\\hat{t})\\times G^{(d,e)}(t)"))
-# ylabel(latexstring("\\tilde{f}^{(4b)}(\\hat{t})\\times\\Theta_{\\mathrm{W}}(t)\\times G^{(3,3)}(t)"))
+# ylabel(latexstring("\\tilde{f}^{(2)}(\\hat{t})\\times G^{(d,e)}(t)"))
+# ylabel(latexstring("\\tilde{f}^{(4b)}(\\hat{t})\\times G^{(d,e)}(t)"))
+ylabel(latexstring("\\tilde{f}^{(4b)}(\\hat{t})\\times\\Theta_{\\mathrm{W}}(t)\\times G^{(3,3)}(t)"))
 xMin, xMax = xlim()
 xMin, xMax = any(x -> x in ["LD","ILD","NW"],WIND) ? [xMin,xMax] : ("ID" in WIND ? [-0.1,2.0] : [-0.05,1.0])
 # xlim(xMin,xMax)
 xlim(0.0,4.5)
-ylim(bottom=-20.)
-ylim(top=180)
+ylim(bottom=-10)
+ylim(top=170)
 legend()
 tight_layout()
 display(gcf())
 if SAVE
     RESCstr = !RESC ? "" : "_resc"
-    p = create_path(path_plot,["Other","IntegrandIsospin_$(ens.id).pdf"],OVERWRITE=OVERSAVE)
-    # p = create_path(path_plot,["Other","IntegrandWindows_$(ens.id).pdf"],OVERWRITE=OVERSAVE)
+    # p = create_path(path_plot,["Other","IntegrandIsospin_$(ens.id).pdf"],OVERWRITE=OVERSAVE)
+    p = create_path(path_plot,["Other","IntegrandWindows_$(ens.id).pdf"],OVERWRITE=OVERSAVE)
     PyPlot.savefig(p)
 end
 close()
